@@ -1,0 +1,149 @@
+{
+  "format": "pmb-export",
+  "schemaVersion": 1,
+  "exportedAt": "2026-10-17T00:00:00.000Z",
+  "project": {
+    "id": "proj-1",
+    "schemaVersion": 1,
+    "info": {
+      "name": "Projeto Importado",
+      "code": "IMP-01",
+      "startDate": "2026-01-05"
+    },
+    "config": {
+      "modules": {
+        "governance": {
+          "enabled": true,
+          "settings": {
+            "staleChangeDays": 15
+          }
+        },
+        "scope": {
+          "enabled": true,
+          "settings": {}
+        },
+        "schedule": {
+          "enabled": true,
+          "settings": {
+            "phases": [
+              "Conceituação",
+              "Análise",
+              "Planejamento de Gestão",
+              "Planejamento de Engenharia",
+              "Execução",
+              "Diligenciamento",
+              "Testes",
+              "Validação",
+              "Serviços",
+              "Faturamento",
+              "Pagamento",
+              "Expedição",
+              "Garantia"
+            ],
+            "milestoneToleranceDays": 5,
+            "spiGreenMin": 0.95,
+            "spiYellowMin": 0.85
+          }
+        },
+        "stakeholders": {
+          "enabled": true,
+          "settings": {}
+        }
+      }
+    },
+    "statusDate": null,
+    "counters": {
+      "PI": 1,
+      "REQ": 1
+    },
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  "baselines": [],
+  "data": {
+    "governance_profile": [
+      {
+        "id": "proj-1",
+        "charter": {
+          "clientId": null,
+          "sponsorId": null,
+          "managerId": null,
+          "objective": "",
+          "justification": "",
+          "currentPhase": "",
+          "status": "Em iniciação",
+          "approvalDate": null
+        },
+        "closure": {
+          "plannedDate": null,
+          "actualDate": null,
+          "pendingItems": "",
+          "closureTermSigned": false
+        },
+        "documentTemplate": {
+          "template": null,
+          "notes": ""
+        },
+        "procurementPolicy": {
+          "model": null,
+          "billing": null,
+          "criteria": [],
+          "approvalLimitCents": null,
+          "notes": ""
+        }
+      }
+    ],
+    "governance_norms": [],
+    "governance_meetings": [],
+    "governance_lessons": [],
+    "scope_requirements": [
+      {
+        "id": "r1",
+        "code": "REQ-001",
+        "description": "Requisito teste",
+        "category": "Funcional",
+        "origin": "Cliente",
+        "priority": "Média",
+        "validationStatus": "Não validado",
+        "fulfillmentStatus": "Não iniciado",
+        "acceptanceCriteria": "",
+        "ownerId": "p1",
+        "lastValidation": null,
+        "deliverableIds": []
+      }
+    ],
+    "scope_wbs": [
+      {
+        "code": "1",
+        "name": "Pacote importado",
+        "parentId": null,
+        "kind": "Pacote de trabalho",
+        "duration": 5,
+        "predecessorIds": [],
+        "startNoEarlierThan": null,
+        "actualStart": null,
+        "actualFinish": null,
+        "percentComplete": 0,
+        "ownerId": null,
+        "phase": "",
+        "id": "A"
+      }
+    ],
+    "scope_deliverables": [],
+    "scope_changeRequests": [],
+    "schedule_milestones": [],
+    "stakeholders_parties": [
+      {
+        "id": "p1",
+        "kind": "Pessoa",
+        "code": "PI-001",
+        "name": "Pessoa Importada",
+        "position": "",
+        "organizationId": null,
+        "contact": "",
+        "internal": "Interno",
+        "notes": ""
+      }
+    ]
+  }
+}

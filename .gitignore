@@ -1,0 +1,20 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+
+script.txt
+.claude/
+.claude-flow/
+playwright-report/
+test-results/
+coverage/
+
+# Pastas locais e temporarias
+_bakeoff/
+script.txt
+.claude/
+.claude-flow/
+playwright-report/
+test-results/
+coverage/
