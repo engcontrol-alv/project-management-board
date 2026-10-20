@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { aPackage } from '@/test/factories';
+import { aBudgetLine, aPackage, aRisk } from '@/test/factories';
 import { aSnapshot } from '@/test/builders';
 import { renderWithProject } from '@/test/render';
 import { resolveConfig } from '@/project/config';
@@ -48,6 +48,39 @@ describe('ConfigPage', () => {
     await waitFor(async () =>
       expect(resolveConfig((await load()).project.config).settings.schedule.milestoneToleranceDays).toBe(3),
     );
+  });
+});
+
+describe('ConfigPage — etapa 2', () => {
+  it('desligar Finanças não desliga outros módulos e preserva os dados', async () => {
+    const s = aSnapshot().withBudgetLine(aBudgetLine()).build();
+    const { load } = await renderWithProject(withActions(<ConfigPage />), { snapshot: s });
+    await userEvent.click(await screen.findByLabelText(/^Custos & Finanças/));
+    await waitFor(async () => expect(resolveConfig((await load()).project.config).enabled.finances).toBe(false));
+    const cfg = resolveConfig((await load()).project.config);
+    expect(Object.entries(cfg.enabled).filter(([, on]) => !on).map(([k]) => k)).toEqual(['finances']);
+    expect(Object.keys((await load()).finances.budgetLines)).toEqual(['orc1']);
+  });
+
+  it('parâmetros de Finanças, Riscos e Recursos', async () => {
+    const { load } = await renderWithProject(withActions(<ConfigPage />), { snapshot: aSnapshot().withRisk(aRisk()).build() });
+    const cpi = await screen.findByLabelText('CPI verde a partir de');
+    await userEvent.clear(cpi);
+    await userEvent.type(cpi, '0,9');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar parâmetros de Custos & Finanças' }));
+    await waitFor(async () => expect(resolveConfig((await load()).project.config).settings.finances.cpiGreenMin).toBe(0.9));
+
+    const red = screen.getByLabelText('Sobrealocação vermelha acima de (%)');
+    await userEvent.clear(red);
+    await userEvent.type(red, '130');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar parâmetros de Recursos' }));
+    await waitFor(async () => expect(resolveConfig((await load()).project.config).settings.resources.overallocationRedPct).toBe(130));
+
+    const cats = screen.getByLabelText('Categorias de risco (uma por linha)');
+    await userEvent.clear(cats);
+    await userEvent.type(cats, 'Técnico');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar parâmetros de Riscos' }));
+    expect(await screen.findByText('Categoria "Fornecedor/Aquisição" está em uso e não pode ser removida.')).toBeInTheDocument();
   });
 });
 

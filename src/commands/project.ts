@@ -77,6 +77,13 @@ export const updateModuleSettings = (id: ImplementedModuleId, settings: unknown)
       if (removed.length > 0)
         return err(removed.map((p) => `Fase "${p}" está em uso e não pode ser removida sem reatribuição.`));
     }
+    if (id === 'risks') {
+      const categories = new Set((parsed.data as { categories: string[] }).categories);
+      const inUse = new Set(Object.values(s.risks.risks).map((r) => r.category));
+      const removed = [...inUse].filter((c) => !categories.has(c));
+      if (removed.length > 0)
+        return err(removed.map((c) => `Categoria "${c}" está em uso e não pode ser removida.`));
+    }
     const current = s.project.config.modules[id];
     const config = {
       modules: { ...s.project.config.modules, [id]: { enabled: current?.enabled ?? true, settings: parsed.data } },

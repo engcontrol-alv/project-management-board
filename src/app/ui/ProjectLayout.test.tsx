@@ -29,7 +29,21 @@ describe('ProjectLayout — navegação horizontal', () => {
     const bar = await screen.findByRole('navigation', { name: 'Domínios' });
     expect(container.querySelector('.sidebar')).toBeNull();
     const names = within(bar).getAllByRole('link').map((a) => a.textContent);
-    expect(names).toEqual(['Governança', 'Escopo', 'Cronograma', 'Partes Interessadas']);
+    expect(names).toEqual([
+      'Geral',
+      'Governança',
+      'Escopo',
+      'Cronograma',
+      'Recursos',
+      'Custos & Finanças',
+      'Riscos',
+      'Partes Interessadas',
+    ]);
+    // Divisória vertical entre "Geral" e os 7 domínios de desempenho.
+    const divider = within(bar).getByRole('separator');
+    expect(divider.previousElementSibling).toHaveTextContent('Geral');
+    expect(divider.nextElementSibling).toHaveTextContent('Governança');
+    expect(within(bar).getByRole('link', { name: 'Partes Interessadas' })).toHaveAttribute('href', '/projeto/stakeholders/cadastro');
     expect(within(bar).getByRole('link', { name: 'Escopo' })).toHaveAttribute('aria-current', 'page');
     expect(within(bar).getByRole('link', { name: 'Governança' })).not.toHaveAttribute('aria-current');
     expect(within(bar).getByRole('link', { name: 'Escopo' }).querySelector('svg')).not.toBeNull();
@@ -38,8 +52,46 @@ describe('ProjectLayout — navegação horizontal', () => {
     expect(within(sections).getByRole('link', { name: 'EAP' })).toHaveAttribute('aria-current', 'page');
   });
 
+  it('ícones: Governança mantém o original (LayoutDashboard); Geral tem a mira técnica própria', async () => {
+    await renderAt('/projeto/geral');
+    const bar = await screen.findByRole('navigation', { name: 'Domínios' });
+    const icon = (name: string) => within(bar).getByRole('link', { name }).querySelector('svg');
+    expect(icon('Governança')).toHaveClass('lucide-layout-dashboard');
+    const target = icon('Geral')!;
+    expect(target).toHaveClass('icon-target');
+    expect(target).not.toHaveClass('lucide-layout-dashboard');
+    for (const [attr, value] of [['width', '16'], ['height', '16'], ['viewBox', '0 0 16 16'], ['fill', 'none'], ['stroke', 'currentColor'], ['stroke-width', '1.75']] as const)
+      expect(target).toHaveAttribute(attr, value);
+    expect(within(bar).getByRole('link', { name: 'Geral' })).toHaveTextContent('Geral');
+  });
+
+  it('cabeçalho sem logotipo: o carimbo começa pelo código e pelo nome do projeto', async () => {
+    const { container } = await renderAt('/projeto/geral');
+    await screen.findByRole('navigation', { name: 'Domínios' });
+    const topbar = container.querySelector('.topbar')!;
+    expect(container.querySelector('.app-header .brand-mark, .app-header .brand-emblem')).toBeNull();
+    expect(topbar.firstElementChild).toHaveClass('tb-cell-code');
+    expect(topbar.firstElementChild!.querySelector('.code-chip')).toHaveTextContent('PT-01');
+    expect(topbar.children[1]).toHaveClass('tb-cell-name');
+    expect(document.body.textContent).not.toMatch(/PMB/);
+  });
+
+  it('ações globais incluem "Novo Projeto"', async () => {
+    await renderAt('/projeto/geral');
+    const toolbar = await screen.findByRole('toolbar', { name: 'Ações do projeto' });
+    expect(within(toolbar).getByRole('button', { name: /Novo Projeto/ })).toBeInTheDocument();
+  });
+
+  it('Geral é a aba ativa na rota inicial do projeto, sem seções', async () => {
+    await renderAt('/projeto/geral');
+    const bar = await screen.findByRole('navigation', { name: 'Domínios' });
+    expect(within(bar).getByRole('link', { name: 'Geral' })).toHaveAttribute('aria-current', 'page');
+    expect(within(bar).getByRole('link', { name: 'Governança' })).not.toHaveAttribute('aria-current');
+    expect(screen.queryByRole('navigation', { name: 'Seções' })).toBeNull();
+  });
+
   it('cabeçalho com projeto, status e ações globais', async () => {
-    await renderAt('/projeto/governance/painel');
+    await renderAt('/projeto/geral');
     const toolbar = await screen.findByRole('toolbar', { name: 'Ações do projeto' });
     for (const name of [/Importar/, /Exportar/, /Projeto demo/, /Imprimir A4/, /Configurações/]) expect(within(toolbar).getByText(name)).toBeInTheDocument();
     expect(screen.getByText('PT-01')).toBeInTheDocument();

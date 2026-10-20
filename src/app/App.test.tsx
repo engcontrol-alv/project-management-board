@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { aSnapshot } from '@/test/builders';
 import { testClock } from '@/test/render';
@@ -57,7 +57,44 @@ describe('App — estados de abertura', () => {
   });
 });
 
+describe('Novo Projeto (cabeçalho)', () => {
+  async function openProject() {
+    const repo = new DexieProjectRepository(`app-test-${++n}-${Date.now()}`);
+    await repo.replaceAll(aSnapshot().build());
+    render(<App repository={repo} clock={testClock} />);
+    await userEvent.click(await screen.findByRole('button', { name: /Novo Projeto/ }));
+    return { repo, dialog: await screen.findByRole('dialog', { name: 'Começar um novo projeto?' }) };
+  }
+
+  it('confirma sem digitar palavra, apaga o projeto atual e volta à tela inicial', async () => {
+    const { repo, dialog } = await openProject();
+    expect(dialog).toHaveTextContent('Exporte o projeto atual antes se quiser guardá-lo.');
+    expect(within(dialog).getByRole('button', { name: 'Exportar o atual' })).toBeInTheDocument();
+    expect(within(dialog).queryByRole('textbox')).toBeNull();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Apagar e começar novo' }));
+    expect(await screen.findByRole('button', { name: /Criar projeto/ })).toBeInTheDocument();
+    expect(await repo.exists()).toBe(false);
+    expect(window.location.hash).toBe('#/');
+  });
+
+  it('cancelar mantém o projeto aberto', async () => {
+    const { repo, dialog } = await openProject();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByText('Painel executivo')).toBeInTheDocument();
+    expect(await repo.exists()).toBe(true);
+  });
+});
+
 describe('StartPage', () => {
+  it('logotipo vetorial, sem a sigla PMB (PMBOK no texto é outro termo)', async () => {
+    const repo = new DexieProjectRepository(`app-test-${++n}-${Date.now()}`);
+    const { container } = render(<App repository={repo} clock={testClock} />);
+    await screen.findByLabelText('Nome');
+    expect(container.querySelector('.brand-mark svg.brand-emblem')).not.toBeNull();
+    expect(document.body.textContent).not.toMatch(new RegExp('\\bPMB\\b'));
+  });
+
   it('criar projeto grava e abre o painel', async () => {
     const repo = new DexieProjectRepository(`app-test-${++n}-${Date.now()}`);
     const spy = vi.spyOn(repo, 'replaceAll');

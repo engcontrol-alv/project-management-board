@@ -19,6 +19,9 @@ import type { Baseline } from '@/project/baseline';
 import { resolveConfig } from '@/project/config';
 import type { Project } from '@/project/project';
 import type { ProjectSnapshot } from '@/project/snapshot';
+import { deriveFinances, type DerivedFinances } from './finances';
+import { deriveResources, type DerivedResources } from './resources';
+import { deriveRisks, type DerivedRisks } from './risks';
 
 export function effectiveStatusDate(p: Project, today: IsoDate): IsoDate {
   return p.statusDate ?? today;
@@ -43,6 +46,10 @@ export type DerivedProject = {
   milestones: Record<MilestoneId, DerivedMilestone>;
   progress: { actual: number | null; planned: number | null; spi: number | null };
   sCurve: SCurvePoint[];
+  /** `null` com o módulo desligado. */
+  finances: DerivedFinances | null;
+  risks: DerivedRisks | null;
+  resources: DerivedResources | null;
 };
 
 /** Projeção pura do snapshot na data de status (SPEC §8). Nunca lança. */
@@ -51,7 +58,7 @@ export function deriveProject(s: ProjectSnapshot, statusDate: IsoDate): DerivedP
   const packages = nodes.filter((n) => n.kind === 'Pacote de trabalho');
   const schedule = computeSchedule(packages, s.project.info.startDate, statusDate);
   const baseline = currentBaseline(s);
-  const { settings } = resolveConfig(s.project.config);
+  const { settings, enabled } = resolveConfig(s.project.config);
 
   const milestones = {} as Record<MilestoneId, DerivedMilestone>;
   for (const m of Object.values(s.schedule.milestones)) {
@@ -74,6 +81,7 @@ export function deriveProject(s: ProjectSnapshot, statusDate: IsoDate): DerivedP
 
   const actual = physicalProgress(packages);
   const planned = baseline ? plannedProgress(baseline.workPackages, statusDate) : null;
+  const risks = enabled.risks ? deriveRisks(s, settings.risks) : null;
   return {
     statusDate,
     schedule,
@@ -81,5 +89,16 @@ export function deriveProject(s: ProjectSnapshot, statusDate: IsoDate): DerivedP
     milestones,
     progress: { actual, planned, spi: physicalSpi(actual, planned) },
     sCurve: baseline ? physicalSCurve(baseline.workPackages, actual, statusDate) : [],
+    finances: enabled.finances
+      ? deriveFinances(s, {
+          baseCurrency: settings.finances.baseCurrency,
+          baseline,
+          schedule,
+          openRiskEmv: risks?.openEmv ?? 0,
+          statusDate,
+        })
+      : null,
+    risks,
+    resources: enabled.resources ? deriveResources(s) : null,
   };
 }

@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import type { PartyId } from '@/core/ids';
+import type { CommunicationId, PartyId } from '@/core/ids';
 import { idSchema, requiredText } from '@/shared/lib/zod';
+import type { Communication } from './communication';
 
 export const ORG_ROLES = [
   'Cliente',
@@ -31,6 +32,25 @@ export function isValidCnpj(digits: string): boolean {
 
 const partyId = idSchema<PartyId>();
 
+export const LEVELS = ['Alto', 'Baixo'] as const;
+export type Level = (typeof LEVELS)[number];
+export const POSTURES = ['Apoiador', 'Neutro', 'Opositor'] as const;
+export type Posture = (typeof POSTURES)[number];
+
+/** Análise do módulo Partes Interessadas; `null` = parte ainda não analisada. */
+export const analysisSchema = z
+  .object({
+    interests: z.string(),
+    power: z.enum(LEVELS),
+    interest: z.enum(LEVELS),
+    currentPosture: z.enum(POSTURES),
+    desiredPosture: z.enum(POSTURES),
+    engagementStrategy: z.string(),
+    relationshipOwnerId: partyId.nullable(),
+  })
+  .strict();
+export type StakeholderAnalysis = z.infer<typeof analysisSchema>;
+
 const common = {
   id: partyId,
   code: z.string(),
@@ -38,6 +58,7 @@ const common = {
   contact: z.string(),
   internal: z.enum(INTERNAL_OPTIONS),
   notes: z.string(),
+  analysis: analysisSchema.nullable(),
 };
 
 export const personSchema = z
@@ -67,10 +88,13 @@ export type Person = z.infer<typeof personSchema>;
 export type Organization = z.infer<typeof organizationSchema>;
 export type Party = Person | Organization;
 
-export type StakeholdersData = { parties: Record<PartyId, Party> };
+export type StakeholdersData = {
+  parties: Record<PartyId, Party>;
+  communications: Record<CommunicationId, Communication>;
+};
 
 export function emptyStakeholdersData(): StakeholdersData {
-  return { parties: {} };
+  return { parties: {}, communications: {} };
 }
 
 function asParty(t: unknown): Party | null {

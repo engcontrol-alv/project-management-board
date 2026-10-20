@@ -45,3 +45,14 @@ export function todayIso(): IsoDate {
   const dd = String(now.getDate()).padStart(2, '0');
   return `${now.getFullYear()}-${mm}-${dd}`;
 }
+
+/** Segunda-feira da semana de `d`. */
+export function startOfWeek(d: IsoDate): IsoDate {
+  const weekday = new Date(toUtcMs(d)).getUTCDay(); // 0 = domingo
+  return addDays(d, -((weekday + 6) % 7));
+}
+
+/** Chave do mês: `'2026-10'`. */
+export function monthKey(d: IsoDate): string {
+  return d.slice(0, 7);
+}

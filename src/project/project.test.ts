@@ -46,6 +46,20 @@ describe('resolveConfig', () => {
     expect(r.settings.schedule.milestoneToleranceDays).toBe(5);
     expect(r.warnings).toHaveLength(1);
   });
+  it('os 7 domínios ligados com os parâmetros padrão da etapa 2', () => {
+    const r = resolveConfig(defaultConfig());
+    expect(Object.keys(r.enabled)).toEqual(['governance', 'scope', 'schedule', 'resources', 'finances', 'risks', 'stakeholders']);
+    expect(r.settings.finances.baseCurrency).toBe('BRL');
+    expect(r.settings.risks.scale).toBe(3);
+    expect(r.settings.resources.overallocationRedPct).toBe(120);
+    expect(r.settings.stakeholders.supplierCommittedThresholdCents).toBe(10_000_000);
+  });
+  it('Finanças, Riscos e Recursos não arrastam outros módulos ao desligar', () => {
+    for (const id of ['finances', 'risks', 'resources'] as const) {
+      const r = resolveConfig(setModuleEnabled(defaultConfig(), id, false));
+      expect(Object.entries(r.enabled).filter(([, on]) => !on).map(([k]) => k)).toEqual([id]);
+    }
+  });
   it('Governança sempre ligada', () => {
     const cfg = defaultConfig();
     cfg.modules.governance = { enabled: false, settings: {} };
@@ -81,14 +95,14 @@ describe('applyChangeset', () => {
 });
 
 describe('migrateExport', () => {
-  it('versão mais nova é recusada; v1 passa intacta', () => {
-    expect(() => migrateExport({ schemaVersion: 2 })).toThrow(UnsupportedVersionError);
+  it('versão mais nova é recusada; a versão atual passa intacta', () => {
+    expect(() => migrateExport({ schemaVersion: 3 })).toThrow(UnsupportedVersionError);
     try {
-      migrateExport({ schemaVersion: 2 });
+      migrateExport({ schemaVersion: 3 });
     } catch (e) {
-      expect((e as UnsupportedVersionError).found).toBe(2);
+      expect((e as UnsupportedVersionError).found).toBe(3);
     }
-    const v1 = { schemaVersion: 1 };
-    expect(migrateExport(v1)).toBe(v1);
+    const current = { schemaVersion: 2 };
+    expect(migrateExport(current)).toBe(current);
   });
 });

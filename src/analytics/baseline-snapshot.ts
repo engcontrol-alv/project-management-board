@@ -20,6 +20,14 @@ export function snapshotBaseline(
   const milestones: Baseline['milestones'] = {};
   for (const [id, m] of Object.entries(d.milestones))
     if (m.forecast) milestones[id as keyof typeof milestones] = { date: m.forecast };
+  // Linha de base de custos: linhas de custo e contratações não canceladas (SPEC §7.3).
+  const costItems: Baseline['costItems'] = {};
+  for (const l of Object.values(s.finances.budgetLines))
+    if (l.kind === 'Custo' && l.status !== 'Cancelado')
+      costItems[l.id] = { budgetedCents: l.budgetedCents, currency: l.currency, rate: l.rate ?? 1 };
+  for (const p of Object.values(s.finances.procurements))
+    if (p.contractStatus !== 'Cancelado')
+      costItems[p.id] = { budgetedCents: p.budgetedCents, currency: p.currency, rate: p.rate ?? 1 };
   const deliverables: Baseline['deliverables'] = {};
   for (const e of Object.values(s.scope.deliverables))
     deliverables[e.id] = { code: e.code, name: e.name, plannedDate: e.plannedDate };
@@ -33,7 +41,7 @@ export function snapshotBaseline(
     projectFinish: d.schedule.ok ? d.schedule.projectFinish : null,
     workPackages,
     milestones,
-    costItems: {},
+    costItems,
     deliverables,
   };
 }

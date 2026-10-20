@@ -31,3 +31,16 @@ export function centsToInput(cents: number | null): string {
   const abs = Math.abs(cents);
   return `${sign}${Math.floor(abs / 100)},${String(abs % 100).padStart(2, '0')}`;
 }
+
+/** Arredonda para o inteiro mais próximo; empates vão para o par (absorve ruído de ponto flutuante). */
+export function roundHalfEven(x: number): number {
+  const floor = Math.floor(x);
+  const diff = x - floor;
+  if (Math.abs(diff - 0.5) < 1e-9) return floor % 2 === 0 ? floor : floor + 1;
+  return Math.round(x);
+}
+
+/** Centavos na moeda do item → centavos na moeda base (taxa decimal informada no item). */
+export function toBaseCents(cents: number, rate: number): number {
+  return roundHalfEven(cents * rate);
+}

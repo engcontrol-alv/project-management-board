@@ -1,6 +1,18 @@
 import { useLayoutEffect, useRef } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { CalendarRange, HardDrive, LayoutDashboard, ListTree, Printer, Settings, Users, type LucideIcon } from 'lucide-react';
+import {
+  CalendarRange,
+  HardDrive,
+  HardHat,
+  LayoutDashboard,
+  ListTree,
+  Printer,
+  Settings,
+  ShieldAlert,
+  Users,
+  Wallet,
+  type LucideIcon,
+} from 'lucide-react';
 import { formatDateBR } from '@/shared/lib/dates';
 import { RagBadge, StatusBadge } from '@/shared/ui/Badge';
 import { computeDashboard } from '@/analytics/dashboard';
@@ -17,10 +29,35 @@ const MODULE_ICONS: Record<ImplementedModuleId, LucideIcon> = {
   governance: LayoutDashboard,
   scope: ListTree,
   schedule: CalendarRange,
+  finances: Wallet,
+  risks: ShieldAlert,
+  resources: HardHat,
   stakeholders: Users,
 };
 
-type DomainTab = { id: string; label: string; to: string; icon: LucideIcon; active: boolean };
+/** Mira/bússola técnica da aba "Geral": círculo externo, marcações cardeais sutis e centro. */
+function TargetIcon() {
+  return (
+    <svg
+      className="icon-target"
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="8" cy="8" r="5.75" />
+      <path d="M8 1v2M8 13v2M1 8h2M13 8h2" />
+      <circle cx="8" cy="8" r="1" />
+    </svg>
+  );
+}
+
+type DomainTab ={ id: string; label: string; to: string; icon: LucideIcon; active: boolean };
 
 export function ProjectLayout() {
   const load = useLoadResult();
@@ -57,14 +94,15 @@ export function ProjectLayout() {
       active: current === id,
     }),
   );
-  // Cadastro de pessoas e organizações: sempre disponível, mesmo com o módulo desligado (SPEC §6.7).
-  tabs.push({
-    id: 'pessoas',
-    label: MANIFESTS.stakeholders.label,
-    to: '/projeto/pessoas',
-    icon: MODULE_ICONS.stakeholders,
-    active: current === 'pessoas',
-  });
+  // Com o módulo desligado, o cadastro de pessoas e organizações continua acessível (SPEC §6.7).
+  if (!analysis.config.enabled.stakeholders)
+    tabs.push({
+      id: 'pessoas',
+      label: MANIFESTS.stakeholders.label,
+      to: '/projeto/pessoas',
+      icon: MODULE_ICONS.stakeholders,
+      active: current === 'pessoas',
+    });
   const activeModule = MODULE_ORDER.find((id) => id === current && analysis.config.enabled[id]);
   const sections = activeModule ? VIEWS[activeModule].sections : [];
 
@@ -73,9 +111,6 @@ export function ProjectLayout() {
       <header className="app-header">
         {/* Linha 1 como carimbo de desenho técnico: células com divisórias de 1px. */}
         <div className="topbar tb-titleblock">
-          <span className="brand-mark" title="Project Management Board" aria-hidden="true">
-            PMB
-          </span>
           <div className="tb-cell tb-cell-code">
             <span className="tb-caption">Código</span>
             <span className="code-chip">{s.project.info.code}</span>
@@ -117,6 +152,12 @@ export function ProjectLayout() {
         </div>
         <div className="domain-row no-print">
           <nav className="domain-bar" aria-label="Domínios" ref={domainBar}>
+            {/* "Geral" (centro de comando) fica antes da divisória; à direita, os 7 domínios de desempenho. */}
+            <Link to="/projeto/geral" className={`domain-tab${current === 'geral' ? ' active' : ''}`} aria-current={current === 'geral' ? 'page' : undefined}>
+              <TargetIcon />
+              Geral
+            </Link>
+            <span className="domain-divider" role="separator" aria-orientation="vertical" />
             {tabs.map((t) => {
               const Icon = t.icon;
               return (

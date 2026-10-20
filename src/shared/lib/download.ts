@@ -7,5 +7,6 @@ export function downloadText(filename: string, text: string): void {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  // Revogar na hora pode cancelar o download em máquinas lentas: o navegador ainda não leu o blob.
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }

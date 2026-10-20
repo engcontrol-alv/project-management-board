@@ -13,17 +13,20 @@ export function DataTable<R extends { id: string }>({
   actions,
   rowClassName,
   empty = 'Nenhum registro.',
+  label,
 }: {
   columns: Column<R>[];
   rows: R[];
   actions?: (row: R) => ReactNode;
   rowClassName?: (row: R) => string | undefined;
   empty?: string;
+  /** Nome acessível da tabela. */
+  label?: string;
 }) {
   if (rows.length === 0) return <p className="muted">{empty}</p>;
   return (
     <div className="table-wrap">
-      <table className="tbl">
+      <table className="tbl" aria-label={label}>
         <thead>
           <tr>
             {columns.map((c) => (

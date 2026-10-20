@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
-import { addDays, diffDays, formatDateBR, isIsoDate, maxDate } from './dates';
-import { formatMoneyBR, parseMoneyBR } from './money';
-import { formatPercent, formatRatio } from './format';
+import { describe, expect, it, vi } from 'vitest';
+import { downloadText } from './download';
+import { addDays, diffDays, formatDateBR, isIsoDate, maxDate, monthKey, startOfWeek } from './dates';
+import { formatMoneyBR, parseMoneyBR, roundHalfEven, toBaseCents } from './money';
+import { formatIndicator, formatPercent, formatRatio } from './format';
 import { formatCode, nextWbsCode } from './codes';
 import { findCycleInGraph, topologicalOrder } from './graph';
 
@@ -67,5 +68,44 @@ describe('graph', () => {
     const cyc: Record<string, string[]> = { A: ['B'], B: ['A'] };
     const found = findCycleInGraph<string>(['A', 'B'], (id) => cyc[id] ?? []);
     expect(found).toEqual(expect.arrayContaining(['A', 'B']));
+  });
+});
+
+describe('etapa 2 — dinheiro, semanas e indicadores', () => {
+  it('half-even e conversão para a moeda base', () => {
+    expect(roundHalfEven(0.5)).toBe(0);
+    expect(roundHalfEven(1.5)).toBe(2);
+    expect(roundHalfEven(2.5)).toBe(2);
+    expect(roundHalfEven(-1.5)).toBe(-2);
+    expect(roundHalfEven(2.4999)).toBe(2);
+    expect(toBaseCents(1_000_000, 5.1234)).toBe(5_123_400);
+    expect(toBaseCents(3, 0.5)).toBe(2);
+    expect(toBaseCents(1, 0.5)).toBe(0);
+    expect(toBaseCents(100, 1)).toBe(100);
+  });
+  it('semana começa na segunda; mês como chave', () => {
+    expect(startOfWeek('2026-10-18')).toBe('2026-10-12');
+    expect(startOfWeek('2026-10-19')).toBe('2026-10-19');
+    expect(monthKey('2026-02-28')).toBe('2026-02');
+  });
+  it('formata indicador monetário', () => {
+    expect(formatIndicator({ format: 'money', value: 123456 })).toBe('R$ 1.234,56');
+    expect(formatIndicator({ format: 'money', value: null })).toBe('n/a');
+    expect(formatIndicator({ format: 'ratio', value: 0.8 })).toBe('0,80');
+  });
+});
+
+describe('downloadText', () => {
+  it('só revoga a URL do blob depois que o navegador teve tempo de iniciar o download', () => {
+    vi.useFakeTimers();
+    const create = vi.fn(() => 'blob:x');
+    const revoke = vi.fn();
+    Object.assign(URL, { createObjectURL: create, revokeObjectURL: revoke });
+    downloadText('a.json', '{}');
+    expect(create).toHaveBeenCalledOnce();
+    expect(revoke).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(30_000);
+    expect(revoke).toHaveBeenCalledWith('blob:x');
+    vi.useRealTimers();
   });
 });

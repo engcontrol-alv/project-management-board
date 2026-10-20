@@ -71,7 +71,15 @@ function FieldControl({
     case 'date':
       return wrap(<input id={id} type="date" value={str} onChange={(e) => onChange(e.target.value || null)} />);
     case 'boolean':
-      return wrap(<input id={id} type="checkbox" checked={value === true} onChange={(e) => onChange(e.target.checked)} />);
+      // Um objeto presente conta como marcado (ex.: "Analisar" liga/desliga o bloco `analysis`).
+      return wrap(
+        <input
+          id={id}
+          type="checkbox"
+          checked={value === true || (value !== null && typeof value === 'object')}
+          onChange={(e) => onChange(e.target.checked)}
+        />,
+      );
     case 'number':
       return wrap(
         <input

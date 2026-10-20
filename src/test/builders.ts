@@ -1,11 +1,16 @@
 /* Builders de snapshot para testes: aSnapshot().withPackage(...).build() */
 import type { ProjectId } from '@/core/ids';
-import type { Party } from '@/modules/stakeholders';
+import type { Communication, Party } from '@/modules/stakeholders';
+import type { BudgetLine, Procurement } from '@/modules/finances';
+import type { Risk } from '@/modules/risks';
+import type { Allocation, Resource } from '@/modules/resources';
+import type { ImplementedModuleId } from '@/project/registry';
 import type { ChangeRequest, Deliverable, Requirement, WbsNode } from '@/modules/scope';
 import type { Milestone } from '@/modules/schedule';
 import type { GovernanceProfile, Lesson, Meeting, Norm } from '@/modules/governance';
 import type { Baseline } from '@/project/baseline';
 import { defaultConfig } from '@/project/config';
+import { SCHEMA_VERSION } from '@/project/migrations';
 import type { Project, ProjectConfig } from '@/project/project';
 import { emptySnapshot, type ProjectSnapshot } from '@/project/snapshot';
 import type { CommandContext } from '@/commands/run';
@@ -15,7 +20,7 @@ export const PROJECT_START = '2026-01-05';
 export function aProject(o: Partial<Project> = {}): Project {
   return {
     id: 'proj-1' as ProjectId,
-    schemaVersion: 1,
+    schemaVersion: SCHEMA_VERSION,
     info: { name: 'Projeto Teste', code: 'PT-01', startDate: PROJECT_START },
     config: defaultConfig(),
     statusDate: null,
@@ -45,7 +50,7 @@ export class SnapshotBuilder {
     return this.withProject({ statusDate: d });
   }
   withParty(...ps: Party[]) {
-    this.s.stakeholders = { parties: { ...this.s.stakeholders.parties, ...byId(ps) } };
+    this.s.stakeholders = { ...this.s.stakeholders, parties: { ...this.s.stakeholders.parties, ...byId(ps) } };
     return this;
   }
   withRequirement(...rs: Requirement[]) {
@@ -83,6 +88,39 @@ export class SnapshotBuilder {
   withProfile(fn: (p: GovernanceProfile) => GovernanceProfile) {
     this.s.governance = { ...this.s.governance, profile: fn(this.s.governance.profile) };
     return this;
+  }
+  withCommunication(...cs: Communication[]) {
+    this.s.stakeholders = { ...this.s.stakeholders, communications: { ...this.s.stakeholders.communications, ...byId(cs) } };
+    return this;
+  }
+  withBudgetLine(...ls: BudgetLine[]) {
+    this.s.finances = { ...this.s.finances, budgetLines: { ...this.s.finances.budgetLines, ...byId(ls) } };
+    return this;
+  }
+  withProcurement(...ps: Procurement[]) {
+    this.s.finances = { ...this.s.finances, procurements: { ...this.s.finances.procurements, ...byId(ps) } };
+    return this;
+  }
+  withRisk(...rs: Risk[]) {
+    this.s.risks = { risks: { ...this.s.risks.risks, ...byId(rs) } };
+    return this;
+  }
+  withResource(...rs: Resource[]) {
+    this.s.resources = { ...this.s.resources, resources: { ...this.s.resources.resources, ...byId(rs) } };
+    return this;
+  }
+  withAllocation(...as: Allocation[]) {
+    this.s.resources = { ...this.s.resources, allocations: { ...this.s.resources.allocations, ...byId(as) } };
+    return this;
+  }
+  /** Liga/desliga ou troca os parâmetros de um módulo. */
+  withModule(id: ImplementedModuleId, o: { enabled?: boolean; settings?: unknown }) {
+    const current = this.s.project.config.modules[id];
+    const modules = {
+      ...this.s.project.config.modules,
+      [id]: { enabled: o.enabled ?? current?.enabled ?? true, settings: o.settings ?? current?.settings },
+    };
+    return this.withProject({ config: { modules } });
   }
   withBaseline(...bs: Baseline[]) {
     this.s = { ...this.s, baselines: [...this.s.baselines, ...bs] };

@@ -8,6 +8,7 @@ import { readFileText } from '@/platform/transfer/file';
 import { projectInfoSchema, type ProjectInfo } from '@/project/project';
 import { parseImportText } from '@/project/serialization';
 import type { ProjectSnapshot } from '@/project/snapshot';
+import { BrandMark } from '@/shared/ui/BrandMark';
 
 const LABELS = { name: 'Nome', code: 'Código', startDate: 'Data de início' };
 
@@ -46,9 +47,7 @@ export function StartPage({
     <div className="start">
       <header className="start-hero">
         <div className="row" style={{ gap: 10 }}>
-          <span className="brand-mark" aria-hidden="true">
-            PMB
-          </span>
+          <BrandMark />
           <span className="brand">Project Management Board</span>
         </div>
         <h1>Governança, escopo e cronograma de um projeto, em um só painel.</h1>

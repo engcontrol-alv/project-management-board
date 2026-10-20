@@ -45,9 +45,11 @@ export class DexieProjectRepository implements ProjectRepository {
     const data: Record<string, unknown[]> = {};
     for (const def of ALL_COLLECTIONS)
       data[def.table] = ((await this.db.table(def.table).toArray()) as Row[]).map(strip);
+    // A versão vem do próprio projeto gravado, para que parseExport → migrateExport rode também na carga.
+    const stored = projects[0]?.schemaVersion;
     return {
       format: 'pmb-export',
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: typeof stored === 'number' ? stored : SCHEMA_VERSION,
       exportedAt: '',
       project: projects[0],
       baselines,

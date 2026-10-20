@@ -160,7 +160,7 @@ O predicado mora no módulo-alvo (ex.: `stakeholders` declara `isPerson`, `isSup
 | `INDICATORS` | `analytics/indicators/registry.ts` | `(ctx: AnalysisContext) => ModuleIndicators` por módulo (KPIs, RAG, alertas) |
 | `VIEWS` | `app/registry.ts` | `ModuleView` por módulo: `{ id, sections: SectionDef[], examples, reportSection? }` |
 
-Os três são `{ [K in ImplementedModuleId]: … }`: esquecer um módulo é erro de compilação. `ImplementedModuleId` cresce por etapa (Etapa 1: `governance | scope | schedule | stakeholders`). A divisão em três existe só para respeitar as camadas (lógica sem React; indicadores precisam de `analytics`; telas precisam de React).
+Os três são `{ [K in ImplementedModuleId]: … }`: esquecer um módulo é erro de compilação. `ImplementedModuleId` cresce por etapa (Etapa 1: `governance | scope | schedule | stakeholders`; Etapa 2: os 7 — `ImplementedModuleId = ModuleId`). A divisão em três existe só para respeitar as camadas (lógica sem React; indicadores precisam de `analytics`; telas precisam de React).
 
 ### 4.3 Configuração por projeto
 ```ts
@@ -297,6 +297,7 @@ Assim as regras ficam testáveis sem banco (comandos e `applyChangeset` são pur
 - `SCHEMA_VERSION` único para dados e banco. Cada etapa que adiciona coleções incrementa a versão: `db.version(n).stores(buildStores(manifestsDaVersao(n)))`.
 - Migrações de dados são funções sobre o **formato de exportação** (`ExportV_n → ExportV_n+1`), usadas pela importação e pelo `.upgrade()` do Dexie (lê tudo → migra → regrava). Uma implementação, dois usos.
 - Fixture dourada por versão em `src/project/__fixtures__/export-v<n>.json`; teste garante migração até a atual.
+- O dump do banco (`readRaw`) usa o `schemaVersion` **gravado no projeto**, não a constante, para que a migração também rode na carga. As tabelas de cada versão anterior ficam congeladas em `project/migrations.ts` (`STORES_V1`), e `db.version(n).upgrade()` aplica `migrateRows` às linhas — a mesma função da importação. Etapa 2: v1 → v2 adiciona `analysis: null` às partes e os parâmetros padrão de Partes Interessadas.
 
 ## 7. Export / Import JSON
 

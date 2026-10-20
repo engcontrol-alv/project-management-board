@@ -11,6 +11,7 @@ const person = {
   contact: '',
   internal: 'Interno',
   notes: '',
+  analysis: null,
 };
 const org = {
   id: 'o1',
@@ -23,6 +24,7 @@ const org = {
   contact: '',
   internal: 'Externo',
   notes: '',
+  analysis: null,
 };
 
 describe('partySchema', () => {

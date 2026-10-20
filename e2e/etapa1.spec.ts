@@ -142,7 +142,7 @@ test('Critérios 5 e 6: atraso crítico gera alerta; LB só muda por mudança ap
   // Data de status antes do início: o cálculo depende só do plano (sem reprojeção).
   await page.getByLabel('Data de status').fill('2026-01-04');
 
-  await go(page, '/projeto/governance/painel');
+  await go(page, '/projeto/geral');
   await page.getByRole('button', { name: 'Definir linha de base' }).click();
   await expect(page.getByText('Linha de base v1')).toBeVisible();
 
@@ -152,7 +152,7 @@ test('Critérios 5 e 6: atraso crítico gera alerta; LB só muda por mudança ap
   await page.getByRole('dialog').getByLabel('Duração (dias corridos)').fill('12');
   await save(page);
 
-  await go(page, '/projeto/governance/painel');
+  await go(page, '/projeto/geral');
   await expect(page.getByLabel('RAG Cronograma')).toContainText('RAG Vermelho');
   await expect(page.getByText('Marco M-001 previsto 7 dias após a linha de base — considerar solicitação de mudança')).toBeVisible();
   await expect(page.getByText('Linha de base v1')).toBeVisible();
@@ -169,7 +169,7 @@ test('Critérios 5 e 6: atraso crítico gera alerta; LB só muda por mudança ap
   await page.getByRole('button', { name: 'Aplicar à linha de base' }).click();
   await expect(page.getByRole('cell', { name: 'Implementada', exact: true })).toBeVisible();
 
-  await go(page, '/projeto/governance/painel');
+  await go(page, '/projeto/geral');
   await expect(page.getByText('Linha de base v2')).toBeVisible();
   await expect(page.getByText(/Marco M-001 previsto/)).toHaveCount(0);
   await page.getByRole('button', { name: 'Consultar v1' }).click();
@@ -189,7 +189,7 @@ test('Critérios 11 e 12: definições da Governança, entregável exige categor
   await expect(page.getByText('Contratações deste projeto não compõem receita própria.')).toBeVisible();
   await page.getByRole('button', { name: 'Salvar' }).click();
 
-  await go(page, '/projeto/governance/painel');
+  await go(page, '/projeto/geral');
   await expect(page.getByText('ISO 9001:2015')).toBeVisible();
   await expect(page.getByText('Externo (cliente)')).toBeVisible();
   await expect(page.getByText(/Modalidade: Concorrência/)).toBeVisible();

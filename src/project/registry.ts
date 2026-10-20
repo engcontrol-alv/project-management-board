@@ -1,21 +1,35 @@
 import type { CollectionDef, ModuleId, ModuleManifest } from '@/core/module-contract';
+import { financesManifest } from '@/modules/finances';
 import { governanceManifest } from '@/modules/governance';
+import { resourcesManifest } from '@/modules/resources';
+import { risksManifest } from '@/modules/risks';
 import { scopeManifest } from '@/modules/scope';
 import { scheduleManifest } from '@/modules/schedule';
 import { stakeholdersManifest } from '@/modules/stakeholders';
 
-/** Módulos implementados nesta etapa (cresce a cada etapa). */
-export type ImplementedModuleId = 'governance' | 'scope' | 'schedule' | 'stakeholders';
+/** Módulos implementados (Etapa 2: os 7 domínios). */
+export type ImplementedModuleId = ModuleId;
 
 export const MANIFESTS = {
   governance: governanceManifest,
   scope: scopeManifest,
   schedule: scheduleManifest,
+  finances: financesManifest,
+  risks: risksManifest,
+  resources: resourcesManifest,
   stakeholders: stakeholdersManifest,
 } satisfies { [K in ImplementedModuleId]: ModuleManifest };
 
-/** Ordem de exibição: Governança primeiro. */
-export const MODULE_ORDER: ImplementedModuleId[] = ['governance', 'scope', 'schedule', 'stakeholders'];
+/** Ordem de exibição dos 7 domínios (barra, semáforo e configuração): Governança primeiro. */
+export const MODULE_ORDER: ImplementedModuleId[] = [
+  'governance',
+  'scope',
+  'schedule',
+  'resources',
+  'finances',
+  'risks',
+  'stakeholders',
+];
 
 export function isImplemented(id: string): id is ImplementedModuleId {
   return (MODULE_ORDER as string[]).includes(id);

@@ -8,6 +8,12 @@ import {
   aPackage,
   aPerson,
   aRequirement,
+  anAllocation,
+  aBudgetLine,
+  aProcurement,
+  aResource,
+  aRisk,
+  aSupplier,
 } from '@/test/factories';
 import { aSnapshot } from '@/test/builders';
 import { findIntegrityErrors, whereUsed } from './integrity';
@@ -102,8 +108,8 @@ describe('export/import', () => {
     expect(msg('{"a":')?.message).toBe('O arquivo não é um JSON válido.');
     expect(msg('{"x":1}')?.message).toBe('O arquivo não é uma exportação do Project Management Board.');
     const file = toExport(full(), 'now');
-    expect(msg(JSON.stringify({ ...file, schemaVersion: 2 }))?.message).toBe(
-      'O arquivo foi gerado por uma versão mais nova da aplicação (versão de dados 2; suportada até 1).',
+    expect(msg(JSON.stringify({ ...file, schemaVersion: 3 }))?.message).toBe(
+      'O arquivo foi gerado por uma versão mais nova da aplicação (versão de dados 3; suportada até 2).',
     );
     const orphans = Array.from({ length: 12 }, (_, i) =>
       aRequirement({ id: `r${i}` as never, code: `REQ-${i}`, ownerId: 'nada' as never }),
@@ -118,5 +124,44 @@ describe('export/import', () => {
   it('nome do arquivo de exportação', () => {
     const s = aSnapshot().withProject({ info: { name: 'x', code: 'OBRA 12/A', startDate: '2026-01-05' } }).build();
     expect(exportFileName(s, '2026-10-17')).toBe('pmb-obra-12-a-2026-10-17.json');
+  });
+});
+
+describe('integridade da etapa 2', () => {
+  it('contratação: fornecedor obrigatório e restrito a organização fornecedora', () => {
+    const noSupplier = aSnapshot().withProcurement(aProcurement({ supplierId: null })).build();
+    expect(findIntegrityErrors(noSupplier)).toEqual(['CTR-001 Painéis de automação: fornecedor é obrigatório']);
+    const person = aSnapshot().withParty(aPerson({ id: 'sup1' as never })).withProcurement(aProcurement()).build();
+    expect(findIntegrityErrors(person)).toEqual([
+      'CTR-001 Painéis de automação: fornecedor deve ser uma organização com papel Fornecedor ou Prestador de serviço',
+    ]);
+    const client = aSnapshot().withParty(aSupplier({ roles: ['Cliente'] })).withProcurement(aProcurement()).build();
+    expect(findIntegrityErrors(client)).toHaveLength(1);
+    const ok = aSnapshot().withParty(aSupplier({ roles: ['Prestador de serviço'] })).withProcurement(aProcurement()).build();
+    expect(findIntegrityErrors(ok)).toEqual([]);
+  });
+
+  it('alocação exige recurso existente; risco só aponta para pacotes de trabalho', () => {
+    const s = aSnapshot()
+      .withPackage(aGroup({ id: 'G', code: '1' }))
+      .withAllocation(anAllocation({ resourceId: 'nope' as never }))
+      .withRisk(aRisk({ workPackageIds: ['G' as never] }))
+      .build();
+    const errors = findIntegrityErrors(s);
+    expect(errors).toContain('ALO-001 2026-01-05 → 2026-01-09 (50%): recurso aponta para um registro inexistente');
+    expect(errors).toContain('R-001 Atraso na importação do CLP: pacotes deve ser um pacote de trabalho');
+  });
+
+  it('whereUsed do pacote inclui finanças, riscos e alocações', () => {
+    const s = aSnapshot()
+      .withParty(aSupplier())
+      .withResource(aResource())
+      .withPackage(aPackage({ id: 'A', code: '1' }))
+      .withProcurement(aProcurement({ workPackageId: 'A' as never }))
+      .withBudgetLine(aBudgetLine({ workPackageId: 'A' as never }))
+      .withRisk(aRisk({ workPackageIds: ['A' as never] }))
+      .withAllocation(anAllocation({ workPackageId: 'A' as never }))
+      .build();
+    expect(whereUsed(s, 'A').map((u) => u.collection).sort()).toEqual(['allocations', 'budgetLines', 'procurements', 'risks']);
   });
 });

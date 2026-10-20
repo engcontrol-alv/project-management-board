@@ -20,7 +20,13 @@ export const RECORD_SECTIONS: Record<string, string> = {
   'governance.norms': '/projeto/governance/normas',
   'governance.meetings': '/projeto/governance/reunioes',
   'governance.lessons': '/projeto/governance/licoes',
-  'stakeholders.parties': '/projeto/pessoas',
+  'stakeholders.parties': '/projeto/pessoas', // redireciona ao cadastro do módulo quando ligado
+  'stakeholders.communications': '/projeto/stakeholders/comunicacao',
+  'finances.budgetLines': '/projeto/finances/orcamento',
+  'finances.procurements': '/projeto/finances/contratacoes',
+  'risks.risks': '/projeto/risks/registro',
+  'resources.resources': '/projeto/resources/recursos',
+  'resources.allocations': '/projeto/resources/alocacoes',
 };
 
 export const NEW_CHANGE_REQUEST_PATH = '/projeto/scope/mudancas?nova=1';

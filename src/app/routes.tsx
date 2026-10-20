@@ -4,6 +4,7 @@ import { useAnalysis } from '@/platform/react/hooks';
 import { isImplemented, MANIFESTS } from '@/project/registry';
 import { VIEWS } from './registry';
 import { ConfigPage } from './ui/ConfigPage';
+import { GeralPage } from './ui/GeralPage';
 import { ProjectLayout } from './ui/ProjectLayout';
 
 function ModuleSection() {
@@ -21,16 +22,24 @@ function ModuleSection() {
   return <>{section.element}</>;
 }
 
+/** Com Partes Interessadas ligado, o cadastro vive nas seções do módulo. */
+function PeopleRoute() {
+  const analysis = useAnalysis();
+  if (analysis?.config.enabled.stakeholders) return <Navigate to="/projeto/stakeholders/cadastro" replace />;
+  return <PartiesPage />;
+}
+
 export function buildRoutes(): RouteObject[] {
   return [
-    { path: '/', element: <Navigate to="/projeto/governance/painel" replace /> },
+    { path: '/', element: <Navigate to="/projeto/geral" replace /> },
     {
       path: '/projeto',
       element: <ProjectLayout />,
       children: [
-        { index: true, element: <Navigate to="/projeto/governance/painel" replace /> },
+        { index: true, element: <Navigate to="/projeto/geral" replace /> },
+        { path: 'geral', element: <GeralPage /> },
         { path: 'configuracao', element: <ConfigPage /> },
-        { path: 'pessoas', element: <PartiesPage /> },
+        { path: 'pessoas', element: <PeopleRoute /> },
         { path: ':modulo', element: <ModuleSection /> },
         { path: ':modulo/:secao', element: <ModuleSection /> },
       ],

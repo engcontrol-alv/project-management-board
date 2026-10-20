@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, Sparkles, Trash2, Upload } from 'lucide-react';
+import { Download, FilePlus2, Sparkles, Trash2, Upload } from 'lucide-react';
 import { newId } from '@/shared/lib/ids';
 import { Card } from '@/shared/ui/Card';
 import { downloadText } from '@/shared/lib/download';
@@ -18,6 +18,7 @@ export function DataMenu() {
   const actions = useAppActions();
   const [preview, setPreview] = useState<{ snapshot: ProjectSnapshot; summary: ImportSummary } | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [confirmNew, setConfirmNew] = useState(false);
 
   const exportNow = () => {
     if (!snapshot) return;
@@ -37,8 +38,18 @@ export function DataMenu() {
     setPreview({ snapshot: demo, summary: summarize(demo) });
   };
 
+  // Sair do projeto atual (ex.: o demo) e voltar à tela inicial — confirmação simples, sem digitar palavra.
+  const startNew = () => {
+    setConfirmNew(false);
+    window.location.hash = '#/';
+    void actions.clearAll();
+  };
+
   return (
     <>
+      <button className="btn btn-sm btn-ghost" title="Novo Projeto" onClick={() => setConfirmNew(true)}>
+        <FilePlus2 size={14} aria-hidden="true" /> Novo Projeto
+      </button>
       <label className="btn btn-sm btn-ghost" htmlFor="data-import" title="Importar">
         <Upload size={14} aria-hidden="true" /> Importar
       </label>
@@ -58,6 +69,37 @@ export function DataMenu() {
           e.target.value = '';
         }}
       />
+
+      <Dialog
+        open={confirmNew}
+        title="Começar um novo projeto?"
+        onClose={() => setConfirmNew(false)}
+        actions={
+          <>
+            <button className="btn" onClick={exportNow} disabled={!snapshot}>
+              Exportar o atual
+            </button>
+            <button className="btn" onClick={() => setConfirmNew(false)}>
+              Cancelar
+            </button>
+            <button className="btn btn-primary" onClick={startNew}>
+              Apagar e começar novo
+            </button>
+          </>
+        }
+      >
+        <div className="notice">Exporte o projeto atual antes se quiser guardá-lo.</div>
+        <p style={{ marginBottom: 0 }}>
+          {snapshot ? (
+            <>
+              <strong>{snapshot.project.info.name}</strong> <span className="tb-mono">{snapshot.project.info.code}</span> será
+              apagado deste navegador e você voltará à tela inicial para criar ou importar um projeto.
+            </>
+          ) : (
+            'O projeto atual será apagado deste navegador.'
+          )}
+        </p>
+      </Dialog>
 
       <Dialog
         open={importError !== null}

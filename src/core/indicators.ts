@@ -4,7 +4,7 @@ export type Indicator = {
   id: string;
   label: string;
   value: number | null;
-  format: 'ratio' | 'percent' | 'count' | 'days';
+  format: 'ratio' | 'percent' | 'count' | 'days' | 'money';
 };
 
 export type AlertAction =

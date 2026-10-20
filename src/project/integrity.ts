@@ -1,5 +1,6 @@
 import { readPath, type ModuleId } from '@/core/module-contract';
 import { findCycle } from '@/modules/scope';
+import { resolveConfig } from './config';
 import { ALL_COLLECTIONS, getCollection, manifestOf } from './registry';
 import { getItems, type ProjectSnapshot } from './snapshot';
 
@@ -62,10 +63,29 @@ export function findIntegrityErrors(s: ProjectSnapshot): string[] {
     }
   }
 
+  errors.push(...findSettingsErrors(s));
+
   const cycle = findCycle(s.scope.wbs);
   if (cycle) {
     const codes = [...cycle, cycle[0]!].map((id) => s.scope.wbs[id]?.code ?? id);
     errors.push(`A EAP tem dependência circular: ${codes.join(' → ')}`);
   }
+  return errors;
+}
+
+/** Regras que dependem dos parâmetros do projeto: moedas aceitas, taxa para a base e categorias de risco. */
+export function findSettingsErrors(s: ProjectSnapshot): string[] {
+  const { settings } = resolveConfig(s.project.config);
+  const { baseCurrency, currencies } = settings.finances;
+  const errors: string[] = [];
+  const items = [...Object.values(s.finances.budgetLines), ...Object.values(s.finances.procurements)];
+  for (const i of items) {
+    if (!(currencies as string[]).includes(i.currency)) errors.push(`${i.code}: moeda ${i.currency} não aceita neste projeto`);
+    else if (i.currency !== baseCurrency && i.rate === null) errors.push(`${i.code}: informe a taxa para ${baseCurrency}`);
+  }
+  const categories = new Set(settings.risks.categories);
+  for (const r of Object.values(s.risks.risks))
+    if (!categories.has(r.category))
+      errors.push(`${r.code}: categoria "${r.category}" não está na lista de categorias de risco`);
   return errors;
 }

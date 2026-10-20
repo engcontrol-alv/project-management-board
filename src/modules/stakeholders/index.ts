@@ -1,2 +1,4 @@
 export * from './model/party';
-export { stakeholdersManifest } from './manifest';
+export * from './model/communication';
+export * from './domain/engagement';
+export { stakeholdersManifest, type StakeholdersSettings } from './manifest';

@@ -4,7 +4,13 @@
  * a Curva S e os alertas apareçam "em andamento" em qualquer dia.
  */
 import type {
+  AllocationId,
+  BudgetLineId,
   ChangeRequestId,
+  CommunicationId,
+  ProcurementId,
+  ResourceId,
+  RiskId,
   DeliverableId,
   LessonId,
   MeetingId,
@@ -18,7 +24,10 @@ import { addDays, type IsoDate } from '@/shared/lib/dates';
 import type { Lesson, Meeting, Norm } from '@/modules/governance';
 import type { ChangeRequest, Deliverable, Requirement, WbsNode } from '@/modules/scope';
 import type { Milestone, ScheduleSettings } from '@/modules/schedule';
-import type { Organization, Person } from '@/modules/stakeholders';
+import type { Communication, Organization, Person, StakeholderAnalysis } from '@/modules/stakeholders';
+import type { BudgetLine, Procurement } from '@/modules/finances';
+import type { Risk } from '@/modules/risks';
+import type { Allocation, Resource } from '@/modules/resources';
 import { snapshotBaseline } from '@/analytics/baseline-snapshot';
 import { deriveProject } from '@/analytics/derive';
 import { newProjectSnapshot } from '@/commands/project';
@@ -53,11 +62,13 @@ export function buildDemoSnapshot(ctx: CommandContext): ProjectSnapshot {
   const buyer = id<PartyId>();
   const sponsor = id<PartyId>();
   const clientRep = id<PartyId>();
+  const integrator = id<PartyId>();
+  const distributor = id<PartyId>();
   const person = (pid: PartyId, code: string, name: string, position: string, org: PartyId | null, internal: 'Interno' | 'Externo'): Person => ({
-    id: pid, kind: 'Pessoa', code, name, position, organizationId: org, contact: '', internal, notes: '',
+    id: pid, kind: 'Pessoa', code, name, position, organizationId: org, contact: '', internal, notes: '', analysis: null,
   });
   const org = (pid: PartyId, code: string, name: string, roles: Organization['roles']): Organization => ({
-    id: pid, kind: 'Organização', code, name, roles, taxId: '', country: 'Brasil', contact: '', internal: 'Externo', notes: '',
+    id: pid, kind: 'Organização', code, name, roles, taxId: '', country: 'Brasil', contact: '', internal: 'Externo', notes: '', analysis: null,
   });
   const parties = [
     org(client, 'PI-001', 'Bebidas Exemplo Indústria S.A.', ['Cliente']),
@@ -67,7 +78,32 @@ export function buildDemoSnapshot(ctx: CommandContext): ProjectSnapshot {
     person(buyer, 'PI-005', 'Juliana Prado', 'Coordenadora de suprimentos', null, 'Interno'),
     person(sponsor, 'PI-006', 'Eduardo Lins', 'Diretor de operações', null, 'Interno'),
     person(clientRep, 'PI-007', 'Marcos Tavares', 'Gerente de engenharia da planta', client, 'Externo'),
+    org(integrator, 'PI-008', 'Integradora SCADA e Montagens Exemplo Ltda.', ['Prestador de serviço']),
+    org(distributor, 'PI-009', 'Distribuidora de Automação Fictícia Ltda.', ['Fornecedor']),
   ];
+  // Análise Poder × Interesse e engajamento (módulo Partes Interessadas).
+  const analysis = (a: Partial<StakeholderAnalysis>): StakeholderAnalysis => ({
+    interests: '', power: 'Alto', interest: 'Alto', currentPosture: 'Apoiador', desiredPosture: 'Apoiador',
+    engagementStrategy: '', relationshipOwnerId: pm, ...a,
+  });
+  const analyses: Record<string, StakeholderAnalysis> = {
+    [client]: analysis({ interests: 'OEE da linha e rastreabilidade de lotes', engagementStrategy: 'Comitê mensal e relatório semanal' }),
+    [supplier]: analysis({
+      interests: 'Prazo de fabricação dos painéis', currentPosture: 'Neutro',
+      engagementStrategy: 'Diligenciamento quinzenal na fábrica', relationshipOwnerId: buyer,
+    }),
+    [sponsor]: analysis({ interests: 'Retorno do investimento e prazo da partida' }),
+    [clientRep]: analysis({
+      interests: 'Aprovação técnica da engenharia', currentPosture: 'Neutro',
+      engagementStrategy: 'Revisões técnicas antes de cada emissão',
+    }),
+    [integrator]: analysis({ power: 'Baixo', interests: 'Escopo do software CLP/SCADA', relationshipOwnerId: eng }),
+    [distributor]: analysis({
+      interest: 'Baixo', currentPosture: 'Neutro', interests: 'Pedido do CLP importado',
+      engagementStrategy: 'Acompanhar a importação', relationshipOwnerId: buyer,
+    }),
+  };
+  for (const p of parties) p.analysis = analyses[p.id] ?? null;
 
   // ─── EAP (plano original; o progresso real é aplicado depois da LB) ───
   const w: Record<string, WorkPackageId> = {};
@@ -241,11 +277,178 @@ export function buildDemoSnapshot(ctx: CommandContext): ProjectSnapshot {
     },
   ];
 
+  // ─── Finanças: linhas de orçamento (custos e receitas) e contratações ligadas a fornecedores ───
+  const [, , m3, m4, m5] = milestones.map((x) => x.id);
+  const line = (code: string, description: string, o: Partial<BudgetLine>): BudgetLine => ({
+    id: id<BudgetLineId>(), code, description, kind: 'Custo', nature: 'OPEX', category: 'Mão de obra', currency: 'BRL',
+    rate: null, budgetedCents: 0, actualCents: 0, plannedDate: null, actualDate: null, status: 'Planejado',
+    workPackageId: null, milestoneId: null, partyId: null, ownerId: pm, ...o,
+  });
+  const billing = { kind: 'Receita', category: 'Marco contratual/Faturamento', partyId: client } as const;
+  const budgetLines = [
+    line('ORC-001', 'Gestão do projeto e planejamento', {
+      workPackageId: w['1.1'], budgetedCents: 3_000_000, actualCents: 3_000_000, plannedDate: day(8), actualDate: day(8), status: 'Realizado',
+    }),
+    line('ORC-002', 'Engenharia de arquitetura de controle', {
+      workPackageId: w['2.2'], budgetedCents: 6_000_000, actualCents: 7_400_000, plannedDate: day(24), actualDate: day(25),
+      status: 'Realizado', ownerId: eng,
+    }),
+    line('ORC-003', 'Projeto dos diagramas elétricos e de interligação', {
+      workPackageId: w['2.3'], budgetedCents: 7_500_000, actualCents: 9_800_000, plannedDate: day(39), actualDate: day(45),
+      status: 'Em andamento', ownerId: eng,
+    }),
+    line('ORC-004', 'Logística e transporte dos painéis', { category: 'Logística', workPackageId: w['4.1'], budgetedCents: 2_800_000, plannedDate: day(96) }),
+    line('ORC-005', 'Comissionamento e partida assistida', { workPackageId: w['5.1'], budgetedCents: 5_500_000, plannedDate: day(130) }),
+    line('ORC-006', 'Reserva de contingência (8%)', {
+      category: 'Contingência', budgetedCents: 9_000_000, actualCents: 1_200_000, actualDate: day(46), status: 'Em andamento',
+    }),
+    line('ORC-007', 'Faturamento de 30% — engenharia aprovada', { ...billing, milestoneId: m3, budgetedCents: 45_000_000, plannedDate: day(60) }),
+    line('ORC-008', 'Faturamento de 40% — TAF/FAT aprovado', { ...billing, milestoneId: m4, budgetedCents: 60_000_000, plannedDate: day(100) }),
+    line('ORC-009', 'Faturamento de 30% — partida da linha', { ...billing, milestoneId: m5, budgetedCents: 45_000_000, plannedDate: day(140) }),
+  ];
+  const c: Record<string, ProcurementId> = {};
+  const proc = (code: string, description: string, supplierId: PartyId, o: Partial<Procurement>): Procurement => {
+    c[code] = id<ProcurementId>();
+    return {
+      id: c[code]!, code, description, type: 'Produto', nature: 'CAPEX', supplierId, origin: 'Nacional', country: '',
+      currency: 'BRL', rate: null, workPackageId: null, milestoneId: null, criticality: 'Média', ownerId: buyer,
+      budgetedCents: 0, committedCents: 0, actualCents: 0, contractStatus: 'A solicitar', deliveryStatus: 'Não iniciado',
+      requestDate: null, dueDate: null, completionDate: null, ...o,
+    };
+  };
+  const procurements = [
+    // Entrega prevista depois do TAF/FAT: o painel avisa que ela ameaça o marco M-004.
+    proc('CTR-001', 'CLP redundante e remotas de I/O PROFINET', distributor, {
+      origin: 'Importado', country: 'Alemanha', currency: 'EUR', rate: 6.2, criticality: 'Alta', workPackageId: w['3.1'],
+      milestoneId: m4, budgetedCents: 18_000_000, committedCents: 18_000_000, actualCents: 9_000_000,
+      contractStatus: 'Pedido emitido', deliveryStatus: 'Em produção', requestDate: day(35), dueDate: day(102),
+    }),
+    // Comprometido acima do orçado: aditivo da inspeção por visão (MUD-001) ainda em análise.
+    proc('CTR-002', 'Fabricação dos painéis de automação', supplier, {
+      criticality: 'Alta', workPackageId: w['3.2'], milestoneId: m4, budgetedCents: 42_000_000, committedCents: 44_500_000,
+      contractStatus: 'Contratado', requestDate: day(40), dueDate: day(88),
+    }),
+    proc('CTR-003', 'Instrumentos de campo (transmissores e válvulas)', distributor, {
+      workPackageId: w['3.1'], budgetedCents: 9_500_000, committedCents: 9_200_000, actualCents: 9_200_000,
+      contractStatus: 'Pedido emitido', deliveryStatus: 'Recebido', requestDate: day(36), dueDate: day(48), completionDate: day(48),
+    }),
+    proc('CTR-004', 'Desenvolvimento do software de CLP e telas SCADA', integrator, {
+      type: 'Serviço', criticality: 'Alta', workPackageId: w['3.2'], budgetedCents: 16_000_000, committedCents: 16_000_000,
+      contractStatus: 'Contratado', requestDate: day(38), dueDate: day(88),
+    }),
+    proc('CTR-005', 'Licenças do SCADA e servidor de históricos', integrator, {
+      origin: 'Importado', country: 'Estados Unidos', currency: 'USD', rate: 5.4, workPackageId: w['2.4'],
+      budgetedCents: 2_500_000, committedCents: 2_500_000, actualCents: 2_500_000, contractStatus: 'Contratado',
+      deliveryStatus: 'Recebido', requestDate: day(28), dueDate: day(40), completionDate: day(40),
+    }),
+    proc('CTR-006', 'Montagem eletromecânica e lançamento de cabos', integrator, {
+      type: 'Serviço', workPackageId: w['4.1'], budgetedCents: 32_000_000, contractStatus: 'Em cotação', dueDate: day(119),
+    }),
+  ];
+
+  // ─── Riscos (matriz 3×3) ligados a pacotes, marcos, contratações e partes interessadas ───
+  const risk = (code: string, title: string, o: Partial<Risk>): Risk => ({
+    id: id<RiskId>(), code, title, nature: 'Ameaça', category: 'Técnico', description: '', rootCause: '', probability: 2,
+    impact: 2, responseType: null, responseAction: '', ownerId: eng, status: 'Identificado', nextReview: day(ELAPSED + 7),
+    notes: '', probabilityPct: null, costImpactCents: null, scheduleImpactDays: null, workPackageIds: [], milestoneIds: [],
+    deliverableIds: [], procurementIds: [], partyIds: [], ...o,
+  });
+  const risks = [
+    risk('R-001', 'Atraso na importação do CLP redundante', {
+      category: 'Fornecedor/Aquisição', probability: 3, impact: 3, status: 'Em mitigação', responseType: 'Mitigar',
+      responseAction: 'Pedido antecipado e diligenciamento semanal com o distribuidor', ownerId: buyer,
+      rootCause: 'Prazo de fabricação do fabricante e desembaraço aduaneiro', probabilityPct: 40, costImpactCents: 25_000_000,
+      scheduleImpactDays: 20, workPackageIds: [w['3.1']!], milestoneIds: [m4!], procurementIds: [c['CTR-001']!],
+      partyIds: [distributor],
+    }),
+    risk('R-002', 'Falha de comunicação PROFINET no TAF/FAT', {
+      probability: 2, impact: 3, workPackageIds: [w['3.4']!], deliverableIds: [d['ENT-005']!],
+      procurementIds: [c['CTR-002']!, c['CTR-004']!], probabilityPct: 25, costImpactCents: 6_000_000, scheduleImpactDays: 7,
+    }),
+    risk('R-003', 'Nova alteração da lista de I/O pelo cliente', {
+      category: 'Cliente/Contratual', probability: 3, impact: 2, status: 'Em monitoramento', workPackageIds: [w['2.3']!],
+      partyIds: [client, clientRep],
+    }),
+    risk('R-004', 'Não conformidade NR-12 nas proteções dos painéis', {
+      category: 'Segurança/SSMA', probability: 1, impact: 3, responseType: 'Evitar',
+      responseAction: 'Revisão de projeto com especialista em NR-12', partyIds: [supplier], workPackageIds: [w['3.2']!],
+    }),
+    risk('R-005', 'Indisponibilidade do técnico de comissionamento', {
+      category: 'Cronograma', probability: 1, impact: 2, workPackageIds: [w['5.1']!], ownerId: pm,
+    }),
+    risk('R-006', 'Antecipar a montagem com a liberação parcial da área', {
+      nature: 'Oportunidade', category: 'Cronograma', probability: 2, impact: 2, responseType: 'Explorar',
+      responseAction: 'Negociar com o cliente a liberação do mezanino', workPackageIds: [w['4.1']!], ownerId: pm,
+    }),
+    risk('R-007', 'Variação cambial do euro na compra do CLP', {
+      category: 'Custo', probability: 2, impact: 2, status: 'Encerrado', responseType: 'Transferir',
+      responseAction: 'Câmbio travado no fechamento do pedido', procurementIds: [c['CTR-001']!], ownerId: buyer,
+    }),
+  ];
+
+  // ─── Recursos: custo homem-hora e alocações nos pacotes (sobrecarga na semana do TAF/FAT) ───
+  const rc: Record<string, ResourceId> = {};
+  const res = (code: string, name: string, o: Partial<Resource>): Resource => {
+    rc[code] = id<ResourceId>();
+    return {
+      id: rc[code]!, code, name, type: 'Pessoa interna', role: '', skill: '', skillLevel: null, capacityPct: 100,
+      hourlyRateCents: null, personId: null, organizationId: null, ...o,
+    };
+  };
+  const resources = [
+    res('REC-001', 'Engenheiro de automação sênior', {
+      role: 'Engenharia de automação', skill: 'CLP/SCADA', skillLevel: 'Sênior', hourlyRateCents: 18_000, personId: eng,
+    }),
+    res('REC-002', 'Projetista elétrico', { role: 'Projeto elétrico', skill: 'Diagramas e interligação', skillLevel: 'Pleno', hourlyRateCents: 11_000 }),
+    res('REC-003', 'Programador CLP/SCADA', {
+      type: 'Pessoa terceirizada', role: 'Software de automação', skill: 'IEC 61131-3', skillLevel: 'Sênior',
+      hourlyRateCents: 16_000, organizationId: integrator,
+    }),
+    res('REC-004', 'Equipe de montagem elétrica', { type: 'Equipe', role: 'Montagem', hourlyRateCents: 42_000, organizationId: integrator }),
+    res('REC-005', 'Técnico de comissionamento', { role: 'Comissionamento', skill: 'Testes de malha', skillLevel: 'Pleno', hourlyRateCents: 12_000 }),
+    res('REC-006', 'Caminhão munck', { type: 'Equipamento', role: 'Movimentação de painéis', hourlyRateCents: 35_000 }),
+  ];
+  const alloc = (code: string, rCode: string, wCode: string, pct: number, from: number, to: number, status: Allocation['status']): Allocation => ({
+    id: id<AllocationId>(), code, resourceId: rc[rCode]!, workPackageId: w[wCode]!, pct, start: day(from), finish: day(to), status,
+  });
+  const allocations = [
+    alloc('ALO-001', 'REC-001', '2.2', 100, 13, 24, 'Encerrada'),
+    alloc('ALO-002', 'REC-001', '2.3', 60, 25, 43, 'Encerrada'),
+    alloc('ALO-003', 'REC-001', '2.5', 50, 44, 55, 'Ativa'),
+    alloc('ALO-004', 'REC-001', '3.4', 70, 94, 98, 'Planejada'),
+    alloc('ALO-005', 'REC-001', '3.3', 50, 90, 96, 'Planejada'),
+    alloc('ALO-006', 'REC-002', '2.3', 100, 25, 43, 'Encerrada'),
+    alloc('ALO-007', 'REC-003', '3.2', 80, 54, 88, 'Planejada'),
+    alloc('ALO-008', 'REC-004', '4.1', 100, 95, 119, 'Planejada'),
+    alloc('ALO-009', 'REC-005', '5.1', 100, 126, 133, 'Planejada'),
+    alloc('ALO-010', 'REC-006', '4.1', 50, 95, 99, 'Planejada'),
+  ];
+
+  // ─── Plano de comunicação (uma comunicação vencida) ───
+  const com = (code: string, information: string, o: Partial<Communication>): Communication => ({
+    id: id<CommunicationId>(), code, information, recipientIds: [], channel: 'E-mail', frequency: 'Semanal', ownerId: pm,
+    nextDate: null, ...o,
+  });
+  const communications = [
+    com('COM-001', 'Relatório semanal de avanço físico e financeiro', {
+      recipientIds: [sponsor, clientRep, integrator], channel: 'Relatório', nextDate: day(ELAPSED + 2),
+    }),
+    com('COM-002', 'Comitê mensal do projeto', {
+      recipientIds: [sponsor, clientRep, client], channel: 'Reunião', frequency: 'Mensal', nextDate: day(ELAPSED + 7),
+    }),
+    com('COM-003', 'Diligenciamento da fabricação dos painéis', {
+      recipientIds: [supplier], channel: 'Reunião', frequency: 'Quinzenal', ownerId: buyer, nextDate: day(ELAPSED + 5),
+    }),
+    com('COM-004', 'Reemissão da lista de I/O ao cliente', {
+      recipientIds: [client, clientRep], frequency: 'Única', ownerId: eng, nextDate: day(ELAPSED - 4),
+    }),
+  ];
+
   let s: ProjectSnapshot = {
     ...base,
     project: {
       ...base.project,
-      counters: { PI: 7, REQ: 5, ENT: 8, MUD: 2, M: 5, NRM: 5, REU: 3, LIC: 1 },
+      counters: { PI: 9, REQ: 5, ENT: 8, MUD: 2, M: 5, NRM: 5, REU: 3, LIC: 1, ORC: 9, CTR: 6, R: 7, REC: 6, ALO: 10, COM: 4 },
       // Fases de um contrato de engenharia e automação industrial.
       config: {
         modules: {
@@ -257,7 +460,10 @@ export function buildDemoSnapshot(ctx: CommandContext): ProjectSnapshot {
         },
       },
     },
-    stakeholders: { parties: byId(parties) },
+    stakeholders: { parties: byId(parties), communications: byId(communications) },
+    finances: { budgetLines: byId(budgetLines), procurements: byId(procurements) },
+    risks: { risks: byId(risks) },
+    resources: { resources: byId(resources), allocations: byId(allocations) },
     scope: { requirements: byId(requirements), wbs: byId(nodes), deliverables: byId(deliverables), changeRequests: byId(changeRequests) },
     schedule: { milestones: byId(milestones) },
     governance: {
@@ -297,7 +503,7 @@ export function buildDemoSnapshot(ctx: CommandContext): ProjectSnapshot {
     done('2.3', 25, 43),
     done('2.4', 25, 34),
     { code: '2.5', actualStart: day(44), actualFinish: null, percentComplete: 50 },
-    { code: '3.1', actualStart: day(35), actualFinish: null, percentComplete: 65 },
+    { code: '3.1', actualStart: day(35), actualFinish: null, percentComplete: 50 },
   ];
   const wbs = { ...s.scope.wbs };
   for (const p of progress) {

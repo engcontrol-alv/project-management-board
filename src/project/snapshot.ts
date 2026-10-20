@@ -1,5 +1,8 @@
 import type { CollectionDef, Entity } from '@/core/module-contract';
+import { emptyFinancesData, type FinancesData } from '@/modules/finances';
 import { emptyGovernanceData, type GovernanceData } from '@/modules/governance';
+import { emptyResourcesData, type ResourcesData } from '@/modules/resources';
+import { emptyRisksData, type RisksData } from '@/modules/risks';
 import { emptyScopeData, type ScopeData } from '@/modules/scope';
 import { emptyScheduleData, type ScheduleData } from '@/modules/schedule';
 import { emptyStakeholdersData, type StakeholdersData } from '@/modules/stakeholders';
@@ -14,6 +17,9 @@ export type ProjectSnapshot = {
   governance: GovernanceData;
   scope: ScopeData;
   schedule: ScheduleData;
+  finances: FinancesData;
+  risks: RisksData;
+  resources: ResourcesData;
 };
 
 export function emptySnapshot(project: Project): ProjectSnapshot {
@@ -24,6 +30,9 @@ export function emptySnapshot(project: Project): ProjectSnapshot {
     governance: emptyGovernanceData(project.id),
     scope: emptyScopeData(),
     schedule: emptyScheduleData(),
+    finances: emptyFinancesData(),
+    risks: emptyRisksData(),
+    resources: emptyResourcesData(),
   };
 }
 

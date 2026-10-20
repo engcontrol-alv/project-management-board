@@ -49,7 +49,7 @@ export function App({ repository, clock }: { repository: ProjectRepository; cloc
       replaceProject: async (s: ProjectSnapshot) => {
         try {
           await repository.replaceAll(s);
-          window.location.hash = '#/projeto/governance/painel'; // projeto novo/importado abre no painel
+          window.location.hash = '#/projeto/geral'; // projeto novo/importado abre na visão geral
           setState('pronto');
         } catch {
           setState('indisponivel');

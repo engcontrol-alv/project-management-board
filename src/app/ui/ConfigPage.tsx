@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/shared/ui/Card';
 import { ErrorList } from '@/shared/ui/Dialog';
-import { Field } from '@/shared/ui/fields';
+import { Field, MoneyInput } from '@/shared/ui/fields';
+import { CURRENCIES, type FinancesSettings } from '@/modules/finances';
+import type { ResourcesSettings } from '@/modules/resources';
+import type { RisksSettings } from '@/modules/risks';
+import type { StakeholdersSettings } from '@/modules/stakeholders';
 import { setModuleEnabledCmd, updateModuleSettings } from '@/commands/project';
 import { useAnalysis, useCommand } from '@/platform/react/hooks';
 import { dependentsOf } from '@/project/config';
@@ -78,7 +82,6 @@ export function ConfigPage() {
             )}
           </div>
         ))}
-        <p className="muted small">Finanças, Riscos e Recursos chegam nas próximas etapas.</p>
       </Card>
 
       <Card title="Pessoas e organizações">
@@ -88,6 +91,12 @@ export function ConfigPage() {
 
       <GovernanceSettingsForm initial={settings.governance} onSave={(v) => save('governance', v)} />
       {enabled.schedule && <ScheduleSettingsForm initial={settings.schedule} onSave={(v) => save('schedule', v)} />}
+      {enabled.finances && <FinancesSettingsForm initial={settings.finances} onSave={(v) => save('finances', v)} />}
+      {enabled.risks && <RisksSettingsForm initial={settings.risks} onSave={(v) => save('risks', v)} />}
+      {enabled.resources && <ResourcesSettingsForm initial={settings.resources} onSave={(v) => save('resources', v)} />}
+      {enabled.stakeholders && (
+        <StakeholdersSettingsForm initial={settings.stakeholders} onSave={(v) => save('stakeholders', v)} />
+      )}
       <ClearDataCard />
     </div>
   );
@@ -124,7 +133,6 @@ function ScheduleSettingsForm({
   const [green, setGreen] = useState(String(initial.spiGreenMin));
   const [yellow, setYellow] = useState(String(initial.spiYellowMin));
   const [phases, setPhases] = useState(initial.phases.join('\n'));
-  const num = (s: string) => Number(s.replace(',', '.'));
   return (
     <Card title="Parâmetros — Cronograma">
       <div className="form-grid">
@@ -156,6 +164,131 @@ function ScheduleSettingsForm({
         }
       >
         Salvar parâmetros do Cronograma
+      </button>
+    </Card>
+  );
+}
+
+const num = (s: string) => Number(s.replace(',', '.'));
+const lines = (s: string) =>
+  s
+    .split('\n')
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+function FinancesSettingsForm({ initial, onSave }: { initial: FinancesSettings; onSave: (v: unknown) => void }) {
+  const [base, setBase] = useState<string>(initial.baseCurrency);
+  const [accepted, setAccepted] = useState<string[]>(initial.currencies);
+  const [green, setGreen] = useState(String(initial.cpiGreenMin).replace('.', ','));
+  const [yellow, setYellow] = useState(String(initial.cpiYellowMin).replace('.', ','));
+  return (
+    <Card title="Parâmetros — Custos & Finanças">
+      <div className="form-grid">
+        <Field id="cfg-base" label="Moeda base" hint="Todos os totais são convertidos para ela.">
+          <select id="cfg-base" value={base} onChange={(e) => setBase(e.target.value)}>
+            {CURRENCIES.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+        </Field>
+        <Field id="cfg-currencies" label="Moedas aceitas">
+          <div className="checks" id="cfg-currencies">
+            {CURRENCIES.map((c) => (
+              <label key={c}>
+                <input
+                  type="checkbox"
+                  checked={accepted.includes(c)}
+                  onChange={(e) => setAccepted(CURRENCIES.filter((x) => (x === c ? e.target.checked : accepted.includes(x))))}
+                />
+                {c}
+              </label>
+            ))}
+          </div>
+        </Field>
+        <Field id="cfg-cpi-green" label="CPI verde a partir de">
+          <input id="cfg-cpi-green" type="text" value={green} onChange={(e) => setGreen(e.target.value)} />
+        </Field>
+        <Field id="cfg-cpi-yellow" label="CPI amarelo a partir de">
+          <input id="cfg-cpi-yellow" type="text" value={yellow} onChange={(e) => setYellow(e.target.value)} />
+        </Field>
+      </div>
+      <button
+        className="btn"
+        onClick={() => onSave({ baseCurrency: base, currencies: accepted, cpiGreenMin: num(green), cpiYellowMin: num(yellow) })}
+      >
+        Salvar parâmetros de Custos & Finanças
+      </button>
+    </Card>
+  );
+}
+
+function RisksSettingsForm({ initial, onSave }: { initial: RisksSettings; onSave: (v: unknown) => void }) {
+  const [low, setLow] = useState(String(initial.bands.low));
+  const [moderate, setModerate] = useState(String(initial.bands.moderate));
+  const [high, setHigh] = useState(String(initial.bands.high));
+  const [categories, setCategories] = useState(initial.categories.join('\n'));
+  return (
+    <Card title="Parâmetros — Riscos">
+      <p className="muted small">Matriz 3×3 (probabilidade × impacto, pontuação de 1 a 9).</p>
+      <div className="form-grid">
+        <Field id="cfg-low" label="Baixo até a pontuação">
+          <input id="cfg-low" type="number" min={1} value={low} onChange={(e) => setLow(e.target.value)} />
+        </Field>
+        <Field id="cfg-moderate" label="Moderado até a pontuação">
+          <input id="cfg-moderate" type="number" min={1} value={moderate} onChange={(e) => setModerate(e.target.value)} />
+        </Field>
+        <Field id="cfg-high" label="Alto até a pontuação" hint="Acima disso = Crítico.">
+          <input id="cfg-high" type="number" min={1} value={high} onChange={(e) => setHigh(e.target.value)} />
+        </Field>
+        <Field id="cfg-categories" label="Categorias de risco (uma por linha)" className="wide">
+          <textarea id="cfg-categories" rows={5} value={categories} onChange={(e) => setCategories(e.target.value)} />
+        </Field>
+      </div>
+      <button
+        className="btn"
+        onClick={() =>
+          onSave({
+            scale: 3,
+            bands: { low: Number(low), moderate: Number(moderate), high: Number(high) },
+            categories: lines(categories),
+          })
+        }
+      >
+        Salvar parâmetros de Riscos
+      </button>
+    </Card>
+  );
+}
+
+function ResourcesSettingsForm({ initial, onSave }: { initial: ResourcesSettings; onSave: (v: unknown) => void }) {
+  const [red, setRed] = useState(String(initial.overallocationRedPct));
+  const [hours, setHours] = useState(String(initial.hoursPerDay));
+  return (
+    <Card title="Parâmetros — Recursos">
+      <div className="form-grid">
+        <Field id="cfg-over" label="Sobrealocação vermelha acima de (%)">
+          <input id="cfg-over" type="number" min={100} value={red} onChange={(e) => setRed(e.target.value)} />
+        </Field>
+        <Field id="cfg-hours" label="Horas por dia" hint="Converte o custo homem-hora em custo/dia.">
+          <input id="cfg-hours" type="number" min={1} max={24} value={hours} onChange={(e) => setHours(e.target.value)} />
+        </Field>
+      </div>
+      <button className="btn" onClick={() => onSave({ overallocationRedPct: Number(red), hoursPerDay: num(hours) })}>
+        Salvar parâmetros de Recursos
+      </button>
+    </Card>
+  );
+}
+
+function StakeholdersSettingsForm({ initial, onSave }: { initial: StakeholdersSettings; onSave: (v: unknown) => void }) {
+  const [limit, setLimit] = useState<number | null>(initial.supplierCommittedThresholdCents);
+  return (
+    <Card title="Parâmetros — Partes Interessadas">
+      <Field id="cfg-limit" label="Destacar fornecedor com comprometido acima de" hint="Na matriz Poder × Interesse e nos alertas.">
+        <MoneyInput id="cfg-limit" value={limit} onChange={setLimit} />
+      </Field>
+      <button className="btn" onClick={() => onSave({ supplierCommittedThresholdCents: limit ?? 0 })}>
+        Salvar parâmetros de Partes Interessadas
       </button>
     </Card>
   );

@@ -1,64 +1,51 @@
 import { describe, expect, it } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Route, Routes, useLocation } from 'react-router-dom';
-import { aLesson, aMilestone, aNorm, aPackage } from '@/test/factories';
+import { aLesson, aMilestone, aPackage } from '@/test/factories';
 import { aSnapshot, PROJECT_START } from '@/test/builders';
 import { renderWithProject } from '@/test/render';
-import { snapshotBaseline } from '@/analytics/baseline-snapshot';
-import { deriveProject } from '@/analytics/derive';
-import type { ProjectSnapshot } from '@/project/snapshot';
-import { Dashboard } from './Dashboard';
 import { BaselinePanel } from './BaselinePanel';
 import { CharterPage } from './CharterPage';
 import { DocsProcurementPage, OWN_REVENUE_NOTE } from './DocsProcurementPage';
+import { PhasesPage } from './PhasesPage';
+import { governanceView } from './view';
 
-function Where() {
-  const l = useLocation();
-  return <p>Rota: {l.pathname + l.search}</p>;
-}
-
-const delayed = (): ProjectSnapshot => {
-  const s = aSnapshot()
-    .withPackage(aPackage({ id: 'A', code: '1', duration: 5 }))
-    .withMilestone(aMilestone({ predecessorIds: ['A' as never], manualDate: null }))
-    .withNorm(aNorm())
-    .withProfile((p) => ({
-      ...p,
-      documentTemplate: { template: 'Externo (cliente)', notes: '' },
-      procurementPolicy: { ...p.procurementPolicy, model: 'Concorrência', billing: 'Misto' },
-    }))
-    .build();
-  const b = snapshotBaseline(s, deriveProject(s, PROJECT_START), { id: 'b1', now: 'n', changeRequestId: null });
-  const a = s.scope.wbs['A' as never]!;
-  return { ...s, baselines: [b], scope: { ...s.scope, wbs: { A: { ...a, duration: 15 } } } as ProjectSnapshot['scope'] };
-};
-
-describe('Dashboard', () => {
-  it('RAG com texto, alertas com atalho e definições do projeto', async () => {
-    await renderWithProject(
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/projeto/scope/mudancas" element={<Where />} />
-      </Routes>,
-      { snapshot: delayed() },
-    );
-    expect(await screen.findByText('Painel executivo')).toBeInTheDocument();
-    expect(screen.getAllByText('RAG Vermelho').length).toBeGreaterThan(0);
-    expect(screen.getByLabelText('RAG Cronograma')).toHaveTextContent('marco(s) crítico(s) atrasado(s)');
-    expect(screen.getByText('ISO 9001:2015')).toBeInTheDocument();
-    expect(screen.getByText('Externo (cliente)')).toBeInTheDocument();
-    expect(screen.getByText(/Modalidade: Concorrência/)).toBeInTheDocument();
-    expect(document.body.textContent).not.toMatch(/Processo/);
-
-    await userEvent.click(screen.getByRole('button', { name: 'Abrir solicitação de mudança' }));
-    expect(await screen.findByText('Rota: /projeto/scope/mudancas?nova=1')).toBeInTheDocument();
+describe('Governança sem o painel executivo', () => {
+  it('seções próprias, sem duplicar o painel que mora em Geral', () => {
+    expect(governanceView.sections.map((x) => x.label)).toEqual([
+      'Abertura e encerramento',
+      'Fases do ciclo de vida',
+      'Normas',
+      'Documentação e aquisições',
+      'Reuniões',
+      'Lições aprendidas',
+    ]);
   });
+});
 
-  it('sem LB, SPI físico é n/a', async () => {
-    await renderWithProject(<Dashboard />, { snapshot: aSnapshot().withPackage(aPackage({ id: 'A' })).build() });
-    const label = await screen.findByText('SPI físico');
-    expect(label.parentElement).toHaveTextContent('n/a');
+describe('PhasesPage', () => {
+  it('fases em ordem, fase atual destacada, pacotes, marcos e atalho para editar', async () => {
+    const s = aSnapshot()
+      .withPackage(
+        aPackage({ id: 'A', code: '1', duration: 5, phase: 'Análise', actualStart: PROJECT_START, actualFinish: '2026-01-09', percentComplete: 100 }),
+        aPackage({ id: 'B', code: '2', duration: 3, phase: 'Execução', predecessorIds: ['A' as never] }),
+      )
+      .withMilestone(aMilestone({ phase: 'Execução', predecessorIds: ['B' as never], manualDate: null }))
+      .withProfile((p) => ({ ...p, charter: { ...p.charter, currentPhase: 'Execução' } }))
+      .build();
+    await renderWithProject(<PhasesPage />, { snapshot: s });
+    const table = await screen.findByRole('table', { name: 'Fases do ciclo de vida' });
+    const rows = within(table).getAllByRole('row').slice(1);
+    expect(rows[0]).toHaveTextContent('Conceituação');
+    const exec = within(table).getByText('Execução').closest('tr')!;
+    expect(exec).toHaveTextContent('Atual');
+    expect(exec).toHaveTextContent('10/01/2026');
+    expect(within(exec).getByText('1', { selector: '.phase-packages' })).toBeInTheDocument();
+    expect(within(exec).getByText('1', { selector: '.phase-milestones' })).toBeInTheDocument();
+    const analysis = within(table).getByText('Análise').closest('tr')!;
+    expect(analysis).toHaveTextContent('Concluída');
+    expect(analysis).toHaveTextContent('100,0%');
+    expect(screen.getByRole('link', { name: 'Editar a lista de fases em Configurações' })).toHaveAttribute('href', '/projeto/configuracao');
   });
 });
 

@@ -442,8 +442,8 @@ Herdada do protótipo: fundo `#f5f7fa`, azul petróleo `#3f6d8f`, IBM Plex Mono 
 | Etapa | Conteúdo | Critérios §14 |
 |---|---|---|
 | 1 | Núcleo (persistência, export/import, apagar, exemplos, configuração de módulos, cadastro básico de pessoas/organizações) + **Escopo** (requisitos, EAP, entregáveis, mudanças) + **Cronograma** + **Governança** (painel, abertura/encerramento, normas, template, estratégia de aquisições, reuniões, lições) + linha de base | 1, 2, 3, 4, 5 (sem Finanças), 6, 10, 11, 12 |
-| 2 | **Finanças** (linhas de orçamento, contratações, resumo, fluxo de caixa, contingência, EVM, Curva S monetária) + **Partes Interessadas** completo (análise, comunicação, painel de fornecedor) | 5, 7, 8 |
-| 3 | **Riscos** + **Recursos** | RAG desses módulos |
+| 2 | **Finanças** (linhas de orçamento, contratações, resumo, fluxo de caixa, contingência, EVM, Curva S monetária) + **Partes Interessadas** completo (análise, comunicação, painel de fornecedor) + **Riscos** (matriz 3×3) + **Recursos** (custo homem-hora, carga semanal) — antecipados da Etapa 3 por decisão do usuário (plano da Etapa 2, D1) | 5, 7, 8 + RAG de Riscos e Recursos |
+| 3 | Escala 5×5 da matriz de riscos com "Reavaliar" (caso 27), adiada na Etapa 2 (D2) | — |
 | 4 | **Relatório** imprimível | 9 |
 
 ## 16. Decisões da consolidação e questões em aberto

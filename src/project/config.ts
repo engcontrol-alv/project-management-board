@@ -1,4 +1,8 @@
+import type { FinancesSettings } from '@/modules/finances';
 import type { GovernanceSettings } from '@/modules/governance';
+import type { ResourcesSettings } from '@/modules/resources';
+import type { RisksSettings } from '@/modules/risks';
+import type { StakeholdersSettings } from '@/modules/stakeholders';
 import type { ScheduleSettings } from '@/modules/schedule';
 import type { ProjectConfig } from './project';
 import { MANIFESTS, MODULE_ORDER, type ImplementedModuleId } from './registry';
@@ -9,7 +13,10 @@ export type ResolvedConfig = {
     governance: GovernanceSettings;
     schedule: ScheduleSettings;
     scope: Record<string, never>;
-    stakeholders: Record<string, never>;
+    finances: FinancesSettings;
+    risks: RisksSettings;
+    resources: ResourcesSettings;
+    stakeholders: StakeholdersSettings;
   };
   warnings: string[];
 };

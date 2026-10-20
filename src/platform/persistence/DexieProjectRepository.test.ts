@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import Dexie from 'dexie';
-import { aChangeRequest, aPackage, aPerson, aRequirement } from '@/test/factories';
+import { aChangeRequest, aPackage, aPerson, aProcurement, aRequirement } from '@/test/factories';
+import { STORES_V1 } from '@/project/migrations';
+import v1 from '@/project/__fixtures__/export-v1.json';
 import { aContext, aSnapshot } from '@/test/builders';
 import { upsertEntity } from '@/commands/entities';
 import { applyChangeToBaseline, defineInitialBaseline } from '@/commands/baseline';
@@ -100,5 +102,32 @@ describe('DexieProjectRepository', () => {
     await repo.clearAll();
     expect(await repo.exists()).toBe(false);
     expect(await listed(name)).toBe(false);
+  });
+
+  it('Review Focus 1: banco criado na v1 abre na v2 com os dados migrados', async () => {
+    const name = uniqueName();
+    const old = new Dexie(name);
+    old.version(1).stores(STORES_V1);
+    await old.open();
+    const pid = v1.project.id;
+    await old.table('core_projects').put(v1.project);
+    for (const [table, rows] of Object.entries(v1.data))
+      await old.table(table).bulkPut((rows as { id: string }[]).map((r) => ({ ...r, projectId: pid })));
+    old.close();
+
+    const repo = new DexieProjectRepository(name);
+    const loaded = await repo.loadSnapshot();
+    if (loaded.status !== 'pronto') throw new Error(JSON.stringify(loaded));
+    const parties = Object.values(loaded.snapshot.stakeholders.parties);
+    expect(parties).toHaveLength(v1.data.stakeholders_parties.length);
+    expect(parties.every((p) => p.analysis === null)).toBe(true);
+    expect(loaded.snapshot.project.schemaVersion).toBe(2);
+    expect(loaded.snapshot.project.config.modules.stakeholders?.settings).toEqual({ supplierCommittedThresholdCents: 10_000_000 });
+
+    const supplier = parties.find((p) => p.kind === 'Organização' && p.roles.includes('Fornecedor'))!;
+    const r = await repo.commit(upsertEntity('finances', 'procurements', aProcurement({ id: 'new-ctr' as never, code: '', supplierId: supplier.id })), aContext());
+    expect(r.ok ? [] : r.error).toEqual([]);
+    const after = await repo.loadSnapshot();
+    expect(after.status === 'pronto' && Object.values(after.snapshot.finances.procurements)[0]?.code).toBe('CTR-001');
   });
 });
