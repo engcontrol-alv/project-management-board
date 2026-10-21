@@ -104,7 +104,8 @@ const onTestsChange = (prev: Values, next: Values): Values => {
 
 const onChange: DraftChange = (prev, next) => onDraftChange(prev, onTestsChange(prev, next));
 
-function TestsCell({ d }: { d: Deliverable }) {
+/** Selos TAF/TAC do entregável (também usados no relatório executivo). */
+export function TestsCell({ d }: { d: Deliverable }) {
   if (d.category !== 'Entregável físico / serviço') return <span className="muted">—</span>;
   if (d.fatStatus === 'Não Aplicável' && d.satStatus === 'Não Aplicável') return <span className="muted">Não aplicável</span>;
   const done = d.status === 'Aceito pelo cliente' ? 'Aceito' : 'Concluído';

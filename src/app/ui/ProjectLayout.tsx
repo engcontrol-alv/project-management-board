@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   CalendarRange,
@@ -21,6 +21,9 @@ import { reopenProject, setStatusDate } from '@/commands/project';
 import { useAnalysis, useCommand, useLoadResult, useRepositoryContext } from '@/platform/react/hooks';
 import { MANIFESTS, MODULE_ORDER, type ImplementedModuleId } from '@/project/registry';
 import { VIEWS } from '../registry';
+import { PrintableReport } from '../report/PrintableReport';
+import { ReportComposer } from '../report/ReportComposer';
+import type { ReportRequest } from '../report/report-config';
 import { useAppActions } from '../shell';
 import { DataMenu } from './DataMenu';
 import { RecoveryPage } from './RecoveryPage';
@@ -67,6 +70,9 @@ export function ProjectLayout() {
   const { clock } = useRepositoryContext();
   const location = useLocation();
   const domainBar = useRef<HTMLElement>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
+  // Cada emissão remonta o relatório (`seq`), para imprimir de novo com a mesma seleção.
+  const [issued, setIssued] = useState<{ seq: number; request: ReportRequest; print: boolean } | null>(null);
 
   // Em telas estreitas, mantém a aba ativa visível dentro da faixa rolável.
   useLayoutEffect(() => {
@@ -142,7 +148,7 @@ export function ProjectLayout() {
           </label>
           <div className="tb-cell toolbar no-print" role="toolbar" aria-label="Ações do projeto">
             <DataMenu />
-            <button className="btn btn-sm btn-ghost" title="Imprimir A4" onClick={() => window.print()}>
+            <button className="btn btn-sm btn-ghost" title="Relatório executivo A4" onClick={() => setComposerOpen(true)}>
               <Printer size={14} aria-hidden="true" /> Imprimir A4
             </button>
             <NavLink to="/projeto/configuracao" className="btn btn-sm btn-ghost" title="Configurações">
@@ -196,6 +202,25 @@ export function ProjectLayout() {
         )}
         <Outlet />
       </main>
+      <ReportComposer
+        open={composerOpen}
+        enabled={analysis.config.enabled}
+        onClose={() => setComposerOpen(false)}
+        onGenerate={(request, print) => {
+          setComposerOpen(false);
+          setIssued({ seq: (issued?.seq ?? 0) + 1, request, print });
+        }}
+      />
+      {issued && (
+        <PrintableReport
+          key={issued.seq}
+          analysis={analysis}
+          request={issued.request}
+          issuedOn={clock.today()}
+          printOnOpen={issued.print}
+          onClose={() => setIssued(null)}
+        />
+      )}
     </div>
   );
 }

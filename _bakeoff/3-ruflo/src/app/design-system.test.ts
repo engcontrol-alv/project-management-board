@@ -36,4 +36,17 @@ describe('design system único: Vercel Geist', () => {
     expect(families).toEqual(['Geist', 'Geist+Mono']);
     expect(link![0]).toContain('media="print"');
   });
+
+  it('impressão A4 do relatório executivo: página, cores exatas, sem quebras no meio e só o relatório', () => {
+    const flat = tokens.replace(/\s+/g, ' ');
+    expect(flat).toContain('@page { size: A4 portrait; margin: 12mm; }');
+    const print = [...tokens.matchAll(/@media print \{([\s\S]*?)\n\}/g)].map((m) => m[1]).join('\n').replace(/\s+/g, ' ');
+    expect(print).toContain('-webkit-print-color-adjust: exact;');
+    expect(print).toContain('print-color-adjust: exact;');
+    expect(print).toMatch(/\.no-print,[^{]*\{ display: none !important; \}/);
+    expect(print).toMatch(/\.dialog-backdrop \{ display: none !important; \}/);
+    expect(print).toContain('body:has(.executive-print-report) > #root { display: none !important; }');
+    expect(print).toMatch(/\.report-tbl tr,[^{]*\.executive-print-report svg \{ break-inside: avoid;/);
+    expect(print).toMatch(/\.kpi,[^{]*\{ break-inside: avoid;/);
+  });
 });

@@ -116,11 +116,12 @@ describe('ProjectLayout — navegação horizontal', () => {
     expect(notice.closest('nav')).toBeNull();
   });
 
-  it('Imprimir A4 chama a impressão do navegador; navegação fica fora da folha', async () => {
+  it('Imprimir A4 abre o compositor do relatório (sem imprimir a aba); navegação fica fora da folha', async () => {
     const print = vi.spyOn(window, 'print').mockImplementation(() => {});
     await renderAt('/projeto/scope/eap');
     await userEvent.click(await screen.findByRole('button', { name: /Imprimir A4/ }));
-    expect(print).toHaveBeenCalledOnce();
+    expect(screen.getByRole('dialog', { name: 'Relatório executivo A4' })).toBeInTheDocument();
+    expect(print).not.toHaveBeenCalled();
     expect(screen.getByRole('navigation', { name: 'Domínios' }).closest('.no-print')).not.toBeNull();
     expect(screen.getByRole('navigation', { name: 'Seções' })).toHaveClass('no-print');
     print.mockRestore();
