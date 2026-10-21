@@ -1,0 +1,52 @@
+{
+  "format": "pmb-export",
+  "schemaVersion": 1,
+  "exportedAt": "2026-01-05T10:00:00.000Z",
+  "project": {
+    "id": "fixture-invalido",
+    "schemaVersion": 1,
+    "info": { "name": "Projeto Inválido", "code": "INV", "startDate": "2026-01-05" },
+    "config": { "modules": {} },
+    "statusDate": null,
+    "counters": {},
+    "createdAt": "2026-01-05T10:00:00.000Z",
+    "updatedAt": "2026-01-05T10:00:00.000Z"
+  },
+  "baselines": [],
+  "data": {
+    "governance_profile": [
+      {
+        "id": "fixture-invalido",
+        "charter": {
+          "clientId": null,
+          "sponsorId": null,
+          "managerId": null,
+          "objective": "",
+          "justification": "",
+          "currentPhase": "",
+          "status": "Em iniciação",
+          "approvalDate": null
+        },
+        "closure": { "plannedDate": null, "actualDate": null, "pendingItems": "", "closureTermSigned": false },
+        "documentTemplate": { "template": null, "notes": "" },
+        "procurementPolicy": { "model": null, "billing": null, "criteria": [], "approvalLimitCents": null, "notes": "" }
+      }
+    ],
+    "scope_requirements": [
+      {
+        "id": "r1",
+        "code": "REQ-001",
+        "description": "Requisito com responsável órfão",
+        "category": "Funcional",
+        "origin": "Cliente",
+        "priority": "Alta",
+        "validationStatus": "Não validado",
+        "fulfillmentStatus": "Não iniciado",
+        "acceptanceCriteria": "",
+        "ownerId": "pessoa-que-nao-existe",
+        "lastValidation": null,
+        "deliverableIds": []
+      }
+    ]
+  }
+}

@@ -16,6 +16,7 @@ export * from './model/change-request';
 export * from './domain/requirements';
 export * from './domain/cycles';
 export * from './domain/deliverables';
+export * from './domain/acceptance';
 export * from './domain/change-requests';
 export { scopeManifest } from './manifest';
 

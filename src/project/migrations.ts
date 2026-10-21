@@ -1,5 +1,5 @@
 /** Versão única de dados e do banco. Cada etapa que adiciona coleções incrementa. */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export class UnsupportedVersionError extends Error {
   constructor(public readonly found: number) {
@@ -26,6 +26,17 @@ export const STORES_V1: Record<string, string> = {
   schedule_milestones: 'id, projectId',
 };
 
+/** Tabelas Dexie da v2 (Etapa 2), congeladas: a v3 não cria tabelas, só migra linhas. */
+export const STORES_V2: Record<string, string> = {
+  ...STORES_V1,
+  stakeholders_communications: 'id, projectId',
+  finances_budgetLines: 'id, projectId',
+  finances_procurements: 'id, projectId',
+  risks_risks: 'id, projectId',
+  resources_resources: 'id, projectId',
+  resources_allocations: 'id, projectId',
+};
+
 type Row = Record<string, unknown>;
 const isRow = (r: unknown): r is Row => !!r && typeof r === 'object' && !Array.isArray(r);
 
@@ -33,12 +44,35 @@ const isRow = (r: unknown): r is Row => !!r && typeof r === 'object' && !Array.i
 const ROW_STEPS: Record<number, Record<string, (row: Row) => Row>> = {
   // v1 → v2: análise da parte interessada (D5) começa vazia.
   1: { stakeholders_parties: (p) => ('analysis' in p ? p : { ...p, analysis: null }) },
+  // v2 → v3 (D10): "Reavaliar" vazio, testes de aceitação não aplicáveis, multa por atraso desativada.
+  2: {
+    risks_risks: (r) => ('reassess' in r ? r : { ...r, reassess: null }),
+    scope_deliverables: (d) =>
+      d.category !== 'Entregável físico / serviço' || 'fatStatus' in d
+        ? d
+        : { ...d, fatStatus: 'Não Aplicável', fatDate: null, satStatus: 'Não Aplicável', satDate: null },
+    governance_profile: (p) =>
+      'latePenalty' in p
+        ? p
+        : {
+            ...p,
+            latePenalty: {
+              enabled: false,
+              ratePct: null,
+              period: 'Diário',
+              base: 'Valor do contrato',
+              contractValueCents: null,
+              capPct: null,
+              notes: '',
+            },
+          },
+  },
 };
 
-/** Migra as linhas de uma tabela da versão `from` até a atual. Devolve o mesmo array se nada mudar. */
-export function migrateRows(table: string, rows: unknown[], from: number): unknown[] {
+/** Migra as linhas de uma tabela da versão `from` até `to` (padrão: a atual). Devolve o mesmo array se nada mudar. */
+export function migrateRows(table: string, rows: unknown[], from: number, to = SCHEMA_VERSION): unknown[] {
   let out = rows;
-  for (let v = from; v < SCHEMA_VERSION; v++) {
+  for (let v = from; v < to; v++) {
     const step = ROW_STEPS[v]?.[table];
     if (step) out = out.map((r) => (isRow(r) ? step(r) : r));
   }

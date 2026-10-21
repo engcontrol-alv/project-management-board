@@ -73,7 +73,7 @@ export function findIntegrityErrors(s: ProjectSnapshot): string[] {
   return errors;
 }
 
-/** Regras que dependem dos parâmetros do projeto: moedas aceitas, taxa para a base e categorias de risco. */
+/** Regras que dependem dos parâmetros do projeto: moedas aceitas, taxa para a base, categorias e escala de risco. */
 export function findSettingsErrors(s: ProjectSnapshot): string[] {
   const { settings } = resolveConfig(s.project.config);
   const { baseCurrency, currencies } = settings.finances;
@@ -87,5 +87,9 @@ export function findSettingsErrors(s: ProjectSnapshot): string[] {
   for (const r of Object.values(s.risks.risks))
     if (!categories.has(r.category))
       errors.push(`${r.code}: categoria "${r.category}" não está na lista de categorias de risco`);
+  const scale = settings.risks.scale;
+  for (const r of Object.values(s.risks.risks))
+    for (const [label, level] of [['probabilidade', r.probability], ['impacto', r.impact]] as const)
+      if (level !== null && level > scale) errors.push(`${r.code}: ${label} ${level} fora da escala ${scale}×${scale}`);
   return errors;
 }

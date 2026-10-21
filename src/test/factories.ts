@@ -138,6 +138,10 @@ export function aPhysical(o: Partial<Extract<Deliverable, { category: 'Entregáv
     actualDate: null,
     ownerId: null,
     clientApproval: false,
+    fatStatus: 'Não Aplicável',
+    fatDate: null,
+    satStatus: 'Não Aplicável',
+    satDate: null,
     ...o,
   };
 }
@@ -330,6 +334,7 @@ export function aRisk(o: Partial<Risk> = {}): Risk {
     deliverableIds: [],
     procurementIds: [],
     partyIds: [],
+    reassess: null,
     ...o,
   };
 }

@@ -20,6 +20,7 @@ import { resolveConfig } from '@/project/config';
 import type { Project } from '@/project/project';
 import type { ProjectSnapshot } from '@/project/snapshot';
 import { deriveFinances, type DerivedFinances } from './finances';
+import { derivePenalty, type DerivedPenalty } from './penalties';
 import { deriveResources, type DerivedResources } from './resources';
 import { deriveRisks, type DerivedRisks } from './risks';
 
@@ -50,6 +51,8 @@ export type DerivedProject = {
   finances: DerivedFinances | null;
   risks: DerivedRisks | null;
   resources: DerivedResources | null;
+  /** Provisão de multa contratual por atraso; `null` sem cláusula ou com o Cronograma desligado. */
+  penalty: DerivedPenalty | null;
 };
 
 /** Projeção pura do snapshot na data de status (SPEC §8). Nunca lança. */
@@ -100,5 +103,13 @@ export function deriveProject(s: ProjectSnapshot, statusDate: IsoDate): DerivedP
       : null,
     risks,
     resources: enabled.resources ? deriveResources(s) : null,
+    penalty: enabled.schedule
+      ? derivePenalty(s, {
+          forecasts: Object.fromEntries(Object.entries(milestones).map(([id, m]) => [id, m.forecast])),
+          baseline,
+          statusDate,
+          finances: enabled.finances ? { baseCurrency: settings.finances.baseCurrency } : null,
+        })
+      : null,
   };
 }

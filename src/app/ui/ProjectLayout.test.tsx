@@ -76,6 +76,13 @@ describe('ProjectLayout — navegação horizontal', () => {
     expect(document.body.textContent).not.toMatch(/PMB/);
   });
 
+  it('design system único: sem seletor de variante visual no cabeçalho', async () => {
+    await renderAt('/projeto/geral');
+    await screen.findByRole('navigation', { name: 'Domínios' });
+    expect(screen.queryByLabelText('Variante visual')).toBeNull();
+    expect(document.documentElement.dataset.designVariant).toBeUndefined();
+  });
+
   it('ações globais incluem "Novo Projeto"', async () => {
     await renderAt('/projeto/geral');
     const toolbar = await screen.findByRole('toolbar', { name: 'Ações do projeto' });

@@ -6,7 +6,7 @@ import { aBudgetLine, aPackage, aRisk } from '@/test/factories';
 import { aSnapshot } from '@/test/builders';
 import { renderWithProject } from '@/test/render';
 import { resolveConfig } from '@/project/config';
-import { toExport } from '@/project/serialization';
+import { toExport, verifyChecksum, withChecksum } from '@/project/serialization';
 import { downloadText } from '@/shared/lib/download';
 import { AppActionsContext, type AppActions } from '../shell';
 import { ConfigPage } from './ConfigPage';
@@ -84,6 +84,32 @@ describe('ConfigPage — etapa 2', () => {
   });
 });
 
+describe('Configurações — escala da matriz de riscos', () => {
+  it('3×3 → 5×5 pede confirmação, converte os riscos avaliados e preenche as faixas padrão', async () => {
+    const s = aSnapshot().withRisk(aRisk({ probability: 2, impact: 3 }), aRisk({ id: 'r2' as never, code: 'R-002', probability: null })).build();
+    const { load } = await renderWithProject(withActions(<ConfigPage />), { snapshot: s });
+    await userEvent.selectOptions(await screen.findByLabelText('Escala da matriz'), '5');
+    expect(screen.getByLabelText('Baixo até a pontuação')).toHaveValue(4);
+    expect(screen.getByLabelText('Moderado até a pontuação')).toHaveValue(9);
+    expect(screen.getByLabelText('Alto até a pontuação')).toHaveValue(16);
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar parâmetros de Riscos' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Mudar a matriz para 5×5?' });
+    expect(dialog).toHaveTextContent('1 risco(s) avaliado(s)');
+    expect(dialog).toHaveTextContent('Reavaliar');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Converter para 5×5' }));
+    await waitFor(async () => expect(resolveConfig((await load()).project.config).settings.risks.scale).toBe(5));
+    expect((await load()).risks.risks['r1' as never]).toMatchObject({ probability: 3, impact: 5, reassess: { scale: 3 } });
+  });
+
+  it('sem riscos avaliados, troca direto, sem diálogo', async () => {
+    const { load } = await renderWithProject(withActions(<ConfigPage />), { snapshot: aSnapshot().build() });
+    await userEvent.selectOptions(await screen.findByLabelText('Escala da matriz'), '5');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar parâmetros de Riscos' }));
+    await waitFor(async () => expect(resolveConfig((await load()).project.config).settings.risks.scale).toBe(5));
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
+
 describe('DataMenu', () => {
   const actions = (): AppActions => ({ replaceProject: vi.fn(async () => {}), clearAll: vi.fn(async () => {}) });
   const fileOf = (text: string) => new File([text], 'p.json', { type: 'application/json' });
@@ -96,12 +122,46 @@ describe('DataMenu', () => {
     );
   }
 
-  it('exporta com o nome padrão', async () => {
+  it('exporta com o nome padrão e o checksum SHA-256 (D9)', async () => {
+    vi.mocked(downloadText).mockClear();
     await renderMenu(actions());
     const button = await screen.findByRole('button', { name: /Exportar/ });
     await waitFor(() => expect(button).toBeEnabled());
     await userEvent.click(button);
-    expect(downloadText).toHaveBeenCalledWith('pmb-pt-01-2026-01-05.json', expect.stringContaining('"format": "pmb-export"'));
+    await waitFor(() =>
+      expect(downloadText).toHaveBeenCalledWith('pmb-pt-01-2026-01-05.json', expect.stringContaining('"format": "pmb-export"')),
+    );
+    const text = vi.mocked(downloadText).mock.calls[0]![1];
+    expect(JSON.parse(text).checksumSha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(await verifyChecksum(JSON.parse(text))).toBe('ok');
+  });
+
+  it('importar arquivo íntegro mostra "Integridade verificada (SHA-256)"', async () => {
+    await renderMenu(actions());
+    const file = await withChecksum(toExport(aSnapshot().build(), 'n'));
+    fireEvent.change(await screen.findByLabelText(/Importar/), { target: { files: [fileOf(JSON.stringify(file))] } });
+    const dialog = await screen.findByRole('dialog', { name: 'Substituir o projeto atual?' });
+    expect(within(dialog).getByText('Integridade verificada (SHA-256)')).toBeInTheDocument();
+  });
+
+  it('arquivo adulterado é recusado sem alterar nada', async () => {
+    const a = actions();
+    await renderMenu(a);
+    const file = await withChecksum(toExport(aSnapshot().build(), 'n'));
+    const tampered = JSON.stringify(file).replace('"name":"Projeto Teste"', '"name":"Projeto Alterado"');
+    expect(tampered).not.toBe(JSON.stringify(file));
+    fireEvent.change(await screen.findByLabelText(/Importar/), { target: { files: [fileOf(tampered)] } });
+    const dialog = await screen.findByRole('dialog', { name: 'Importação recusada' });
+    expect(dialog).toHaveTextContent('Integridade SHA-256 não confere: o arquivo foi alterado ou corrompido depois da exportação.');
+    expect(within(dialog).getByText('Nenhum dado foi alterado.')).toBeInTheDocument();
+    expect(a.replaceProject).not.toHaveBeenCalled();
+  });
+
+  it('arquivo antigo sem checksum é aceito e sinalizado', async () => {
+    await renderMenu(actions());
+    fireEvent.change(await screen.findByLabelText(/Importar/), { target: { files: [fileOf(JSON.stringify(toExport(aSnapshot().build(), 'n')))] } });
+    const dialog = await screen.findByRole('dialog', { name: 'Substituir o projeto atual?' });
+    expect(within(dialog).getByText('Arquivo sem checksum (exportação antiga)')).toBeInTheDocument();
   });
 
   it('importação válida mostra prévia e pede confirmação', async () => {

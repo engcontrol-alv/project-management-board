@@ -76,6 +76,26 @@ describe('projeto de demonstração', () => {
     expect(Object.values(s.stakeholders.parties).filter((p) => p.analysis)).toHaveLength(6);
   });
 
+  it('Etapa 3: TAF/TAC nos entregáveis físicos e multa contratual pelos marcos contratuais atrasados', () => {
+    const s = buildDemoSnapshot(ctx);
+    const c = buildContext(s, TODAY);
+    const physical = Object.values(s.scope.deliverables).filter((d) => d.category === 'Entregável físico / serviço');
+    expect(physical.map((d) => [d.code, d.type, d.fatStatus, d.satStatus])).toEqual([
+      ['ENT-007', 'Painel/Sistema', 'Pendente', 'Pendente'],
+      ['ENT-008', 'Treinamento', 'Não Aplicável', 'Não Aplicável'],
+      ['ENT-009', 'Software de CLP/IHM', 'Aprovado com Ressalvas', 'Reprovado'],
+    ]);
+    const alerts = computeDashboard(c).alerts;
+    expect(alerts.find((a) => a.message === 'ENT-009 aceito pelo cliente com TAC/SAT Reprovado')?.severity).toBe('vermelho');
+    const p = c.derived.penalty!;
+    expect(p.clauseText).toBe('0,1% por dia sobre o valor do contrato · teto 10%');
+    // M-002 já venceu na data de status; o atraso se propaga pelo caminho crítico até M-005 (atraso previsto).
+    expect(p.items.map((i) => i.code)).toEqual(['M-002', 'M-005']);
+    expect(p.items.every((i) => i.delayDays > 0)).toBe(true);
+    expect(p.totalCents).toBe(p.items.reduce((sum, i) => sum + i.delayDays, 0) * 150_000);
+    expect(p.capped).toBe(false);
+  });
+
   it('a mudança aprovada pode ser aplicada à linha de base', () => {
     const s = buildDemoSnapshot(ctx);
     const approved = Object.values(s.scope.changeRequests).find((c) => c.status === 'Aprovada')!;

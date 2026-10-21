@@ -1,33 +1,50 @@
 import { useState } from 'react';
 import { Download, FilePlus2, Sparkles, Trash2, Upload } from 'lucide-react';
 import { newId } from '@/shared/lib/ids';
+import { Badge } from '@/shared/ui/Badge';
 import { Card } from '@/shared/ui/Card';
 import { downloadText } from '@/shared/lib/download';
 import { ConfirmTypedDialog } from '@/shared/ui/ConfirmTypedDialog';
 import { Dialog } from '@/shared/ui/Dialog';
 import { readFileText } from '@/platform/transfer/file';
 import { useRepositoryContext, useSnapshot } from '@/platform/react/hooks';
-import { exportFileName, parseImportText, summarize, toExport, type ImportSummary } from '@/project/serialization';
+import {
+  exportFileName,
+  parseImportFile,
+  summarize,
+  toExport,
+  withChecksum,
+  type ImportSummary,
+  type Integrity,
+} from '@/project/serialization';
 import type { ProjectSnapshot } from '@/project/snapshot';
 import { buildDemoSnapshot } from '../demo/demo-project';
 import { useAppActions } from '../shell';
+
+const INTEGRITY_BADGE: Record<Integrity, { text: string; tone: 'green' | 'gray' | 'gold' }> = {
+  verificada: { text: 'Integridade verificada (SHA-256)', tone: 'green' },
+  ausente: { text: 'Arquivo sem checksum (exportação antiga)', tone: 'gray' },
+  'não verificável': { text: 'Checksum não verificado (navegador sem Web Crypto)', tone: 'gold' },
+};
 
 export function DataMenu() {
   const snapshot = useSnapshot();
   const { clock } = useRepositoryContext();
   const actions = useAppActions();
-  const [preview, setPreview] = useState<{ snapshot: ProjectSnapshot; summary: ImportSummary } | null>(null);
+  const [preview, setPreview] = useState<{ snapshot: ProjectSnapshot; summary: ImportSummary; integrity?: Integrity } | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [confirmNew, setConfirmNew] = useState(false);
 
-  const exportNow = () => {
+  // Backup com checksum SHA-256 do conteúdo (D9).
+  const exportNow = async () => {
     if (!snapshot) return;
-    downloadText(exportFileName(snapshot, clock.today()), JSON.stringify(toExport(snapshot, clock.now()), null, 2));
+    const file = await withChecksum(toExport(snapshot, clock.now()));
+    downloadText(exportFileName(snapshot, clock.today()), JSON.stringify(file, null, 2));
   };
 
   const importFile = async (file: File | undefined) => {
     if (!file) return;
-    const r = parseImportText(await readFileText(file));
+    const r = await parseImportFile(await readFileText(file));
     if (r.ok) setPreview(r.value);
     else setImportError(r.error.message);
   };
@@ -53,7 +70,7 @@ export function DataMenu() {
       <label className="btn btn-sm btn-ghost" htmlFor="data-import" title="Importar">
         <Upload size={14} aria-hidden="true" /> Importar
       </label>
-      <button className="btn btn-sm btn-ghost" title="Exportar" onClick={exportNow} disabled={!snapshot}>
+      <button className="btn btn-sm btn-ghost" title="Exportar" onClick={() => void exportNow()} disabled={!snapshot}>
         <Download size={14} aria-hidden="true" /> Exportar
       </button>
       <button className="btn btn-sm btn-ghost" title="Projeto demo" onClick={previewDemo}>
@@ -76,7 +93,7 @@ export function DataMenu() {
         onClose={() => setConfirmNew(false)}
         actions={
           <>
-            <button className="btn" onClick={exportNow} disabled={!snapshot}>
+            <button className="btn" onClick={() => void exportNow()} disabled={!snapshot}>
               Exportar o atual
             </button>
             <button className="btn" onClick={() => setConfirmNew(false)}>
@@ -123,7 +140,7 @@ export function DataMenu() {
         onClose={() => setPreview(null)}
         actions={
           <>
-            <button className="btn" onClick={exportNow}>
+            <button className="btn" onClick={() => void exportNow()}>
               Exportar o atual
             </button>
             <button className="btn" onClick={() => setPreview(null)}>
@@ -148,6 +165,11 @@ export function DataMenu() {
             <p>
               <strong>{preview.summary.name}</strong> <span className="tb-mono">{preview.summary.code}</span>
             </p>
+            {preview.integrity && (
+              <p className="small">
+                <Badge {...INTEGRITY_BADGE[preview.integrity]} dot />
+              </p>
+            )}
             <table className="tbl">
               <tbody>
                 {Object.entries(preview.summary.counts).map(([label, count]) => (

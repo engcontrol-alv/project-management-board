@@ -1,3 +1,4 @@
+import { formatDateBR } from '@/shared/lib/dates';
 import { formatPercent } from '@/shared/lib/format';
 import { formatMoneyBR } from '@/shared/lib/money';
 import { Badge } from '@/shared/ui/Badge';
@@ -33,9 +34,15 @@ function TotalsTable({ rows, currency, title }: { rows: TotalsRow[]; currency: s
 export function SummaryPage() {
   const analysis = useAnalysis();
   const f = analysis?.derived.finances;
-  if (!f) return null;
+  if (!analysis || !f) return null;
   const { summary, contingency: c, baseCurrency: cur } = f;
   const negative = summary.freeBalance < 0;
+  const penalty = analysis.derived.penalty;
+  const penaltyHint = penalty
+    ? penalty.reason ?? `${penalty.items.length} marco(s) contratual(is) atrasado(s)`
+    : analysis.snapshot.governance.profile.latePenalty.enabled
+      ? 'Cronograma desligado'
+      : 'Cláusula de multa não configurada';
   return (
     <div>
       <div className="page-head">
@@ -48,7 +55,38 @@ export function SummaryPage() {
         <KpiTile label="Saldo livre" value={formatMoneyBR(summary.freeBalance, cur)}>
           {negative && <Badge text="Saldo negativo" tone="red" />}
         </KpiTile>
+        <KpiTile
+          label="Multa por atraso (provisão)"
+          value={penalty?.totalCents !== null && penalty?.totalCents !== undefined ? formatMoneyBR(penalty.totalCents, cur) : 'n/a'}
+          hint={penaltyHint}
+        >
+          {penalty?.capped && <Badge text="Teto atingido" tone="red" />}
+        </KpiTile>
       </div>
+      {penalty && (
+        <section className="card tb-card flush" aria-label="Multa contratual por atraso">
+          <div className="card-head" style={{ padding: '14px 18px 0' }}>
+            <h2>Multa contratual por atraso</h2>
+            <span className="muted small">{penalty.clauseText}</span>
+          </div>
+          <DataTable
+            rows={penalty.items.map((i) => ({ ...i, id: i.milestoneId }))}
+            empty="Nenhum marco contratual atrasado."
+            columns={[
+              { key: 'code', label: 'Marco', mono: true },
+              { key: 'name', label: 'Nome' },
+              { key: 'dueDate', label: 'Prazo contratual', mono: true, render: (i) => formatDateBR(i.dueDate) },
+              { key: 'endDate', label: 'Real / previsto', mono: true, render: (i) => formatDateBR(i.endDate) },
+              { key: 'delayDays', label: 'Dias de atraso', mono: true },
+              {
+                key: 'penaltyCents',
+                label: 'Multa',
+                render: (i) => (i.penaltyCents === null ? 'n/a' : <Money cents={i.penaltyCents} currency={cur} />),
+              },
+            ]}
+          />
+        </section>
+      )}
       <div className="split">
         <TotalsTable
           title="Por natureza"

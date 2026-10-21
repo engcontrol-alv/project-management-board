@@ -1,0 +1,2073 @@
+{
+  "format": "pmb-export",
+  "schemaVersion": 2,
+  "exportedAt": "2026-10-19T12:00:00.000Z",
+  "project": {
+    "id": "id-001",
+    "schemaVersion": 2,
+    "info": {
+      "name": "Demonstração — Automação da Linha de Envase 3",
+      "code": "DEMO-AUT03",
+      "startDate": "2026-08-30"
+    },
+    "config": {
+      "modules": {
+        "governance": {
+          "enabled": true,
+          "settings": {
+            "staleChangeDays": 15
+          }
+        },
+        "scope": {
+          "enabled": true,
+          "settings": {}
+        },
+        "schedule": {
+          "enabled": true,
+          "settings": {
+            "phases": [
+              "Planejamento",
+              "Engenharia",
+              "Suprimentos",
+              "Montagem",
+              "Comissionamento"
+            ],
+            "milestoneToleranceDays": 5,
+            "spiGreenMin": 0.95,
+            "spiYellowMin": 0.85
+          }
+        },
+        "resources": {
+          "enabled": true,
+          "settings": {
+            "overallocationRedPct": 120,
+            "hoursPerDay": 8
+          }
+        },
+        "finances": {
+          "enabled": true,
+          "settings": {
+            "baseCurrency": "BRL",
+            "currencies": [
+              "BRL",
+              "USD",
+              "EUR"
+            ],
+            "cpiGreenMin": 0.95,
+            "cpiYellowMin": 0.85
+          }
+        },
+        "risks": {
+          "enabled": true,
+          "settings": {
+            "scale": 3,
+            "bands": {
+              "low": 2,
+              "moderate": 4,
+              "high": 6
+            },
+            "categories": [
+              "Técnico",
+              "Cronograma",
+              "Custo",
+              "Fornecedor/Aquisição",
+              "Segurança/SSMA",
+              "Cliente/Contratual",
+              "Regulatório",
+              "Outro"
+            ]
+          }
+        },
+        "stakeholders": {
+          "enabled": true,
+          "settings": {
+            "supplierCommittedThresholdCents": 10000000
+          }
+        }
+      }
+    },
+    "statusDate": null,
+    "counters": {
+      "PI": 9,
+      "REQ": 5,
+      "ENT": 8,
+      "MUD": 2,
+      "M": 5,
+      "NRM": 5,
+      "REU": 3,
+      "LIC": 1,
+      "ORC": 9,
+      "CTR": 6,
+      "R": 7,
+      "REC": 6,
+      "ALO": 10,
+      "COM": 4
+    },
+    "createdAt": "2026-10-19T12:00:00.000Z",
+    "updatedAt": "2026-10-19T12:00:00.000Z"
+  },
+  "baselines": [
+    {
+      "id": "id-103",
+      "projectId": "id-001",
+      "version": 1,
+      "createdAt": "2026-08-30T12:00:00.000Z",
+      "changeRequestId": null,
+      "projectFinish": "2027-01-17",
+      "workPackages": {
+        "id-012": {
+          "start": "2026-08-30",
+          "finish": "2026-09-03",
+          "duration": 5
+        },
+        "id-013": {
+          "start": "2026-09-04",
+          "finish": "2026-09-07",
+          "duration": 4
+        },
+        "id-015": {
+          "start": "2026-09-04",
+          "finish": "2026-09-11",
+          "duration": 8
+        },
+        "id-016": {
+          "start": "2026-09-12",
+          "finish": "2026-09-23",
+          "duration": 12
+        },
+        "id-017": {
+          "start": "2026-09-24",
+          "finish": "2026-10-08",
+          "duration": 15
+        },
+        "id-018": {
+          "start": "2026-09-24",
+          "finish": "2026-10-03",
+          "duration": 10
+        },
+        "id-019": {
+          "start": "2026-10-09",
+          "finish": "2026-10-18",
+          "duration": 10
+        },
+        "id-021": {
+          "start": "2026-10-04",
+          "finish": "2026-10-23",
+          "duration": 20
+        },
+        "id-022": {
+          "start": "2026-10-19",
+          "finish": "2026-11-22",
+          "duration": 35
+        },
+        "id-023": {
+          "start": "2026-11-23",
+          "finish": "2026-11-27",
+          "duration": 5
+        },
+        "id-024": {
+          "start": "2026-11-28",
+          "finish": "2026-12-02",
+          "duration": 5
+        },
+        "id-026": {
+          "start": "2026-12-03",
+          "finish": "2026-12-27",
+          "duration": 25
+        },
+        "id-027": {
+          "start": "2026-12-28",
+          "finish": "2027-01-02",
+          "duration": 6
+        },
+        "id-029": {
+          "start": "2027-01-03",
+          "finish": "2027-01-10",
+          "duration": 8
+        },
+        "id-030": {
+          "start": "2027-01-11",
+          "finish": "2027-01-13",
+          "duration": 3
+        },
+        "id-031": {
+          "start": "2027-01-11",
+          "finish": "2027-01-17",
+          "duration": 7
+        }
+      },
+      "milestones": {
+        "id-032": {
+          "date": "2026-08-30"
+        },
+        "id-033": {
+          "date": "2026-10-18"
+        },
+        "id-034": {
+          "date": "2026-10-18"
+        },
+        "id-035": {
+          "date": "2026-12-02"
+        },
+        "id-036": {
+          "date": "2027-01-10"
+        }
+      },
+      "costItems": {
+        "id-061": {
+          "budgetedCents": 3000000,
+          "currency": "BRL",
+          "rate": 1
+        },
+        "id-062": {
+          "budgetedCents": 6000000,
+          "currency": "BRL",
+          "rate": 1
+        },
+        "id-063": {
+          "budgetedCents": 7500000,
+          "currency": "BRL",
+          "rate": 1
+        },
+        "id-064": {
+          "budgetedCents": 2800000,
+          "currency": "BRL",
+          "rate": 1
+        },
+        "id-065": {
+          "budgetedCents": 5500000,
+          "currency": "BRL",
+          "rate": 1
+        },
+        "id-066": {
+          "budgetedCents": 9000000,
+          "currency": "BRL",
+          "rate": 1
+        },
+        "id-070": {
+          "budgetedCents": 18000000,
+          "currency": "EUR",
+          "rate": 6.2
+        },
+        "id-071": {
+          "budgetedCents": 42000000,
+          "currency": "BRL",
+          "rate": 1
+        },
+        "id-072": {
+          "budgetedCents": 9500000,
+          "currency": "BRL",
+          "rate": 1
+        },
+        "id-073": {
+          "budgetedCents": 16000000,
+          "currency": "BRL",
+          "rate": 1
+        },
+        "id-074": {
+          "budgetedCents": 2500000,
+          "currency": "USD",
+          "rate": 5.4
+        },
+        "id-075": {
+          "budgetedCents": 32000000,
+          "currency": "BRL",
+          "rate": 1
+        }
+      },
+      "deliverables": {
+        "id-037": {
+          "code": "ENT-001",
+          "name": "Plano de projeto",
+          "plannedDate": "2026-09-04"
+        },
+        "id-038": {
+          "code": "ENT-002",
+          "name": "Memorial descritivo da arquitetura de automação",
+          "plannedDate": "2026-09-24"
+        },
+        "id-039": {
+          "code": "ENT-003",
+          "name": "Lista de I/O e folhas de dados dos instrumentos",
+          "plannedDate": "2026-10-04"
+        },
+        "id-040": {
+          "code": "ENT-004",
+          "name": "Diagramas elétricos e de interligação dos painéis",
+          "plannedDate": "2026-10-23"
+        },
+        "id-041": {
+          "code": "ENT-005",
+          "name": "Protocolo e relatório de TAF/FAT",
+          "plannedDate": null
+        },
+        "id-042": {
+          "code": "ENT-006",
+          "name": "Protocolo e relatório de TAC/SAT",
+          "plannedDate": null
+        },
+        "id-043": {
+          "code": "ENT-007",
+          "name": "Painéis de automação (CLP e remotas de I/O)",
+          "plannedDate": null
+        },
+        "id-044": {
+          "code": "ENT-008",
+          "name": "Treinamento dos operadores e da manutenção",
+          "plannedDate": null
+        }
+      }
+    }
+  ],
+  "data": {
+    "governance_profile": [
+      {
+        "id": "id-001",
+        "charter": {
+          "clientId": "id-002",
+          "sponsorId": "id-007",
+          "managerId": "id-004",
+          "objective": "Automatizar a linha de envase 3 com CLP redundante, painéis de automação e SCADA integrado ao MES.",
+          "justification": "Elevar a eficiência (OEE) e a rastreabilidade da linha exigidas pelo cliente.",
+          "currentPhase": "Engenharia",
+          "status": "Em execução",
+          "approvalDate": "2026-08-25"
+        },
+        "closure": {
+          "plannedDate": "2027-01-27",
+          "actualDate": null,
+          "pendingItems": "",
+          "closureTermSigned": false
+        },
+        "documentTemplate": {
+          "template": "Externo (cliente)",
+          "notes": "Padrão de documentação técnica do cliente, rev. 3"
+        },
+        "procurementPolicy": {
+          "model": "Cotação com ≥ 3 fornecedores",
+          "billing": "Misto",
+          "criteria": [
+            "Preço",
+            "Prazo",
+            "Homologação do cliente"
+          ],
+          "approvalLimitCents": 25000000,
+          "notes": "Itens acima da alçada vão ao comitê mensal."
+        }
+      }
+    ],
+    "governance_norms": [
+      {
+        "id": "id-050",
+        "code": "NRM-001",
+        "standard": "NR-10",
+        "type": "NR",
+        "title": "Segurança em instalações e serviços em eletricidade",
+        "notes": ""
+      },
+      {
+        "id": "id-051",
+        "code": "NRM-002",
+        "standard": "NR-12",
+        "type": "NR",
+        "title": "Segurança no trabalho em máquinas e equipamentos",
+        "notes": ""
+      },
+      {
+        "id": "id-052",
+        "code": "NRM-003",
+        "standard": "IEC 61131-3",
+        "type": "IEC",
+        "title": "Controladores programáveis — linguagens de programação",
+        "notes": ""
+      },
+      {
+        "id": "id-053",
+        "code": "NRM-004",
+        "standard": "IEC 62443",
+        "type": "IEC",
+        "title": "Segurança cibernética de sistemas de automação industrial",
+        "notes": ""
+      },
+      {
+        "id": "id-054",
+        "code": "NRM-005",
+        "standard": "ISO 9001:2015",
+        "type": "ISO",
+        "title": "Sistemas de gestão da qualidade",
+        "notes": ""
+      }
+    ],
+    "governance_meetings": [
+      {
+        "id": "id-055",
+        "code": "REU-001",
+        "type": "Outra",
+        "date": "2026-08-30",
+        "participantIds": [
+          "id-004",
+          "id-005",
+          "id-007",
+          "id-008"
+        ],
+        "decisions": "Plano de projeto e marcos contratuais aprovados.",
+        "actions": "Emitir o cronograma executivo em 5 dias.",
+        "status": "Realizada"
+      },
+      {
+        "id": "id-056",
+        "code": "REU-002",
+        "type": "Status semanal",
+        "date": "2026-10-18",
+        "participantIds": [
+          "id-004",
+          "id-005",
+          "id-006"
+        ],
+        "decisions": "Priorizar a revisão dos diagramas de interligação.",
+        "actions": "Reemitir a lista de I/O após os comentários do cliente.",
+        "status": "Realizada"
+      },
+      {
+        "id": "id-057",
+        "code": "REU-003",
+        "type": "Revisão de fase",
+        "date": "2026-10-26",
+        "participantIds": [
+          "id-004",
+          "id-007",
+          "id-008"
+        ],
+        "decisions": "",
+        "actions": "",
+        "status": "Agendada"
+      }
+    ],
+    "governance_lessons": [
+      {
+        "id": "id-058",
+        "code": "LIC-001",
+        "title": "Congelar a lista de I/O com o cliente antes do detalhamento dos diagramas",
+        "type": "Ponto de melhoria",
+        "category": "Técnica",
+        "context": "Inclusão tardia de pontos de I/O pelo cliente atrasou os diagramas de interligação.",
+        "recommendation": "Fazer uma revisão formal da lista de I/O ao final do levantamento de campo.",
+        "date": "2026-10-14",
+        "ownerId": "id-005"
+      }
+    ],
+    "scope_requirements": [
+      {
+        "id": "id-045",
+        "code": "REQ-001",
+        "description": "CLP redundante com remotas de I/O em rede PROFINET para a linha de envase",
+        "category": "Técnico",
+        "origin": "Cliente",
+        "priority": "Alta",
+        "validationStatus": "Validado",
+        "fulfillmentStatus": "Em desenvolvimento",
+        "acceptanceCriteria": "Comutação sem perda de processo comprovada no TAF/FAT.",
+        "ownerId": "id-005",
+        "lastValidation": "2026-09-19",
+        "deliverableIds": [
+          "id-040",
+          "id-041"
+        ]
+      },
+      {
+        "id": "id-046",
+        "code": "REQ-002",
+        "description": "Painéis com proteções de segurança de máquinas conforme NR-12",
+        "category": "Regulatório/Normativo",
+        "origin": "Normativo/Regulatório",
+        "priority": "Alta",
+        "validationStatus": "Validado",
+        "fulfillmentStatus": "Em desenvolvimento",
+        "acceptanceCriteria": "",
+        "ownerId": "id-005",
+        "lastValidation": "2026-09-19",
+        "deliverableIds": [
+          "id-043",
+          "id-041"
+        ]
+      },
+      {
+        "id": "id-047",
+        "code": "REQ-003",
+        "description": "Lista de I/O aprovada pelo cliente antes da fabricação",
+        "category": "Técnico",
+        "origin": "Cliente",
+        "priority": "Média",
+        "validationStatus": "Em validação",
+        "fulfillmentStatus": "Atendido",
+        "acceptanceCriteria": "",
+        "ownerId": "id-005",
+        "lastValidation": null,
+        "deliverableIds": [
+          "id-039"
+        ]
+      },
+      {
+        "id": "id-048",
+        "code": "REQ-004",
+        "description": "Integração do SCADA ao MES da planta (OPC UA)",
+        "category": "Técnico",
+        "origin": "Cliente",
+        "priority": "Média",
+        "validationStatus": "Validado",
+        "fulfillmentStatus": "Não atendido (gap)",
+        "acceptanceCriteria": "Tags de produção e alarmes publicados no MES e verificados no TAC/SAT.",
+        "ownerId": "id-005",
+        "lastValidation": "2026-09-29",
+        "deliverableIds": [
+          "id-042"
+        ]
+      },
+      {
+        "id": "id-049",
+        "code": "REQ-005",
+        "description": "Treinamento de 16 horas para operação e manutenção",
+        "category": "Comercial/Contratual",
+        "origin": "Comercial",
+        "priority": "Baixa",
+        "validationStatus": "Validado",
+        "fulfillmentStatus": "Não iniciado",
+        "acceptanceCriteria": "",
+        "ownerId": "id-005",
+        "lastValidation": "2026-09-09",
+        "deliverableIds": [
+          "id-044"
+        ]
+      }
+    ],
+    "scope_wbs": [
+      {
+        "id": "id-011",
+        "code": "1",
+        "name": "Planejamento",
+        "parentId": null,
+        "kind": "Agrupador",
+        "duration": 0,
+        "predecessorIds": [],
+        "startNoEarlierThan": null,
+        "actualStart": null,
+        "actualFinish": null,
+        "percentComplete": 0,
+        "ownerId": null,
+        "phase": "Planejamento"
+      },
+      {
+        "id": "id-012",
+        "code": "1.1",
+        "name": "Kick-off e plano de projeto",
+        "parentId": "id-011",
+        "kind": "Pacote de trabalho",
+        "duration": 5,
+        "predecessorIds": [],
+        "startNoEarlierThan": null,
+        "actualStart": "2026-08-30",
+        "actualFinish": "2026-09-03",
+        "percentComplete": 100,
+        "ownerId": "id-004",
+        "phase": "Planejamento"
+      },
+      {
+        "id": "id-013",
+        "code": "1.2",
+        "name": "Cronograma executivo e EAP",
+        "parentId": "id-011",
+        "kind": "Pacote de trabalho",
+        "duration": 4,
+        "predecessorIds": [
+          "id-012"
+        ],
+        "startNoEarlierThan": null,
+        "actualStart": "2026-09-04",
+        "actualFinish": "2026-09-07",
+        "percentComplete": 100,
+        "ownerId": "id-004",
+        "phase": "Planejamento"
+      },
+      {
+        "id": "id-014",
+        "code": "2",
+        "name": "Engenharia",
+        "parentId": null,
+        "kind": "Agrupador",
+        "duration": 0,
+        "predecessorIds": [],
+        "startNoEarlierThan": null,
+        "actualStart": null,
+        "actualFinish": null,
+        "percentComplete": 0,
+        "ownerId": null,
+        "phase": "Engenharia"
+      },
+      {
+        "id": "id-015",
+        "code": "2.1",
+        "name": "Levantamento de campo e lista de I/O",
+        "parentId": "id-014",
+        "kind": "Pacote de trabalho",
+        "duration": 8,
+        "predecessorIds": [
+          "id-012"
+        ],
+        "startNoEarlierThan": null,
+        "actualStart": "2026-09-04",
+        "actualFinish": "2026-09-11",
+        "percentComplete": 100,
+        "ownerId": "id-005",
+        "phase": "Engenharia"
+      },
+      {
+        "id": "id-016",
+        "code": "2.2",
+        "name": "Arquitetura de controle e rede industrial",
+        "parentId": "id-014",
+        "kind": "Pacote de trabalho",
+        "duration": 12,
+        "predecessorIds": [
+          "id-015"
+        ],
+        "startNoEarlierThan": null,
+        "actualStart": "2026-09-12",
+        "actualFinish": "2026-09-23",
+        "percentComplete": 100,
+        "ownerId": "id-005",
+        "phase": "Engenharia"
+      },
+      {
+        "id": "id-017",
+        "code": "2.3",
+        "name": "Diagramas elétricos e de interligação",
+        "parentId": "id-014",
+        "kind": "Pacote de trabalho",
+        "duration": 15,
+        "predecessorIds": [
+          "id-016"
+        ],
+        "startNoEarlierThan": null,
+        "actualStart": "2026-09-24",
+        "actualFinish": "2026-10-12",
+        "percentComplete": 100,
+        "ownerId": "id-005",
+        "phase": "Engenharia"
+      },
+      {
+        "id": "id-018",
+        "code": "2.4",
+        "name": "Especificação de CLP, remotas e instrumentos",
+        "parentId": "id-014",
+        "kind": "Pacote de trabalho",
+        "duration": 10,
+        "predecessorIds": [
+          "id-016"
+        ],
+        "startNoEarlierThan": null,
+        "actualStart": "2026-09-24",
+        "actualFinish": "2026-10-03",
+        "percentComplete": 100,
+        "ownerId": "id-005",
+        "phase": "Engenharia"
+      },
+      {
+        "id": "id-019",
+        "code": "2.5",
+        "name": "Aprovação da engenharia pelo cliente",
+        "parentId": "id-014",
+        "kind": "Pacote de trabalho",
+        "duration": 10,
+        "predecessorIds": [
+          "id-017",
+          "id-018"
+        ],
+        "startNoEarlierThan": null,
+        "actualStart": "2026-10-13",
+        "actualFinish": null,
+        "percentComplete": 50,
+        "ownerId": "id-004",
+        "phase": "Engenharia"
+      },
+      {
+        "id": "id-020",
+        "code": "3",
+        "name": "Suprimentos",
+        "parentId": null,
+        "kind": "Agrupador",
+        "duration": 0,
+        "predecessorIds": [],
+        "startNoEarlierThan": null,
+        "actualStart": null,
+        "actualFinish": null,
+        "percentComplete": 0,
+        "ownerId": null,
+        "phase": "Suprimentos"
+      },
+      {
+        "id": "id-021",
+        "code": "3.1",
+        "name": "Compra de CLP, remotas e instrumentos",
+        "parentId": "id-020",
+        "kind": "Pacote de trabalho",
+        "duration": 20,
+        "predecessorIds": [
+          "id-018"
+        ],
+        "startNoEarlierThan": null,
+        "actualStart": "2026-10-04",
+        "actualFinish": null,
+        "percentComplete": 50,
+        "ownerId": "id-006",
+        "phase": "Suprimentos"
+      },
+      {
+        "id": "id-022",
+        "code": "3.2",
+        "name": "Fabricação dos painéis e software de CLP/SCADA",
+        "parentId": "id-020",
+        "kind": "Pacote de trabalho",
+        "duration": 35,
+        "predecessorIds": [
+          "id-019"
+        ],
+        "startNoEarlierThan": null,
+        "actualStart": null,
+        "actualFinish": null,
+        "percentComplete": 0,
+        "ownerId": "id-006",
+        "phase": "Suprimentos"
+      },
+      {
+        "id": "id-023",
+        "code": "3.3",
+        "name": "Inspeção de fabricação dos painéis",
+        "parentId": "id-020",
+        "kind": "Pacote de trabalho",
+        "duration": 5,
+        "predecessorIds": [
+          "id-022"
+        ],
+        "startNoEarlierThan": null,
+        "actualStart": null,
+        "actualFinish": null,
+        "percentComplete": 0,
+        "ownerId": "id-005",
+        "phase": "Suprimentos"
+      },
+      {
+        "id": "id-024",
+        "code": "3.4",
+        "name": "TAF/FAT — teste de aceitação em fábrica",
+        "parentId": "id-020",
+        "kind": "Pacote de trabalho",
+        "duration": 5,
+        "predecessorIds": [
+          "id-023"
+        ],
+        "startNoEarlierThan": null,
+        "actualStart": null,
+        "actualFinish": null,
+        "percentComplete": 0,
+        "ownerId": "id-005",
+        "phase": "Suprimentos"
+      },
+      {
+        "id": "id-025",
+        "code": "4",
+        "name": "Montagem",
+        "parentId": null,
+        "kind": "Agrupador",
+        "duration": 0,
+        "predecessorIds": [],
+        "startNoEarlierThan": null,
+        "actualStart": null,
+        "actualFinish": null,
+        "percentComplete": 0,
+        "ownerId": null,
+        "phase": "Montagem"
+      },
+      {
+        "id": "id-026",
+        "code": "4.1",
+        "name": "Montagem dos painéis e lançamento de cabos",
+        "parentId": "id-025",
+        "kind": "Pacote de trabalho",
+        "duration": 25,
+        "predecessorIds": [
+          "id-024",
+          "id-021"
+        ],
+        "startNoEarlierThan": null,
+        "actualStart": null,
+        "actualFinish": null,
+        "percentComplete": 0,
+        "ownerId": "id-005",
+        "phase": "Montagem"
+      },
+      {
+        "id": "id-027",
+        "code": "4.2",
+        "name": "Testes de malha e interligação",
+        "parentId": "id-025",
+        "kind": "Pacote de trabalho",
+        "duration": 6,
+        "predecessorIds": [
+          "id-026"
+        ],
+        "startNoEarlierThan": null,
+        "actualStart": null,
+        "actualFinish": null,
+        "percentComplete": 0,
+        "ownerId": "id-005",
+        "phase": "Montagem"
+      },
+      {
+        "id": "id-028",
+        "code": "5",
+        "name": "Comissionamento",
+        "parentId": null,
+        "kind": "Agrupador",
+        "duration": 0,
+        "predecessorIds": [],
+        "startNoEarlierThan": null,
+        "actualStart": null,
+        "actualFinish": null,
+        "percentComplete": 0,
+        "ownerId": null,
+        "phase": "Comissionamento"
+      },
+      {
+        "id": "id-029",
+        "code": "5.1",
+        "name": "TAC/SAT — teste de aceitação em campo",
+        "parentId": "id-028",
+        "kind": "Pacote de trabalho",
+        "duration": 8,
+        "predecessorIds": [
+          "id-027"
+        ],
+        "startNoEarlierThan": null,
+        "actualStart": null,
+        "actualFinish": null,
+        "percentComplete": 0,
+        "ownerId": "id-005",
+        "phase": "Comissionamento"
+      },
+      {
+        "id": "id-030",
+        "code": "5.2",
+        "name": "Partida assistida e treinamento da operação",
+        "parentId": "id-028",
+        "kind": "Pacote de trabalho",
+        "duration": 3,
+        "predecessorIds": [
+          "id-029"
+        ],
+        "startNoEarlierThan": null,
+        "actualStart": null,
+        "actualFinish": null,
+        "percentComplete": 0,
+        "ownerId": "id-004",
+        "phase": "Comissionamento"
+      },
+      {
+        "id": "id-031",
+        "code": "5.3",
+        "name": "Data book e as built",
+        "parentId": "id-028",
+        "kind": "Pacote de trabalho",
+        "duration": 7,
+        "predecessorIds": [
+          "id-029"
+        ],
+        "startNoEarlierThan": null,
+        "actualStart": null,
+        "actualFinish": null,
+        "percentComplete": 0,
+        "ownerId": "id-005",
+        "phase": "Comissionamento"
+      }
+    ],
+    "scope_deliverables": [
+      {
+        "id": "id-037",
+        "code": "ENT-001",
+        "name": "Plano de projeto",
+        "category": "Documentação de gerenciamento de projeto",
+        "type": "Plano de projeto",
+        "revision": "A",
+        "template": "Interno",
+        "status": "Aprovado",
+        "workPackageId": "id-012",
+        "milestoneId": null,
+        "plannedDate": "2026-09-04",
+        "actualDate": "2026-09-04",
+        "ownerId": "id-004",
+        "clientApproval": true
+      },
+      {
+        "id": "id-038",
+        "code": "ENT-002",
+        "name": "Memorial descritivo da arquitetura de automação",
+        "category": "Documentação de engenharia",
+        "type": "Memorial descritivo",
+        "revision": "B",
+        "template": null,
+        "status": "Aprovado",
+        "workPackageId": "id-016",
+        "milestoneId": null,
+        "plannedDate": "2026-09-24",
+        "actualDate": "2026-09-26",
+        "ownerId": "id-005",
+        "clientApproval": true
+      },
+      {
+        "id": "id-039",
+        "code": "ENT-003",
+        "name": "Lista de I/O e folhas de dados dos instrumentos",
+        "category": "Documentação de engenharia",
+        "type": "Folha de dados",
+        "revision": "A",
+        "template": null,
+        "status": "Emitido ao cliente",
+        "workPackageId": "id-018",
+        "milestoneId": null,
+        "plannedDate": "2026-10-04",
+        "actualDate": null,
+        "ownerId": "id-005",
+        "clientApproval": true
+      },
+      {
+        "id": "id-040",
+        "code": "ENT-004",
+        "name": "Diagramas elétricos e de interligação dos painéis",
+        "category": "Documentação de engenharia",
+        "type": "Diagrama (P&ID, unifilar, elétrico)",
+        "revision": "0",
+        "template": null,
+        "status": "Em revisão interna",
+        "workPackageId": "id-017",
+        "milestoneId": null,
+        "plannedDate": "2026-10-23",
+        "actualDate": null,
+        "ownerId": "id-005",
+        "clientApproval": true
+      },
+      {
+        "id": "id-041",
+        "code": "ENT-005",
+        "name": "Protocolo e relatório de TAF/FAT",
+        "category": "Documentação de engenharia",
+        "type": "Relatório de teste (TAF/TAC/TAP/TDS)",
+        "revision": "0",
+        "template": null,
+        "status": "Não iniciado",
+        "workPackageId": "id-024",
+        "milestoneId": null,
+        "plannedDate": null,
+        "actualDate": null,
+        "ownerId": "id-005",
+        "clientApproval": true
+      },
+      {
+        "id": "id-042",
+        "code": "ENT-006",
+        "name": "Protocolo e relatório de TAC/SAT",
+        "category": "Documentação de engenharia",
+        "type": "Relatório de teste (TAF/TAC/TAP/TDS)",
+        "revision": "0",
+        "template": null,
+        "status": "Não iniciado",
+        "workPackageId": "id-029",
+        "milestoneId": null,
+        "plannedDate": null,
+        "actualDate": null,
+        "ownerId": "id-005",
+        "clientApproval": true
+      },
+      {
+        "id": "id-043",
+        "code": "ENT-007",
+        "name": "Painéis de automação (CLP e remotas de I/O)",
+        "category": "Entregável físico / serviço",
+        "type": "Painel/Sistema",
+        "status": "Não iniciado",
+        "workPackageId": "id-022",
+        "milestoneId": null,
+        "plannedDate": null,
+        "actualDate": null,
+        "ownerId": "id-006",
+        "clientApproval": true
+      },
+      {
+        "id": "id-044",
+        "code": "ENT-008",
+        "name": "Treinamento dos operadores e da manutenção",
+        "category": "Entregável físico / serviço",
+        "type": "Treinamento",
+        "status": "Não iniciado",
+        "workPackageId": "id-030",
+        "milestoneId": null,
+        "plannedDate": null,
+        "actualDate": null,
+        "ownerId": "id-004",
+        "clientApproval": false
+      }
+    ],
+    "scope_changeRequests": [
+      {
+        "id": "id-059",
+        "code": "MUD-001",
+        "title": "Inclusão de inspeção por visão na rotuladora",
+        "description": "Cliente solicitou câmera de inspeção de rótulos integrada ao CLP da linha.",
+        "justification": "Redução de refugo exigida pela auditoria de qualidade do cliente.",
+        "requesterId": "id-008",
+        "requestDate": "2026-09-17",
+        "categories": [
+          "Escopo",
+          "Cronograma",
+          "Custo"
+        ],
+        "scopeImpact": "Novos pontos de I/O, revisão dos diagramas e das telas SCADA.",
+        "affectedWorkPackageIds": [
+          "id-017",
+          "id-026"
+        ],
+        "affectedDeliverableIds": [
+          "id-040"
+        ],
+        "scheduleImpactDays": 12,
+        "costImpactCents": 48000000,
+        "impactLevel": "Alto",
+        "status": "Em análise",
+        "approverId": null,
+        "decisionDate": null,
+        "implementerId": "id-005"
+      },
+      {
+        "id": "id-060",
+        "code": "MUD-002",
+        "title": "Troca dos inversores por modelo homologado",
+        "description": "Substituir os inversores de frequência por modelo da lista de homologação do cliente.",
+        "justification": "Exigência de padronização de sobressalentes do cliente.",
+        "requesterId": "id-008",
+        "requestDate": "2026-10-09",
+        "categories": [
+          "Técnica",
+          "Custo"
+        ],
+        "scopeImpact": "Atualização da especificação técnica.",
+        "affectedWorkPackageIds": [
+          "id-018"
+        ],
+        "affectedDeliverableIds": [],
+        "scheduleImpactDays": 0,
+        "costImpactCents": -1500000,
+        "impactLevel": "Baixo",
+        "status": "Aprovada",
+        "approverId": "id-007",
+        "decisionDate": "2026-10-14",
+        "implementerId": "id-006"
+      }
+    ],
+    "schedule_milestones": [
+      {
+        "id": "id-032",
+        "code": "M-001",
+        "name": "Assinatura do contrato",
+        "phase": "Planejamento",
+        "type": "Contratual",
+        "predecessorIds": [],
+        "manualDate": "2026-08-30",
+        "actualDate": "2026-08-30",
+        "ownerId": "id-004"
+      },
+      {
+        "id": "id-033",
+        "code": "M-002",
+        "name": "Engenharia aprovada pelo cliente",
+        "phase": "Engenharia",
+        "type": "Contratual",
+        "predecessorIds": [
+          "id-019"
+        ],
+        "manualDate": null,
+        "actualDate": null,
+        "ownerId": "id-004"
+      },
+      {
+        "id": "id-034",
+        "code": "M-003",
+        "name": "Faturamento de 30% — engenharia",
+        "phase": "Engenharia",
+        "type": "Faturamento",
+        "predecessorIds": [
+          "id-019"
+        ],
+        "manualDate": null,
+        "actualDate": null,
+        "ownerId": "id-004"
+      },
+      {
+        "id": "id-035",
+        "code": "M-004",
+        "name": "TAF/FAT aprovado pelo cliente",
+        "phase": "Suprimentos",
+        "type": "Teste (TAF/TAC/TAP/TDS)",
+        "predecessorIds": [
+          "id-024"
+        ],
+        "manualDate": null,
+        "actualDate": null,
+        "ownerId": "id-004"
+      },
+      {
+        "id": "id-036",
+        "code": "M-005",
+        "name": "TAC/SAT aprovado e partida da linha",
+        "phase": "Comissionamento",
+        "type": "Contratual",
+        "predecessorIds": [
+          "id-029"
+        ],
+        "manualDate": null,
+        "actualDate": null,
+        "ownerId": "id-004"
+      }
+    ],
+    "resources_resources": [
+      {
+        "id": "id-083",
+        "code": "REC-001",
+        "name": "Engenheiro de automação sênior",
+        "type": "Pessoa interna",
+        "role": "Engenharia de automação",
+        "skill": "CLP/SCADA",
+        "skillLevel": "Sênior",
+        "capacityPct": 100,
+        "hourlyRateCents": 18000,
+        "personId": "id-005",
+        "organizationId": null
+      },
+      {
+        "id": "id-084",
+        "code": "REC-002",
+        "name": "Projetista elétrico",
+        "type": "Pessoa interna",
+        "role": "Projeto elétrico",
+        "skill": "Diagramas e interligação",
+        "skillLevel": "Pleno",
+        "capacityPct": 100,
+        "hourlyRateCents": 11000,
+        "personId": null,
+        "organizationId": null
+      },
+      {
+        "id": "id-085",
+        "code": "REC-003",
+        "name": "Programador CLP/SCADA",
+        "type": "Pessoa terceirizada",
+        "role": "Software de automação",
+        "skill": "IEC 61131-3",
+        "skillLevel": "Sênior",
+        "capacityPct": 100,
+        "hourlyRateCents": 16000,
+        "personId": null,
+        "organizationId": "id-009"
+      },
+      {
+        "id": "id-086",
+        "code": "REC-004",
+        "name": "Equipe de montagem elétrica",
+        "type": "Equipe",
+        "role": "Montagem",
+        "skill": "",
+        "skillLevel": null,
+        "capacityPct": 100,
+        "hourlyRateCents": 42000,
+        "personId": null,
+        "organizationId": "id-009"
+      },
+      {
+        "id": "id-087",
+        "code": "REC-005",
+        "name": "Técnico de comissionamento",
+        "type": "Pessoa interna",
+        "role": "Comissionamento",
+        "skill": "Testes de malha",
+        "skillLevel": "Pleno",
+        "capacityPct": 100,
+        "hourlyRateCents": 12000,
+        "personId": null,
+        "organizationId": null
+      },
+      {
+        "id": "id-088",
+        "code": "REC-006",
+        "name": "Caminhão munck",
+        "type": "Equipamento",
+        "role": "Movimentação de painéis",
+        "skill": "",
+        "skillLevel": null,
+        "capacityPct": 100,
+        "hourlyRateCents": 35000,
+        "personId": null,
+        "organizationId": null
+      }
+    ],
+    "resources_allocations": [
+      {
+        "id": "id-089",
+        "code": "ALO-001",
+        "resourceId": "id-083",
+        "workPackageId": "id-016",
+        "pct": 100,
+        "start": "2026-09-12",
+        "finish": "2026-09-23",
+        "status": "Encerrada"
+      },
+      {
+        "id": "id-090",
+        "code": "ALO-002",
+        "resourceId": "id-083",
+        "workPackageId": "id-017",
+        "pct": 60,
+        "start": "2026-09-24",
+        "finish": "2026-10-12",
+        "status": "Encerrada"
+      },
+      {
+        "id": "id-091",
+        "code": "ALO-003",
+        "resourceId": "id-083",
+        "workPackageId": "id-019",
+        "pct": 50,
+        "start": "2026-10-13",
+        "finish": "2026-10-24",
+        "status": "Ativa"
+      },
+      {
+        "id": "id-092",
+        "code": "ALO-004",
+        "resourceId": "id-083",
+        "workPackageId": "id-024",
+        "pct": 70,
+        "start": "2026-12-02",
+        "finish": "2026-12-06",
+        "status": "Planejada"
+      },
+      {
+        "id": "id-093",
+        "code": "ALO-005",
+        "resourceId": "id-083",
+        "workPackageId": "id-023",
+        "pct": 50,
+        "start": "2026-11-28",
+        "finish": "2026-12-04",
+        "status": "Planejada"
+      },
+      {
+        "id": "id-094",
+        "code": "ALO-006",
+        "resourceId": "id-084",
+        "workPackageId": "id-017",
+        "pct": 100,
+        "start": "2026-09-24",
+        "finish": "2026-10-12",
+        "status": "Encerrada"
+      },
+      {
+        "id": "id-095",
+        "code": "ALO-007",
+        "resourceId": "id-085",
+        "workPackageId": "id-022",
+        "pct": 80,
+        "start": "2026-10-23",
+        "finish": "2026-11-26",
+        "status": "Planejada"
+      },
+      {
+        "id": "id-096",
+        "code": "ALO-008",
+        "resourceId": "id-086",
+        "workPackageId": "id-026",
+        "pct": 100,
+        "start": "2026-12-03",
+        "finish": "2026-12-27",
+        "status": "Planejada"
+      },
+      {
+        "id": "id-097",
+        "code": "ALO-009",
+        "resourceId": "id-087",
+        "workPackageId": "id-029",
+        "pct": 100,
+        "start": "2027-01-03",
+        "finish": "2027-01-10",
+        "status": "Planejada"
+      },
+      {
+        "id": "id-098",
+        "code": "ALO-010",
+        "resourceId": "id-088",
+        "workPackageId": "id-026",
+        "pct": 50,
+        "start": "2026-12-03",
+        "finish": "2026-12-07",
+        "status": "Planejada"
+      }
+    ],
+    "finances_budgetLines": [
+      {
+        "id": "id-061",
+        "code": "ORC-001",
+        "description": "Gestão do projeto e planejamento",
+        "kind": "Custo",
+        "nature": "OPEX",
+        "category": "Mão de obra",
+        "currency": "BRL",
+        "rate": null,
+        "budgetedCents": 3000000,
+        "actualCents": 3000000,
+        "plannedDate": "2026-09-07",
+        "actualDate": "2026-09-07",
+        "status": "Realizado",
+        "workPackageId": "id-012",
+        "milestoneId": null,
+        "partyId": null,
+        "ownerId": "id-004"
+      },
+      {
+        "id": "id-062",
+        "code": "ORC-002",
+        "description": "Engenharia de arquitetura de controle",
+        "kind": "Custo",
+        "nature": "OPEX",
+        "category": "Mão de obra",
+        "currency": "BRL",
+        "rate": null,
+        "budgetedCents": 6000000,
+        "actualCents": 7400000,
+        "plannedDate": "2026-09-23",
+        "actualDate": "2026-09-24",
+        "status": "Realizado",
+        "workPackageId": "id-016",
+        "milestoneId": null,
+        "partyId": null,
+        "ownerId": "id-005"
+      },
+      {
+        "id": "id-063",
+        "code": "ORC-003",
+        "description": "Projeto dos diagramas elétricos e de interligação",
+        "kind": "Custo",
+        "nature": "OPEX",
+        "category": "Mão de obra",
+        "currency": "BRL",
+        "rate": null,
+        "budgetedCents": 7500000,
+        "actualCents": 9800000,
+        "plannedDate": "2026-10-08",
+        "actualDate": "2026-10-14",
+        "status": "Em andamento",
+        "workPackageId": "id-017",
+        "milestoneId": null,
+        "partyId": null,
+        "ownerId": "id-005"
+      },
+      {
+        "id": "id-064",
+        "code": "ORC-004",
+        "description": "Logística e transporte dos painéis",
+        "kind": "Custo",
+        "nature": "OPEX",
+        "category": "Logística",
+        "currency": "BRL",
+        "rate": null,
+        "budgetedCents": 2800000,
+        "actualCents": 0,
+        "plannedDate": "2026-12-04",
+        "actualDate": null,
+        "status": "Planejado",
+        "workPackageId": "id-026",
+        "milestoneId": null,
+        "partyId": null,
+        "ownerId": "id-004"
+      },
+      {
+        "id": "id-065",
+        "code": "ORC-005",
+        "description": "Comissionamento e partida assistida",
+        "kind": "Custo",
+        "nature": "OPEX",
+        "category": "Mão de obra",
+        "currency": "BRL",
+        "rate": null,
+        "budgetedCents": 5500000,
+        "actualCents": 0,
+        "plannedDate": "2027-01-07",
+        "actualDate": null,
+        "status": "Planejado",
+        "workPackageId": "id-029",
+        "milestoneId": null,
+        "partyId": null,
+        "ownerId": "id-004"
+      },
+      {
+        "id": "id-066",
+        "code": "ORC-006",
+        "description": "Reserva de contingência (8%)",
+        "kind": "Custo",
+        "nature": "OPEX",
+        "category": "Contingência",
+        "currency": "BRL",
+        "rate": null,
+        "budgetedCents": 9000000,
+        "actualCents": 1200000,
+        "plannedDate": null,
+        "actualDate": "2026-10-15",
+        "status": "Em andamento",
+        "workPackageId": null,
+        "milestoneId": null,
+        "partyId": null,
+        "ownerId": "id-004"
+      },
+      {
+        "id": "id-067",
+        "code": "ORC-007",
+        "description": "Faturamento de 30% — engenharia aprovada",
+        "kind": "Receita",
+        "nature": "OPEX",
+        "category": "Marco contratual/Faturamento",
+        "currency": "BRL",
+        "rate": null,
+        "budgetedCents": 45000000,
+        "actualCents": 0,
+        "plannedDate": "2026-10-29",
+        "actualDate": null,
+        "status": "Planejado",
+        "workPackageId": null,
+        "milestoneId": "id-034",
+        "partyId": "id-002",
+        "ownerId": "id-004"
+      },
+      {
+        "id": "id-068",
+        "code": "ORC-008",
+        "description": "Faturamento de 40% — TAF/FAT aprovado",
+        "kind": "Receita",
+        "nature": "OPEX",
+        "category": "Marco contratual/Faturamento",
+        "currency": "BRL",
+        "rate": null,
+        "budgetedCents": 60000000,
+        "actualCents": 0,
+        "plannedDate": "2026-12-08",
+        "actualDate": null,
+        "status": "Planejado",
+        "workPackageId": null,
+        "milestoneId": "id-035",
+        "partyId": "id-002",
+        "ownerId": "id-004"
+      },
+      {
+        "id": "id-069",
+        "code": "ORC-009",
+        "description": "Faturamento de 30% — partida da linha",
+        "kind": "Receita",
+        "nature": "OPEX",
+        "category": "Marco contratual/Faturamento",
+        "currency": "BRL",
+        "rate": null,
+        "budgetedCents": 45000000,
+        "actualCents": 0,
+        "plannedDate": "2027-01-17",
+        "actualDate": null,
+        "status": "Planejado",
+        "workPackageId": null,
+        "milestoneId": "id-036",
+        "partyId": "id-002",
+        "ownerId": "id-004"
+      }
+    ],
+    "finances_procurements": [
+      {
+        "id": "id-070",
+        "code": "CTR-001",
+        "description": "CLP redundante e remotas de I/O PROFINET",
+        "type": "Produto",
+        "nature": "CAPEX",
+        "supplierId": "id-010",
+        "origin": "Importado",
+        "country": "Alemanha",
+        "currency": "EUR",
+        "rate": 6.2,
+        "workPackageId": "id-021",
+        "milestoneId": "id-035",
+        "criticality": "Alta",
+        "ownerId": "id-006",
+        "budgetedCents": 18000000,
+        "committedCents": 18000000,
+        "actualCents": 9000000,
+        "contractStatus": "Pedido emitido",
+        "deliveryStatus": "Em produção",
+        "requestDate": "2026-10-04",
+        "dueDate": "2026-12-10",
+        "completionDate": null
+      },
+      {
+        "id": "id-071",
+        "code": "CTR-002",
+        "description": "Fabricação dos painéis de automação",
+        "type": "Produto",
+        "nature": "CAPEX",
+        "supplierId": "id-003",
+        "origin": "Nacional",
+        "country": "",
+        "currency": "BRL",
+        "rate": null,
+        "workPackageId": "id-022",
+        "milestoneId": "id-035",
+        "criticality": "Alta",
+        "ownerId": "id-006",
+        "budgetedCents": 42000000,
+        "committedCents": 44500000,
+        "actualCents": 0,
+        "contractStatus": "Contratado",
+        "deliveryStatus": "Não iniciado",
+        "requestDate": "2026-10-09",
+        "dueDate": "2026-11-26",
+        "completionDate": null
+      },
+      {
+        "id": "id-072",
+        "code": "CTR-003",
+        "description": "Instrumentos de campo (transmissores e válvulas)",
+        "type": "Produto",
+        "nature": "CAPEX",
+        "supplierId": "id-010",
+        "origin": "Nacional",
+        "country": "",
+        "currency": "BRL",
+        "rate": null,
+        "workPackageId": "id-021",
+        "milestoneId": null,
+        "criticality": "Média",
+        "ownerId": "id-006",
+        "budgetedCents": 9500000,
+        "committedCents": 9200000,
+        "actualCents": 9200000,
+        "contractStatus": "Pedido emitido",
+        "deliveryStatus": "Recebido",
+        "requestDate": "2026-10-05",
+        "dueDate": "2026-10-17",
+        "completionDate": "2026-10-17"
+      },
+      {
+        "id": "id-073",
+        "code": "CTR-004",
+        "description": "Desenvolvimento do software de CLP e telas SCADA",
+        "type": "Serviço",
+        "nature": "CAPEX",
+        "supplierId": "id-009",
+        "origin": "Nacional",
+        "country": "",
+        "currency": "BRL",
+        "rate": null,
+        "workPackageId": "id-022",
+        "milestoneId": null,
+        "criticality": "Alta",
+        "ownerId": "id-006",
+        "budgetedCents": 16000000,
+        "committedCents": 16000000,
+        "actualCents": 0,
+        "contractStatus": "Contratado",
+        "deliveryStatus": "Não iniciado",
+        "requestDate": "2026-10-07",
+        "dueDate": "2026-11-26",
+        "completionDate": null
+      },
+      {
+        "id": "id-074",
+        "code": "CTR-005",
+        "description": "Licenças do SCADA e servidor de históricos",
+        "type": "Produto",
+        "nature": "CAPEX",
+        "supplierId": "id-009",
+        "origin": "Importado",
+        "country": "Estados Unidos",
+        "currency": "USD",
+        "rate": 5.4,
+        "workPackageId": "id-018",
+        "milestoneId": null,
+        "criticality": "Média",
+        "ownerId": "id-006",
+        "budgetedCents": 2500000,
+        "committedCents": 2500000,
+        "actualCents": 2500000,
+        "contractStatus": "Contratado",
+        "deliveryStatus": "Recebido",
+        "requestDate": "2026-09-27",
+        "dueDate": "2026-10-09",
+        "completionDate": "2026-10-09"
+      },
+      {
+        "id": "id-075",
+        "code": "CTR-006",
+        "description": "Montagem eletromecânica e lançamento de cabos",
+        "type": "Serviço",
+        "nature": "CAPEX",
+        "supplierId": "id-009",
+        "origin": "Nacional",
+        "country": "",
+        "currency": "BRL",
+        "rate": null,
+        "workPackageId": "id-026",
+        "milestoneId": null,
+        "criticality": "Média",
+        "ownerId": "id-006",
+        "budgetedCents": 32000000,
+        "committedCents": 0,
+        "actualCents": 0,
+        "contractStatus": "Em cotação",
+        "deliveryStatus": "Não iniciado",
+        "requestDate": null,
+        "dueDate": "2026-12-27",
+        "completionDate": null
+      }
+    ],
+    "risks_risks": [
+      {
+        "id": "id-076",
+        "code": "R-001",
+        "title": "Atraso na importação do CLP redundante",
+        "nature": "Ameaça",
+        "category": "Fornecedor/Aquisição",
+        "description": "",
+        "rootCause": "Prazo de fabricação do fabricante e desembaraço aduaneiro",
+        "probability": 3,
+        "impact": 3,
+        "responseType": "Mitigar",
+        "responseAction": "Pedido antecipado e diligenciamento semanal com o distribuidor",
+        "ownerId": "id-006",
+        "status": "Em mitigação",
+        "nextReview": "2026-10-26",
+        "notes": "",
+        "probabilityPct": 40,
+        "costImpactCents": 25000000,
+        "scheduleImpactDays": 20,
+        "workPackageIds": [
+          "id-021"
+        ],
+        "milestoneIds": [
+          "id-035"
+        ],
+        "deliverableIds": [],
+        "procurementIds": [
+          "id-070"
+        ],
+        "partyIds": [
+          "id-010"
+        ]
+      },
+      {
+        "id": "id-077",
+        "code": "R-002",
+        "title": "Falha de comunicação PROFINET no TAF/FAT",
+        "nature": "Ameaça",
+        "category": "Técnico",
+        "description": "",
+        "rootCause": "",
+        "probability": 2,
+        "impact": 3,
+        "responseType": null,
+        "responseAction": "",
+        "ownerId": "id-005",
+        "status": "Identificado",
+        "nextReview": "2026-10-26",
+        "notes": "",
+        "probabilityPct": 25,
+        "costImpactCents": 6000000,
+        "scheduleImpactDays": 7,
+        "workPackageIds": [
+          "id-024"
+        ],
+        "milestoneIds": [],
+        "deliverableIds": [
+          "id-041"
+        ],
+        "procurementIds": [
+          "id-071",
+          "id-073"
+        ],
+        "partyIds": []
+      },
+      {
+        "id": "id-078",
+        "code": "R-003",
+        "title": "Nova alteração da lista de I/O pelo cliente",
+        "nature": "Ameaça",
+        "category": "Cliente/Contratual",
+        "description": "",
+        "rootCause": "",
+        "probability": 3,
+        "impact": 2,
+        "responseType": null,
+        "responseAction": "",
+        "ownerId": "id-005",
+        "status": "Em monitoramento",
+        "nextReview": "2026-10-26",
+        "notes": "",
+        "probabilityPct": null,
+        "costImpactCents": null,
+        "scheduleImpactDays": null,
+        "workPackageIds": [
+          "id-017"
+        ],
+        "milestoneIds": [],
+        "deliverableIds": [],
+        "procurementIds": [],
+        "partyIds": [
+          "id-002",
+          "id-008"
+        ]
+      },
+      {
+        "id": "id-079",
+        "code": "R-004",
+        "title": "Não conformidade NR-12 nas proteções dos painéis",
+        "nature": "Ameaça",
+        "category": "Segurança/SSMA",
+        "description": "",
+        "rootCause": "",
+        "probability": 1,
+        "impact": 3,
+        "responseType": "Evitar",
+        "responseAction": "Revisão de projeto com especialista em NR-12",
+        "ownerId": "id-005",
+        "status": "Identificado",
+        "nextReview": "2026-10-26",
+        "notes": "",
+        "probabilityPct": null,
+        "costImpactCents": null,
+        "scheduleImpactDays": null,
+        "workPackageIds": [
+          "id-022"
+        ],
+        "milestoneIds": [],
+        "deliverableIds": [],
+        "procurementIds": [],
+        "partyIds": [
+          "id-003"
+        ]
+      },
+      {
+        "id": "id-080",
+        "code": "R-005",
+        "title": "Indisponibilidade do técnico de comissionamento",
+        "nature": "Ameaça",
+        "category": "Cronograma",
+        "description": "",
+        "rootCause": "",
+        "probability": 1,
+        "impact": 2,
+        "responseType": null,
+        "responseAction": "",
+        "ownerId": "id-004",
+        "status": "Identificado",
+        "nextReview": "2026-10-26",
+        "notes": "",
+        "probabilityPct": null,
+        "costImpactCents": null,
+        "scheduleImpactDays": null,
+        "workPackageIds": [
+          "id-029"
+        ],
+        "milestoneIds": [],
+        "deliverableIds": [],
+        "procurementIds": [],
+        "partyIds": []
+      },
+      {
+        "id": "id-081",
+        "code": "R-006",
+        "title": "Antecipar a montagem com a liberação parcial da área",
+        "nature": "Oportunidade",
+        "category": "Cronograma",
+        "description": "",
+        "rootCause": "",
+        "probability": 2,
+        "impact": 2,
+        "responseType": "Explorar",
+        "responseAction": "Negociar com o cliente a liberação do mezanino",
+        "ownerId": "id-004",
+        "status": "Identificado",
+        "nextReview": "2026-10-26",
+        "notes": "",
+        "probabilityPct": null,
+        "costImpactCents": null,
+        "scheduleImpactDays": null,
+        "workPackageIds": [
+          "id-026"
+        ],
+        "milestoneIds": [],
+        "deliverableIds": [],
+        "procurementIds": [],
+        "partyIds": []
+      },
+      {
+        "id": "id-082",
+        "code": "R-007",
+        "title": "Variação cambial do euro na compra do CLP",
+        "nature": "Ameaça",
+        "category": "Custo",
+        "description": "",
+        "rootCause": "",
+        "probability": 2,
+        "impact": 2,
+        "responseType": "Transferir",
+        "responseAction": "Câmbio travado no fechamento do pedido",
+        "ownerId": "id-006",
+        "status": "Encerrado",
+        "nextReview": "2026-10-26",
+        "notes": "",
+        "probabilityPct": null,
+        "costImpactCents": null,
+        "scheduleImpactDays": null,
+        "workPackageIds": [],
+        "milestoneIds": [],
+        "deliverableIds": [],
+        "procurementIds": [
+          "id-070"
+        ],
+        "partyIds": []
+      }
+    ],
+    "stakeholders_parties": [
+      {
+        "id": "id-002",
+        "kind": "Organização",
+        "code": "PI-001",
+        "name": "Bebidas Exemplo Indústria S.A.",
+        "roles": [
+          "Cliente"
+        ],
+        "taxId": "",
+        "country": "Brasil",
+        "contact": "",
+        "internal": "Externo",
+        "notes": "",
+        "analysis": {
+          "interests": "OEE da linha e rastreabilidade de lotes",
+          "power": "Alto",
+          "interest": "Alto",
+          "currentPosture": "Apoiador",
+          "desiredPosture": "Apoiador",
+          "engagementStrategy": "Comitê mensal e relatório semanal",
+          "relationshipOwnerId": "id-004"
+        }
+      },
+      {
+        "id": "id-003",
+        "kind": "Organização",
+        "code": "PI-002",
+        "name": "Painéis Elétricos Fictícios Ltda.",
+        "roles": [
+          "Fornecedor"
+        ],
+        "taxId": "",
+        "country": "Brasil",
+        "contact": "",
+        "internal": "Externo",
+        "notes": "",
+        "analysis": {
+          "interests": "Prazo de fabricação dos painéis",
+          "power": "Alto",
+          "interest": "Alto",
+          "currentPosture": "Neutro",
+          "desiredPosture": "Apoiador",
+          "engagementStrategy": "Diligenciamento quinzenal na fábrica",
+          "relationshipOwnerId": "id-006"
+        }
+      },
+      {
+        "id": "id-004",
+        "kind": "Pessoa",
+        "code": "PI-003",
+        "name": "Carla Menezes",
+        "position": "Gerente de projetos",
+        "organizationId": null,
+        "contact": "",
+        "internal": "Interno",
+        "notes": "",
+        "analysis": null
+      },
+      {
+        "id": "id-005",
+        "kind": "Pessoa",
+        "code": "PI-004",
+        "name": "Rafael Duarte",
+        "position": "Engenheiro de automação",
+        "organizationId": null,
+        "contact": "",
+        "internal": "Interno",
+        "notes": "",
+        "analysis": null
+      },
+      {
+        "id": "id-006",
+        "kind": "Pessoa",
+        "code": "PI-005",
+        "name": "Juliana Prado",
+        "position": "Coordenadora de suprimentos",
+        "organizationId": null,
+        "contact": "",
+        "internal": "Interno",
+        "notes": "",
+        "analysis": null
+      },
+      {
+        "id": "id-007",
+        "kind": "Pessoa",
+        "code": "PI-006",
+        "name": "Eduardo Lins",
+        "position": "Diretor de operações",
+        "organizationId": null,
+        "contact": "",
+        "internal": "Interno",
+        "notes": "",
+        "analysis": {
+          "interests": "Retorno do investimento e prazo da partida",
+          "power": "Alto",
+          "interest": "Alto",
+          "currentPosture": "Apoiador",
+          "desiredPosture": "Apoiador",
+          "engagementStrategy": "",
+          "relationshipOwnerId": "id-004"
+        }
+      },
+      {
+        "id": "id-008",
+        "kind": "Pessoa",
+        "code": "PI-007",
+        "name": "Marcos Tavares",
+        "position": "Gerente de engenharia da planta",
+        "organizationId": "id-002",
+        "contact": "",
+        "internal": "Externo",
+        "notes": "",
+        "analysis": {
+          "interests": "Aprovação técnica da engenharia",
+          "power": "Alto",
+          "interest": "Alto",
+          "currentPosture": "Neutro",
+          "desiredPosture": "Apoiador",
+          "engagementStrategy": "Revisões técnicas antes de cada emissão",
+          "relationshipOwnerId": "id-004"
+        }
+      },
+      {
+        "id": "id-009",
+        "kind": "Organização",
+        "code": "PI-008",
+        "name": "Integradora SCADA e Montagens Exemplo Ltda.",
+        "roles": [
+          "Prestador de serviço"
+        ],
+        "taxId": "",
+        "country": "Brasil",
+        "contact": "",
+        "internal": "Externo",
+        "notes": "",
+        "analysis": {
+          "interests": "Escopo do software CLP/SCADA",
+          "power": "Baixo",
+          "interest": "Alto",
+          "currentPosture": "Apoiador",
+          "desiredPosture": "Apoiador",
+          "engagementStrategy": "",
+          "relationshipOwnerId": "id-005"
+        }
+      },
+      {
+        "id": "id-010",
+        "kind": "Organização",
+        "code": "PI-009",
+        "name": "Distribuidora de Automação Fictícia Ltda.",
+        "roles": [
+          "Fornecedor"
+        ],
+        "taxId": "",
+        "country": "Brasil",
+        "contact": "",
+        "internal": "Externo",
+        "notes": "",
+        "analysis": {
+          "interests": "Pedido do CLP importado",
+          "power": "Alto",
+          "interest": "Baixo",
+          "currentPosture": "Neutro",
+          "desiredPosture": "Apoiador",
+          "engagementStrategy": "Acompanhar a importação",
+          "relationshipOwnerId": "id-006"
+        }
+      }
+    ],
+    "stakeholders_communications": [
+      {
+        "id": "id-099",
+        "code": "COM-001",
+        "information": "Relatório semanal de avanço físico e financeiro",
+        "recipientIds": [
+          "id-007",
+          "id-008",
+          "id-009"
+        ],
+        "channel": "Relatório",
+        "frequency": "Semanal",
+        "ownerId": "id-004",
+        "nextDate": "2026-10-21"
+      },
+      {
+        "id": "id-100",
+        "code": "COM-002",
+        "information": "Comitê mensal do projeto",
+        "recipientIds": [
+          "id-007",
+          "id-008",
+          "id-002"
+        ],
+        "channel": "Reunião",
+        "frequency": "Mensal",
+        "ownerId": "id-004",
+        "nextDate": "2026-10-26"
+      },
+      {
+        "id": "id-101",
+        "code": "COM-003",
+        "information": "Diligenciamento da fabricação dos painéis",
+        "recipientIds": [
+          "id-003"
+        ],
+        "channel": "Reunião",
+        "frequency": "Quinzenal",
+        "ownerId": "id-006",
+        "nextDate": "2026-10-24"
+      },
+      {
+        "id": "id-102",
+        "code": "COM-004",
+        "information": "Reemissão da lista de I/O ao cliente",
+        "recipientIds": [
+          "id-002",
+          "id-008"
+        ],
+        "channel": "E-mail",
+        "frequency": "Única",
+        "ownerId": "id-005",
+        "nextDate": "2026-10-15"
+      }
+    ]
+  }
+}

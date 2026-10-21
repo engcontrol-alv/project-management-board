@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { aBudgetLine, anOrganization, aPackage, aProcurement, aRisk, aSupplier } from '@/test/factories';
+import { aBudgetLine, aMilestone, anOrganization, aPackage, aProcurement, aRisk, aSupplier } from '@/test/factories';
 import { aSnapshot, PROJECT_START } from '@/test/builders';
 import { renderWithProject } from '@/test/render';
 import { snapshotBaseline } from '@/analytics/baseline-snapshot';
@@ -122,5 +122,34 @@ describe('EvmPage', () => {
       expect(await screen.findByText(k, { selector: '.kpi-label' })).toBeInTheDocument();
     expect(screen.getAllByText('0,80', { selector: '.kpi-value' })).toHaveLength(2);
     expect(screen.getByText(/% do custo orçado não vinculado a pacotes/)).toHaveTextContent('50,0%');
+  });
+});
+
+describe('SummaryPage — multa por atraso (D7)', () => {
+  const penalty = (p: ProjectSnapshot['governance']['profile']) => ({
+    ...p,
+    latePenalty: { ...p.latePenalty, enabled: true, ratePct: 0.1, period: 'Diário' as const, base: 'Valor do contrato' as const, contractValueCents: 150_000_000, capPct: 10 },
+  });
+
+  it('KPI de provisão e tabela por marco contratual atrasado', async () => {
+    const s = aSnapshot()
+      .withProject({ statusDate: '2026-01-09' })
+      .withProfile(penalty)
+      .withMilestone(aMilestone({ code: 'M-002', name: 'Engenharia aprovada', manualDate: '2026-01-05' }))
+      .build();
+    await renderWithProject(<SummaryPage />, { snapshot: s });
+    const kpi = (await screen.findByText('Multa por atraso (provisão)')).closest('.kpi')!;
+    expect(kpi).toHaveTextContent('R$ 6.000,00');
+    const table = screen.getByRole('region', { name: 'Multa contratual por atraso' });
+    const row = within(table).getByText('M-002').closest('tr')!;
+    expect(row).toHaveTextContent('05/01/2026');
+    expect(row).toHaveTextContent('4');
+    expect(row).toHaveTextContent('R$ 6.000,00');
+    expect(table).toHaveTextContent('0,1% por dia sobre o valor do contrato · teto 10%');
+  });
+
+  it('sem cláusula: indicador explica que não está configurada', async () => {
+    await renderWithProject(<SummaryPage />);
+    expect(await screen.findByText('Cláusula de multa não configurada')).toBeInTheDocument();
   });
 });

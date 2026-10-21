@@ -5,6 +5,7 @@ import type { Lesson, Meeting, Norm } from './model/records';
 export * from './model/profile';
 export * from './model/records';
 export * from './domain/governance';
+export * from './domain/penalty';
 export {
   governanceManifest,
   governanceSettingsSchema,

@@ -108,8 +108,8 @@ describe('export/import', () => {
     expect(msg('{"a":')?.message).toBe('O arquivo não é um JSON válido.');
     expect(msg('{"x":1}')?.message).toBe('O arquivo não é uma exportação do Project Management Board.');
     const file = toExport(full(), 'now');
-    expect(msg(JSON.stringify({ ...file, schemaVersion: 3 }))?.message).toBe(
-      'O arquivo foi gerado por uma versão mais nova da aplicação (versão de dados 3; suportada até 2).',
+    expect(msg(JSON.stringify({ ...file, schemaVersion: 4 }))?.message).toBe(
+      'O arquivo foi gerado por uma versão mais nova da aplicação (versão de dados 4; suportada até 3).',
     );
     const orphans = Array.from({ length: 12 }, (_, i) =>
       aRequirement({ id: `r${i}` as never, code: `REQ-${i}`, ownerId: 'nada' as never }),

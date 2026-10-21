@@ -198,12 +198,23 @@ export function buildDemoSnapshot(ctx: CommandContext): ProjectSnapshot {
     id: d['ENT-007'], code: 'ENT-007', name: 'Painéis de automação (CLP e remotas de I/O)', category: 'Entregável físico / serviço',
     type: 'Painel/Sistema', status: 'Não iniciado', workPackageId: w['3.2']!, milestoneId: null,
     plannedDate: null, actualDate: null, ownerId: buyer, clientApproval: true,
+    // TAF/FAT previsto para a semana do pacote 3.4; o TAC/SAT acontece em campo, depois da montagem.
+    fatStatus: 'Pendente', fatDate: day(100), satStatus: 'Pendente', satDate: null,
   });
   d['ENT-008'] = id<DeliverableId>();
   deliverables.push({
     id: d['ENT-008'], code: 'ENT-008', name: 'Treinamento dos operadores e da manutenção', category: 'Entregável físico / serviço',
     type: 'Treinamento', status: 'Não iniciado', workPackageId: w['5.2']!, milestoneId: null,
     plannedDate: null, actualDate: null, ownerId: pm, clientApproval: false,
+    fatStatus: 'Não Aplicável', fatDate: null, satStatus: 'Não Aplicável', satDate: null,
+  });
+  // Release piloto do software: aceito pelo cliente, mas o TAC/SAT na célula piloto foi reprovado → alerta.
+  d['ENT-009'] = id<DeliverableId>();
+  deliverables.push({
+    id: d['ENT-009'], code: 'ENT-009', name: 'Software de CLP e IHM — release da célula piloto', category: 'Entregável físico / serviço',
+    type: 'Software de CLP/IHM', status: 'Aceito pelo cliente', workPackageId: w['2.2']!, milestoneId: null,
+    plannedDate: day(40), actualDate: day(46), ownerId: eng, clientApproval: true,
+    fatStatus: 'Aprovado com Ressalvas', fatDate: day(38), satStatus: 'Reprovado', satDate: day(47),
   });
 
   // ─── Requisitos ───
@@ -351,7 +362,7 @@ export function buildDemoSnapshot(ctx: CommandContext): ProjectSnapshot {
     id: id<RiskId>(), code, title, nature: 'Ameaça', category: 'Técnico', description: '', rootCause: '', probability: 2,
     impact: 2, responseType: null, responseAction: '', ownerId: eng, status: 'Identificado', nextReview: day(ELAPSED + 7),
     notes: '', probabilityPct: null, costImpactCents: null, scheduleImpactDays: null, workPackageIds: [], milestoneIds: [],
-    deliverableIds: [], procurementIds: [], partyIds: [], ...o,
+    deliverableIds: [], procurementIds: [], partyIds: [], reassess: null, ...o,
   });
   const risks = [
     risk('R-001', 'Atraso na importação do CLP redundante', {
@@ -448,7 +459,7 @@ export function buildDemoSnapshot(ctx: CommandContext): ProjectSnapshot {
     ...base,
     project: {
       ...base.project,
-      counters: { PI: 9, REQ: 5, ENT: 8, MUD: 2, M: 5, NRM: 5, REU: 3, LIC: 1, ORC: 9, CTR: 6, R: 7, REC: 6, ALO: 10, COM: 4 },
+      counters: { PI: 9, REQ: 5, ENT: 9, MUD: 2, M: 5, NRM: 5, REU: 3, LIC: 1, ORC: 9, CTR: 6, R: 7, REC: 6, ALO: 10, COM: 4 },
       // Fases de um contrato de engenharia e automação industrial.
       config: {
         modules: {
@@ -481,6 +492,11 @@ export function buildDemoSnapshot(ctx: CommandContext): ProjectSnapshot {
         procurementPolicy: {
           model: 'Cotação com ≥ 3 fornecedores', billing: 'Misto', criteria: ['Preço', 'Prazo', 'Homologação do cliente'],
           approvalLimitCents: 25000000, notes: 'Itens acima da alçada vão ao comitê mensal.',
+        },
+        // Contrato de R$ 1.500.000,00 (= as três receitas de faturamento): 0,1% ao dia por marco contratual atrasado, teto de 10%.
+        latePenalty: {
+          enabled: true, ratePct: 0.1, period: 'Diário', base: 'Valor do contrato', contractValueCents: 150_000_000, capPct: 10,
+          notes: 'Cláusula 12.3: multa moratória de 0,1% do valor do contrato por dia de atraso nos marcos contratuais, limitada a 10%.',
         },
       },
       norms: byId(norms),

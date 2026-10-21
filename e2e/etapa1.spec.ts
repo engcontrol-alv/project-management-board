@@ -107,7 +107,9 @@ test('Critério 2 e 10: exportar, apagar e reimportar produz dados idênticos', 
   });
   await expect(page.getByText('Painel executivo')).toBeVisible();
   const after = await exportProject(page);
-  expect({ ...after, exportedAt: null }).toEqual({ ...before, exportedAt: null });
+  // Metadados do arquivo (data de exportação e o checksum que a inclui) mudam; os dados não.
+  expect(after.checksumSha256).toMatch(/^[0-9a-f]{64}$/);
+  expect({ ...after, exportedAt: null, checksumSha256: null }).toEqual({ ...before, exportedAt: null, checksumSha256: null });
 
   await go(page, '/projeto/scope/entregaveis');
   await expect(page.getByRole('cell', { name: 'ENT-001', exact: true })).toBeVisible();

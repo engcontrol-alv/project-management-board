@@ -297,7 +297,7 @@ Assim as regras ficam testáveis sem banco (comandos e `applyChangeset` são pur
 - `SCHEMA_VERSION` único para dados e banco. Cada etapa que adiciona coleções incrementa a versão: `db.version(n).stores(buildStores(manifestsDaVersao(n)))`.
 - Migrações de dados são funções sobre o **formato de exportação** (`ExportV_n → ExportV_n+1`), usadas pela importação e pelo `.upgrade()` do Dexie (lê tudo → migra → regrava). Uma implementação, dois usos.
 - Fixture dourada por versão em `src/project/__fixtures__/export-v<n>.json`; teste garante migração até a atual.
-- O dump do banco (`readRaw`) usa o `schemaVersion` **gravado no projeto**, não a constante, para que a migração também rode na carga. As tabelas de cada versão anterior ficam congeladas em `project/migrations.ts` (`STORES_V1`), e `db.version(n).upgrade()` aplica `migrateRows` às linhas — a mesma função da importação. Etapa 2: v1 → v2 adiciona `analysis: null` às partes e os parâmetros padrão de Partes Interessadas.
+- O dump do banco (`readRaw`) usa o `schemaVersion` **gravado no projeto**, não a constante, para que a migração também rode na carga. As tabelas de cada versão anterior ficam congeladas em `project/migrations.ts` (`STORES_V1`), e `db.version(n).upgrade()` aplica `migrateRows` às linhas — a mesma função da importação. Etapa 2: v1 → v2 adiciona `analysis: null` às partes e os parâmetros padrão de Partes Interessadas. Etapa 3: v2 → v3 (sem tabelas novas; `STORES_V2` congelado) adiciona `reassess: null` aos riscos, `fatStatus/satStatus = 'Não Aplicável'` e datas `null` aos entregáveis físicos e `latePenalty` desativada ao perfil de Governança. Cada `db.version(n).upgrade()` chama `migrateRows(tabela, linhas, n−1, n)`.
 
 ## 7. Export / Import JSON
 
@@ -309,8 +309,10 @@ type ExportFile = {
   project: Project;
   baselines: Baseline[];
   data: Record<string /* table */, unknown[]>;
+  checksumSha256?: string; // Etapa 3
 };
 ```
+- **Integridade (Etapa 3)**: `checksumSha256` = SHA-256 (hex minúsculo, `crypto.subtle.digest`) do JSON **canônico** (chaves ordenadas em todos os níveis) do arquivo sem o próprio campo — não depende de indentação nem da ordem das chaves. A importação (`parseImportFile`, assíncrona) verifica antes da migração: divergente → recusa com "Integridade SHA-256 não confere…"; ausente → aceita (exportação antiga) e a prévia avisa; sem Web Crypto (contexto inseguro) → exporta sem o campo e importa sem verificar, com aviso.
 - **Exportar**: `loadSnapshot` → `toExport()` → JSON indentado → download `pmb-<código-em-slug>-<AAAA-MM-DD>.json`. Exemplos nunca estão no snapshot, logo nunca são exportados.
 - **Importar** (`project/serialization.ts#parseExport`, puro; `platform/transfer` só lê o arquivo e grava). A carga do IndexedDB usa o mesmo `parseExport` sobre o dump das tabelas:
   1. `JSON.parse` → falha: "O arquivo não é um JSON válido."

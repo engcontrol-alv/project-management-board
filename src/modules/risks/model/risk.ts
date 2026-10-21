@@ -8,16 +8,33 @@ export const OPPORTUNITY_RESPONSES = ['Explorar', 'Melhorar', 'Compartilhar', 'A
 export const RESPONSE_TYPES = ['Evitar', 'Mitigar', 'Transferir', 'Aceitar', 'Escalar', 'Explorar', 'Melhorar', 'Compartilhar'] as const;
 export const RISK_STATUSES =['Identificado', 'Em monitoramento', 'Em mitigação', 'Materializado', 'Encerrado'] as const;
 
-/** Níveis da matriz 3×3 (D2: 5×5 fica para depois). */
-export const LEVELS_3 = [1, 2, 3] as const;
-export const PROBABILITY_LABELS: Record<number, string> = { 1: 'Baixa', 2: 'Média', 3: 'Alta' };
-export const IMPACT_LABELS: Record<number, string> = { 1: 'Baixo', 2: 'Médio', 3: 'Alto' };
+/** Tamanho da matriz P × I (SPEC §8.4): 3×3 padrão, configurável para 5×5. */
+export const RISK_SCALES = [3, 5] as const;
+export type RiskScale = (typeof RISK_SCALES)[number];
+
+export function levelsFor(scale: RiskScale): number[] {
+  return Array.from({ length: scale }, (_, i) => i + 1);
+}
+
+const LABELS: Record<RiskScale, { probability: string[]; impact: string[] }> = {
+  3: { probability: ['Baixa', 'Média', 'Alta'], impact: ['Baixo', 'Médio', 'Alto'] },
+  5: {
+    probability: ['Muito baixa', 'Baixa', 'Média', 'Alta', 'Muito alta'],
+    impact: ['Muito baixo', 'Baixo', 'Médio', 'Alto', 'Muito alto'],
+  },
+};
+
+/** Rótulos por nível (índice 0 = nível 1). */
+export function levelLabels(scale: RiskScale): { probability: string[]; impact: string[] } {
+  return LABELS[scale];
+}
 
 export function responsesFor(nature: string): readonly string[] {
   return nature === 'Oportunidade' ? OPPORTUNITY_RESPONSES : THREAT_RESPONSES;
 }
 
-const level = z.union([z.literal(1), z.literal(2), z.literal(3)]).nullable();
+/** Nível 1–5; o limite da escala do projeto é validado com os settings (integridade). */
+const level = z.number().int().min(1).max(5).nullable();
 
 export const riskSchema = z
   .object({
@@ -45,6 +62,11 @@ export const riskSchema = z
     deliverableIds: z.array(idSchema<DeliverableId>()),
     procurementIds: z.array(idSchema<ProcurementId>()),
     partyIds: z.array(idSchema<PartyId>()),
+    /** "Reavaliar" (D1): avaliação anterior à troca de escala; volta exata se a escala voltar. */
+    reassess: z
+      .object({ scale: z.union([z.literal(3), z.literal(5)]), probability: z.number().int().min(1).max(5), impact: z.number().int().min(1).max(5) })
+      .strict()
+      .nullable(),
   })
   .strict()
   .superRefine((r, ctx) => {

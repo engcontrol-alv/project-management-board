@@ -31,7 +31,7 @@ export function SCurvePage() {
             <YAxis domain={[0, 100]} tickFormatter={(v: number) => `${v}%`} fontSize={11} />
             <Tooltip labelFormatter={(d) => formatDateBR(String(d))} formatter={(v) => formatPercent(Number(v))} />
             <Legend />
-            <Line type="monotone" dataKey="planned" name="Planejado (LB)" stroke="#9aa7b4" strokeDasharray="5 4" dot={false} strokeWidth={2} />
+            <Line type="monotone" dataKey="planned" name="Planejado (LB)" stroke="var(--chart-planned)" strokeDasharray="5 4" dot={false} strokeWidth={2} />
             <Line type="monotone" dataKey="actual" name="Realizado" stroke="var(--primary)" strokeWidth={2} connectNulls={false} />
           </LineChart>
         </ResponsiveContainer>
@@ -81,10 +81,10 @@ function MoneyCurve() {
           <LineChart data={f.moneySCurve} margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
             <CartesianGrid stroke="var(--line)" />
             <XAxis dataKey="date" tickFormatter={(d: string) => formatDateBR(d).slice(0, 5)} fontSize={11} />
-            <YAxis tickFormatter={short} fontSize={11} width={96} />
+            <YAxis tickFormatter={short} fontSize={11} width={116} />
             <Tooltip labelFormatter={(d) => formatDateBR(String(d))} formatter={(v) => money(Number(v))} />
             <Legend />
-            <Line type="monotone" dataKey="pv" name="PV (planejado)" stroke="#9aa7b4" strokeDasharray="5 4" dot={false} strokeWidth={2} />
+            <Line type="monotone" dataKey="pv" name="PV (planejado)" stroke="var(--chart-planned)" strokeDasharray="5 4" dot={false} strokeWidth={2} />
             <Line type="monotone" dataKey="ev" name="EV (agregado)" stroke="var(--primary)" strokeWidth={2} connectNulls={false} />
             <Line type="monotone" dataKey="ac" name="AC (real)" stroke="var(--red)" strokeWidth={2} connectNulls={false} />
           </LineChart>

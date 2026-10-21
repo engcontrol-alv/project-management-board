@@ -58,7 +58,7 @@ async function exportProject(page: Page): Promise<{ schemaVersion: number; data:
 const financeTables = (f: { data: Record<string, unknown[]> }) =>
   Object.fromEntries(Object.entries(f.data).filter(([t]) => t.startsWith('finances_')));
 
-test('Review Focus 1: arquivo exportado na Etapa 1 importa e reexporta como v2', async ({ page }) => {
+test('Review Focus 1: arquivo exportado na Etapa 1 importa e reexporta na versão atual (v3)', async ({ page }) => {
   await page.goto('/');
   await page.locator('#start-import').setInputFiles(fixture('projeto-v1.json'));
   await expect(page.getByText('Painel executivo')).toBeVisible();
@@ -67,7 +67,7 @@ test('Review Focus 1: arquivo exportado na Etapa 1 importa e reexporta como v2',
   await go(page, '/projeto/finances/contratacoes');
   await expect(page.getByText('Exemplo').first()).toBeVisible();
   const file = await exportProject(page);
-  expect(file.schemaVersion).toBe(2);
+  expect(file.schemaVersion).toBe(3);
   expect((file.data.stakeholders_parties as { analysis: unknown }[]).every((p) => p.analysis === null)).toBe(true);
 });
 

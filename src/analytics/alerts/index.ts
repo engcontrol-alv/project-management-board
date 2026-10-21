@@ -1,5 +1,6 @@
 import { baselinePackageDeleted } from './baseline-package-deleted';
 import { contingencyInsufficient } from './contingency-insufficient';
+import { deliverableAcceptance } from './deliverable-acceptance';
 import { deliverableOverdue } from './deliverable-overdue';
 import { milestoneDeviation } from './milestone-deviation';
 import { procurementOverBudget, procurementThreatensMilestone } from './procurement-alerts';
@@ -13,6 +14,7 @@ export const ALERT_RULES: AlertRule[] = [
   milestoneDeviation,
   staleChangeRequest,
   deliverableOverdue,
+  deliverableAcceptance,
   baselinePackageDeleted,
   procurementThreatensMilestone,
   procurementOverBudget,

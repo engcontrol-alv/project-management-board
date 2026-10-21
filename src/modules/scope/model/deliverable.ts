@@ -34,6 +34,7 @@ export const MANAGEMENT_DOC_TYPES = [
 export const PHYSICAL_TYPES = [
   'Equipamento',
   'Painel/Sistema',
+  'Software de CLP/IHM',
   'Instalação/Montagem',
   'Comissionamento',
   'Treinamento',
@@ -56,6 +57,12 @@ export const PHYSICAL_STATUSES = [
   'Aceito pelo cliente',
   'Cancelado',
 ] as const;
+/** Testes de aceitação dos entregáveis físicos: TAF/FAT (fábrica) e TAC/SAT (campo). */
+export const TEST_STATUSES = ['Não Aplicável', 'Pendente', 'Aprovado', 'Aprovado com Ressalvas', 'Reprovado'] as const;
+export type TestStatus = (typeof TEST_STATUSES)[number];
+/** Status de teste já executado: exigem a data (D5). */
+export const EXECUTED_TEST_STATUSES: readonly TestStatus[] = ['Aprovado', 'Aprovado com Ressalvas', 'Reprovado'];
+
 export const DOC_TEMPLATES = ['Interno', 'Externo (cliente)'] as const;
 export type DocTemplate = (typeof DOC_TEMPLATES)[number];
 
@@ -96,6 +103,27 @@ const docFields = {
   status: z.enum(DOC_STATUSES),
 };
 
+const testFields = {
+  fatStatus: z.enum(TEST_STATUSES),
+  fatDate: nullableIsoDate,
+  satStatus: z.enum(TEST_STATUSES),
+  satDate: nullableIsoDate,
+};
+
+type TestValues = { fatStatus: TestStatus; fatDate: string | null; satStatus: TestStatus; satDate: string | null };
+
+function checkTests(d: TestValues, ctx: z.RefinementCtx) {
+  for (const [label, status, date, path] of [
+    ['TAF/FAT', d.fatStatus, d.fatDate, 'fatDate'],
+    ['TAC/SAT', d.satStatus, d.satDate, 'satDate'],
+  ] as const) {
+    if (EXECUTED_TEST_STATUSES.includes(status) && !date)
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message: `${label} ${status} exige a data do teste` });
+    if (status === 'Não Aplicável' && date)
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message: `${label} não aplicável não tem data` });
+  }
+}
+
 export const deliverableSchema = z.discriminatedUnion('category', [
   z
     .object({
@@ -119,12 +147,16 @@ export const deliverableSchema = z.discriminatedUnion('category', [
       category: z.literal('Entregável físico / serviço'),
       type: z.enum(PHYSICAL_TYPES),
       status: z.enum(PHYSICAL_STATUSES),
+      ...testFields,
     })
     .strict(),
-]);
+]).superRefine((d, ctx) => {
+  if (d.category === 'Entregável físico / serviço') checkTests(d, ctx);
+});
 
 export type Deliverable = z.infer<typeof deliverableSchema>;
 export type DocumentDeliverable = Extract<Deliverable, { revision: string }>;
+export type PhysicalDeliverable = Extract<Deliverable, { category: 'Entregável físico / serviço' }>;
 
 export function isDocument(d: Deliverable): d is DocumentDeliverable {
   return d.category !== 'Entregável físico / serviço';

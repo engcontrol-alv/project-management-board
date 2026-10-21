@@ -15,10 +15,12 @@ export type ExportFile = {
   project: Project;
   baselines: Baseline[];
   data: Record<string, unknown[]>;
+  /** SHA-256 (hex) do JSON canônico do arquivo sem este campo (D9). Ausente em arquivos antigos. */
+  checksumSha256?: string;
 };
 
 export type ParseError = { code: 'format' | 'version' | 'invalid'; message: string };
-export type ImportError = { code: 'json' | ParseError['code']; message: string };
+export type ImportError = { code: 'json' | 'checksum' | ParseError['code']; message: string };
 
 const MAX_LISTED = 10;
 
@@ -31,6 +33,49 @@ export function toExport(s: ProjectSnapshot, now: string): ExportFile {
     baselines: s.baselines,
     data: Object.fromEntries(ALL_COLLECTIONS.map((def) => [def.table, Object.values(getItems(s, def))])),
   };
+}
+
+/** JSON com chaves ordenadas em todos os níveis: o hash não depende da ordem nem da indentação. */
+export function canonicalJson(v: unknown): string {
+  if (Array.isArray(v)) return `[${v.map((x) => (x === undefined ? 'null' : canonicalJson(x))).join(',')}]`;
+  if (v && typeof v === 'object')
+    return `{${Object.keys(v)
+      .sort()
+      .filter((k) => (v as Record<string, unknown>)[k] !== undefined)
+      .map((k) => `${JSON.stringify(k)}:${canonicalJson((v as Record<string, unknown>)[k])}`)
+      .join(',')}}`;
+  return JSON.stringify(v);
+}
+
+/** SHA-256 em hexadecimal minúsculo via Web Crypto (`crypto.subtle.digest`). */
+export async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** Web Crypto só existe em contexto seguro (https, localhost, arquivo local). */
+const canHash = () => typeof crypto !== 'undefined' && !!crypto.subtle;
+
+const payloadOf = (file: Record<string, unknown>) => {
+  const { checksumSha256: _omit, ...payload } = file;
+  return payload;
+};
+
+/** Acrescenta `checksumSha256`; sem Web Crypto, exporta sem o campo (o arquivo continua válido). */
+export async function withChecksum(file: ExportFile): Promise<ExportFile> {
+  if (!canHash()) return file;
+  return { ...file, checksumSha256: await sha256Hex(canonicalJson(payloadOf(file))) };
+}
+
+export type ChecksumStatus = 'ok' | 'ausente' | 'divergente' | 'indisponível';
+
+export async function verifyChecksum(raw: unknown): Promise<ChecksumStatus> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return 'ausente';
+  const expected = (raw as { checksumSha256?: unknown }).checksumSha256;
+  if (expected === undefined) return 'ausente';
+  if (!canHash()) return 'indisponível';
+  const actual = await sha256Hex(canonicalJson(payloadOf(raw as Record<string, unknown>)));
+  return typeof expected === 'string' && expected.toLowerCase() === actual ? 'ok' : 'divergente';
 }
 
 export function exportFileName(s: ProjectSnapshot, today: IsoDate): string {
@@ -125,6 +170,35 @@ export function summarize(s: ProjectSnapshot): ImportSummary {
     if (def.cardinality === 'many') counts[def.label] = Object.keys(getItems(s, def)).length;
   counts['Linhas de base'] = s.baselines.length;
   return { name: s.project.info.name, code: s.project.info.code, counts };
+}
+
+export type Integrity = 'verificada' | 'ausente' | 'não verificável';
+
+const INTEGRITY: Record<Exclude<ChecksumStatus, 'divergente'>, Integrity> = {
+  ok: 'verificada',
+  ausente: 'ausente',
+  indisponível: 'não verificável',
+};
+
+/** Importação de arquivo: valida o checksum (se houver) antes de qualquer outra etapa; nada é gravado aqui. */
+export async function parseImportFile(
+  text: string,
+): Promise<Result<{ snapshot: ProjectSnapshot; summary: ImportSummary; integrity: Integrity }, ImportError>> {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    return err({ code: 'json', message: 'O arquivo não é um JSON válido.' });
+  }
+  const status = await verifyChecksum(raw);
+  if (status === 'divergente')
+    return err({
+      code: 'checksum',
+      message: 'Integridade SHA-256 não confere: o arquivo foi alterado ou corrompido depois da exportação.',
+    });
+  const parsed = parseImportText(text);
+  if (!parsed.ok) return parsed;
+  return ok({ ...parsed.value, integrity: INTEGRITY[status] });
 }
 
 export function parseImportText(

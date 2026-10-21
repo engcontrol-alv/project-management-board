@@ -12,13 +12,13 @@ export default function CashflowChart({ months, currency }: { months: CashflowMo
       <ResponsiveContainer>
         <BarChart data={data} margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
           <CartesianGrid stroke="var(--paper-line)" vertical={false} />
-          <XAxis dataKey="label" tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} />
-          <YAxis tickFormatter={(v: number) => formatMoneyBR(v, currency).replace(/,\d{2}$/, '')} tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} width={96} />
+          <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+          <YAxis tickFormatter={(v: number) => formatMoneyBR(v, currency).replace(/,\d{2}$/, '')} tick={{ fontSize: 11 }} width={116} />
           <Tooltip formatter={(v: number) => formatMoneyBR(v, currency)} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
-          <Bar dataKey="plannedCost" name="Custo previsto" fill="#aeb9c5" />
+          <Bar dataKey="plannedCost" name="Custo previsto" fill="var(--chart-baseline)" />
           <Bar dataKey="actualCost" name="Custo realizado" fill="var(--navy)" />
-          <Bar dataKey="plannedRevenue" name="Receita prevista" fill="#bfdcd5" />
+          <Bar dataKey="plannedRevenue" name="Receita prevista" fill="var(--chart-revenue)" />
           <Bar dataKey="actualRevenue" name="Receita realizada" fill="var(--green)" />
         </BarChart>
       </ResponsiveContainer>

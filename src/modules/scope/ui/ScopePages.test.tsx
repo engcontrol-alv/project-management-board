@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { aChangeRequest, aDocument, aGroup, aPackage, aPerson } from '@/test/factories';
+import { aChangeRequest, aDocument, aGroup, aPackage, aPerson, aPhysical } from '@/test/factories';
 import { aSnapshot, PROJECT_START } from '@/test/builders';
 import { renderWithProject } from '@/test/render';
 import { snapshotBaseline } from '@/analytics/baseline-snapshot';
@@ -93,6 +93,41 @@ describe('DeliverablesPage', () => {
     const types = [...within(dialog).getByLabelText<HTMLSelectElement>('Tipo').options].map((o) => o.value);
     expect(types).toContain('Equipamento');
     expect(types).not.toContain('Memorial descritivo');
+  });
+
+  it('TAF/TAC só na categoria física; painel começa Pendente; documentação remove os campos', async () => {
+    await renderWithProject(<DeliverablesPage />);
+    await userEvent.click(await screen.findByRole('button', { name: /Novo/ }));
+    const dialog = screen.getByRole('dialog');
+    await userEvent.selectOptions(within(dialog).getByLabelText('Categoria'), 'Documentação de engenharia');
+    expect(within(dialog).queryByLabelText('TAF/FAT — status')).toBeNull();
+    await userEvent.selectOptions(within(dialog).getByLabelText('Categoria'), 'Entregável físico / serviço');
+    expect(within(dialog).getByLabelText('TAF/FAT — status')).toHaveValue('Não Aplicável');
+    await userEvent.selectOptions(within(dialog).getByLabelText('Tipo'), 'Painel/Sistema');
+    expect(within(dialog).getByLabelText('TAF/FAT — status')).toHaveValue('Pendente');
+    expect(within(dialog).getByLabelText('TAC/SAT — status')).toHaveValue('Pendente');
+    const options = [...within(dialog).getByLabelText<HTMLSelectElement>('TAC/SAT — status').options].map((o) => o.value).filter(Boolean);
+    expect(options).toEqual(['Não Aplicável', 'Pendente', 'Aprovado', 'Aprovado com Ressalvas', 'Reprovado']);
+    expect(within(dialog).getByLabelText('TAF/FAT — data')).toBeInTheDocument();
+    await userEvent.selectOptions(within(dialog).getByLabelText('Categoria'), 'Documentação de gerenciamento de projeto');
+    expect(within(dialog).queryByLabelText('TAF/FAT — status')).toBeNull();
+    expect(within(dialog).getByText(CATEGORY_CHANGED_NOTICE)).toBeInTheDocument();
+  });
+
+  it('coluna TAF / TAC com texto e indicador do entregue sem teste aprovado', async () => {
+    const s = aSnapshot()
+      .withDeliverable(
+        aPhysical({ status: 'Aceito pelo cliente', fatStatus: 'Aprovado', fatDate: '2026-09-01', satStatus: 'Reprovado', satDate: '2026-10-01' }),
+        aPhysical({ id: 'd3' as never, code: 'ENT-003', name: 'Treinamento', type: 'Treinamento' }),
+      )
+      .build();
+    const { container } = await renderWithProject(<DeliverablesPage />, { snapshot: s });
+    await screen.findByText('Painel');
+    const panel = row(container, 'd2');
+    expect(within(panel).getByText('TAF Aprovado')).toBeInTheDocument();
+    expect(within(panel).getByText('TAC Reprovado')).toBeInTheDocument();
+    expect(within(panel).getByText('Aceito com TAC/SAT Reprovado')).toBeInTheDocument();
+    expect(within(row(container, 'd3')).getByText('Não aplicável')).toBeInTheDocument();
   });
 
   it('exige categoria', async () => {

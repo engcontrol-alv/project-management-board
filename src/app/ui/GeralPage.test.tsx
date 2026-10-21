@@ -148,3 +148,26 @@ describe('Curva S monetária', () => {
     expect(await screen.findByRole('heading', { name: 'Curva S física' })).toBeInTheDocument();
   });
 });
+
+describe('Geral — multa contratual por atraso', () => {
+  it('mostra a provisão e os marcos que a geram', async () => {
+    const s = aSnapshot()
+      .withProject({ statusDate: '2026-01-09' })
+      .withProfile((p) => ({
+        ...p,
+        latePenalty: { ...p.latePenalty, enabled: true, ratePct: 0.1, period: 'Diário', base: 'Valor do contrato', contractValueCents: 150_000_000, capPct: 10 },
+      }))
+      .withMilestone(aMilestone({ code: 'M-002', manualDate: '2026-01-05' }))
+      .build();
+    await renderWithProject(withRoutes(<GeralPage />), { snapshot: s });
+    const card = await screen.findByRole('region', { name: 'Multa contratual por atraso' });
+    expect(card).toHaveTextContent('R$ 6.000,00');
+    expect(card).toHaveTextContent('M-002 · 4 dia(s)');
+  });
+
+  it('sem cláusula configurada', async () => {
+    await renderWithProject(withRoutes(<GeralPage />));
+    const card = await screen.findByRole('region', { name: 'Multa contratual por atraso' });
+    expect(card).toHaveTextContent('Cláusula de multa não configurada');
+  });
+});

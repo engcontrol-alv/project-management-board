@@ -1,6 +1,7 @@
 import { formatDateBR } from '@/shared/lib/dates';
 import { formatPercent } from '@/shared/lib/format';
-import { StatusBadge } from '@/shared/ui/Badge';
+import { Badge, StatusBadge } from '@/shared/ui/Badge';
+import type { Tone } from '@/shared/ui/tones';
 import { useAnalysis } from '@/platform/react/hooks';
 import { RegisterView, type DraftChange } from '@/registers/RegisterView';
 import type { FieldDef, Values } from '@/registers/types';
@@ -9,16 +10,33 @@ import {
   DOC_CATEGORIES,
   DOC_TEMPLATES,
   statusesFor,
+  TEST_STATUSES,
+  type TestStatus,
   typesFor,
   type Deliverable,
   type DeliverableCategory,
 } from '../model/deliverable';
 import { deliverableProgress, effectiveTemplate } from '../domain/deliverables';
+import { acceptanceIssues, defaultTestStatus } from '../domain/acceptance';
 import { deliverableExamples } from '../examples';
 
 export const CATEGORY_CHANGED_NOTICE = 'Campos incompatíveis com a nova categoria foram limpos.';
 
 const isDoc = (v: Values) => DOC_CATEGORIES.includes(v.category as DeliverableCategory);
+const isPhysical = (v: Values) => v.category === 'Entregável físico / serviço';
+
+const TESTS = [
+  ['fat', 'TAF/FAT'],
+  ['sat', 'TAC/SAT'],
+] as const;
+
+const TEST_TONE: Record<TestStatus, Tone> = {
+  'Não Aplicável': 'gray',
+  Pendente: 'gray',
+  Aprovado: 'green',
+  'Aprovado com Ressalvas': 'amber',
+  Reprovado: 'red',
+};
 
 const newDeliverable = (): Values => ({
   code: '',
@@ -57,8 +75,53 @@ const onDraftChange: DraftChange = (prev, next) => {
     delete v.revision;
     delete v.template;
   }
+  if (isPhysical(v)) {
+    for (const [k] of TESTS) {
+      v[`${k}Status`] = v[`${k}Status`] ?? defaultTestStatus(String(v.type ?? ''));
+      v[`${k}Date`] = v[`${k}Date`] ?? null;
+    }
+  } else {
+    for (const [k] of TESTS) {
+      if (`${k}Status` in v && (v[`${k}Status`] !== 'Não Aplicável' || v[`${k}Date`])) cleared = true;
+      delete v[`${k}Status`];
+      delete v[`${k}Date`];
+    }
+  }
   return { value: v, notice: cleared && prev.category ? CATEGORY_CHANGED_NOTICE : undefined };
 };
+
+/** Tipo industrial novo leva o teste ainda no padrão do tipo anterior ao padrão do novo; "Não Aplicável" limpa a data. */
+const onTestsChange = (prev: Values, next: Values): Values => {
+  if (!isPhysical(next) || !isPhysical(prev)) return next;
+  const v: Values = { ...next };
+  for (const [k] of TESTS) {
+    if (prev.type !== v.type && prev[`${k}Status`] === defaultTestStatus(String(prev.type ?? '')))
+      v[`${k}Status`] = defaultTestStatus(String(v.type ?? ''));
+    if (v[`${k}Status`] === 'Não Aplicável') v[`${k}Date`] = null;
+  }
+  return v;
+};
+
+const onChange: DraftChange = (prev, next) => onDraftChange(prev, onTestsChange(prev, next));
+
+function TestsCell({ d }: { d: Deliverable }) {
+  if (d.category !== 'Entregável físico / serviço') return <span className="muted">—</span>;
+  if (d.fatStatus === 'Não Aplicável' && d.satStatus === 'Não Aplicável') return <span className="muted">Não aplicável</span>;
+  const done = d.status === 'Aceito pelo cliente' ? 'Aceito' : 'Concluído';
+  return (
+    <span className="row" style={{ gap: 4 }}>
+      {TESTS.map(([k, label]) => {
+        const status = d[`${k}Status`];
+        return status === 'Não Aplicável' ? null : (
+          <Badge key={k} text={`${label.slice(0, 3)} ${status}`} tone={TEST_TONE[status]} />
+        );
+      })}
+      {acceptanceIssues(d).map((i) => (
+        <Badge key={i.test} text={`${done} com ${i.test} ${i.status}`} tone={i.severity === 'vermelho' ? 'red' : 'gold'} dot />
+      ))}
+    </span>
+  );
+}
 
 export function DeliverablesPage() {
   const analysis = useAnalysis();
@@ -93,6 +156,23 @@ export function DeliverablesPage() {
     { key: 'actualDate', label: 'Data real', type: 'date' },
     { key: 'ownerId', label: 'Responsável', type: 'reference', module: 'stakeholders', collection: 'parties', constraint: 'isPerson' },
     { key: 'clientApproval', label: 'Exige aprovação do cliente', type: 'boolean' },
+    ...TESTS.flatMap(([k, label]): FieldDef[] => [
+      {
+        key: `${k}Status`,
+        label: `${label} — status`,
+        type: 'select',
+        options: TEST_STATUSES,
+        visible: isPhysical,
+        hint: k === 'fat' ? 'Teste de Aceitação em Fábrica.' : 'Teste de Aceitação em Campo.',
+      },
+      {
+        key: `${k}Date`,
+        label: `${label} — data`,
+        type: 'date',
+        visible: (v) => isPhysical(v) && v[`${k}Status`] !== 'Não Aplicável',
+        hint: 'Obrigatória para Aprovado, Aprovado com Ressalvas e Reprovado; em Pendente, a data prevista.',
+      },
+    ]),
   ];
 
   return (
@@ -103,7 +183,7 @@ export function DeliverablesPage() {
       fields={fields}
       examples={deliverableExamples}
       newEntity={newDeliverable}
-      onDraftChange={onDraftChange}
+      onDraftChange={onChange}
       summary={
         <div className="card">
           <p>
@@ -136,6 +216,7 @@ export function DeliverablesPage() {
           },
         },
         { key: 'status', label: 'Status', render: (d) => <StatusBadge status={d.status} /> },
+        { key: 'tests', label: 'TAF / TAC', render: (d) => <TestsCell d={d} /> },
         { key: 'plannedDate', label: 'Prevista', mono: true, render: (d) => formatDateBR(d.plannedDate) },
         { key: 'requirements', label: 'Requisitos', mono: true, render: (d) => requirementsOf(d.id) || '—' },
       ]}

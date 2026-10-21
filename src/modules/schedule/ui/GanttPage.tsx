@@ -156,7 +156,7 @@ export function GanttPage() {
           Caminho crítico
         </span>
         <span>
-          <i style={{ background: '#aeb9c5', height: 4 }} />
+          <i style={{ background: 'var(--chart-baseline)', height: 4 }} />
           Linha de base {baseline ? `v${baseline.version}` : '(não definida)'}
         </span>
         <span>
@@ -239,8 +239,8 @@ export function GanttPage() {
                   <title>
                     {`${r.code} ${r.name}: ${formatDateBR(r.start)} – ${formatDateBR(r.finish)}${r.critical ? ' · crítico' : ''}`}
                   </title>
-                  {b && !r.zero && <rect x={b.x} y={y + 21} width={b.width} height={4} fill="#aeb9c5" rx={2} />}
-                  {b && r.zero && <Diamond cx={b.x} cy={y + 15} color="#aeb9c5" size={5} />}
+                  {b && !r.zero && <rect x={b.x} y={y + 21} width={b.width} height={4} fill="var(--chart-baseline)" rx={2} />}
+                  {b && r.zero && <Diamond cx={b.x} cy={y + 15} color="var(--chart-baseline)" size={5} />}
                   {p && r.kind === 'group' && (
                     <path
                       d={`M${p.x} ${y + 10} h${p.width} v8 l-4 -4 h${-(p.width - 8)} l-4 4 z`}

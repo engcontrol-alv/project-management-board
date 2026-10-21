@@ -48,17 +48,26 @@ export const DEFAULT_RISK_CATEGORIES = [
   'Outro',
 ];
 
+/** Faixas padrão por escala (SPEC §8.4): 3×3 1–2/3–4/6/9; 5×5 1–4/5–9/10–16/20–25. */
+export const DEFAULT_BANDS = {
+  3: { low: 2, moderate: 4, high: 6 },
+  5: { low: 4, moderate: 9, high: 16 },
+} as const;
+
 export const risksSettingsSchema = z
   .object({
-    /** D2: só 3×3 nesta etapa; o campo prepara o 5×5. */
-    scale: z.literal(3),
+    scale: z.union([z.literal(3), z.literal(5)]),
     bands: z
       .object({ low: z.number().int(), moderate: z.number().int(), high: z.number().int() })
       .strict()
       .refine((b) => b.low < b.moderate && b.moderate < b.high, { message: 'faixas devem ser crescentes' }),
     categories: z.array(z.string().min(1)).min(1),
   })
-  .strict();
+  .strict()
+  .refine((s) => s.bands.low >= 1 && s.bands.high < s.scale * s.scale, {
+    path: ['bands'],
+    message: 'faixas devem ficar entre 1 e a pontuação máxima da escala (Crítico acima de Alto)',
+  });
 export type RisksSettings = z.infer<typeof risksSettingsSchema>;
 
 export const risksManifest: ModuleManifest<typeof risksSettingsSchema> = {
@@ -67,7 +76,7 @@ export const risksManifest: ModuleManifest<typeof risksSettingsSchema> = {
   mandatory: false,
   requires: [],
   settingsSchema: risksSettingsSchema,
-  defaultSettings: { scale: 3, bands: { low: 2, moderate: 4, high: 6 }, categories: DEFAULT_RISK_CATEGORIES },
+  defaultSettings: { scale: 3, bands: { ...DEFAULT_BANDS[3] }, categories: DEFAULT_RISK_CATEGORIES },
   collections: [risks],
   constraints: {},
 };

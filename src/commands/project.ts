@@ -1,9 +1,10 @@
 import type { ProjectId } from '@/core/ids';
 import { err, ok } from '@/core/result';
 import type { GovernanceProfile } from '@/modules/governance';
+import { rescaleRisk, type RisksSettings } from '@/modules/risks';
 import type { IsoDate } from '@/shared/lib/dates';
 import { issuesToMessages, ptErrorMap } from '@/shared/lib/zod';
-import { defaultConfig, setModuleEnabled } from '@/project/config';
+import { defaultConfig, resolveConfig, setModuleEnabled } from '@/project/config';
 import { SCHEMA_VERSION } from '@/project/migrations';
 import type { Project, ProjectInfo } from '@/project/project';
 import { MANIFESTS, type ImplementedModuleId } from '@/project/registry';
@@ -77,18 +78,26 @@ export const updateModuleSettings = (id: ImplementedModuleId, settings: unknown)
       if (removed.length > 0)
         return err(removed.map((p) => `Fase "${p}" está em uso e não pode ser removida sem reatribuição.`));
     }
+    const puts: { table: string; value: { id: string } }[] = [];
     if (id === 'risks') {
-      const categories = new Set((parsed.data as { categories: string[] }).categories);
+      const next = parsed.data as RisksSettings;
+      const categories = new Set(next.categories);
       const inUse = new Set(Object.values(s.risks.risks).map((r) => r.category));
       const removed = [...inUse].filter((c) => !categories.has(c));
       if (removed.length > 0)
         return err(removed.map((c) => `Categoria "${c}" está em uso e não pode ser removida.`));
+      // Trocar 3×3 ↔ 5×5 converte os riscos avaliados na mesma transação, guardando o original (D1).
+      const from = resolveConfig(s.project.config).settings.risks.scale;
+      for (const r of Object.values(s.risks.risks)) {
+        const converted = rescaleRisk(r, from, next.scale);
+        if (converted !== r) puts.push({ table: 'risks_risks', value: converted });
+      }
     }
     const current = s.project.config.modules[id];
     const config = {
       modules: { ...s.project.config.modules, [id]: { enabled: current?.enabled ?? true, settings: parsed.data } },
     };
-    return ok({ project: touch(s.project, ctx, { config }), puts: [], deletes: [] });
+    return ok({ project: touch(s.project, ctx, { config }), puts, deletes: [] });
   });
 
 export const reopenProject = (): Command =>

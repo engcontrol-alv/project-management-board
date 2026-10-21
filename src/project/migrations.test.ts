@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import v1 from './__fixtures__/export-v1.json';
+import v2 from './__fixtures__/export-v2.json';
 import { resolveConfig } from './config';
 import { migrateExport, migrateRows, SCHEMA_VERSION } from './migrations';
 import { parseExport, toExport } from './serialization';
@@ -9,28 +10,28 @@ describe('migração v1 → v2 (arquivo)', () => {
     const r = parseExport(structuredClone(v1));
     if (!r.ok) throw new Error(r.error.message);
     const s = r.value;
-    expect(SCHEMA_VERSION).toBe(2);
+    expect(SCHEMA_VERSION).toBe(3);
     expect(Object.values(s.stakeholders.parties).every((p) => p.analysis === null)).toBe(true);
     expect(Object.keys(s.stakeholders.parties)).toHaveLength(v1.data.stakeholders_parties.length);
     expect(s.finances.procurements).toEqual({});
     expect(s.risks.risks).toEqual({});
     expect(s.project.counters).toEqual(v1.project.counters);
-    expect(s.project.schemaVersion).toBe(2);
+    expect(s.project.schemaVersion).toBe(3);
     expect(resolveConfig(s.project.config).warnings).toEqual([]);
   });
 
-  it('exportar o resultado gera v2 e o round-trip é idêntico', () => {
+  it('exportar o resultado gera a versão atual e o round-trip é idêntico', () => {
     const r = parseExport(structuredClone(v1));
     if (!r.ok) throw new Error(r.error.message);
     const file = toExport(r.value, '2026-10-19T00:00:00.000Z');
-    expect(file.schemaVersion).toBe(2);
+    expect(file.schemaVersion).toBe(3);
     const again = parseExport(JSON.parse(JSON.stringify(file)));
     expect(again.ok && again.value).toEqual(r.value);
   });
 
   it('versão mais nova é recusada com a mensagem do SPEC', () => {
-    expect(() => migrateExport({ ...v1, schemaVersion: 3 })).toThrow(
-      'O arquivo foi gerado por uma versão mais nova da aplicação (versão de dados 3; suportada até 2).',
+    expect(() => migrateExport({ ...v1, schemaVersion: 4 })).toThrow(
+      'O arquivo foi gerado por uma versão mais nova da aplicação (versão de dados 4; suportada até 3).',
     );
   });
 
@@ -42,5 +43,41 @@ describe('migração v1 → v2 (arquivo)', () => {
     ]);
     expect(migrateRows('scope_wbs', rows, 1)).toBe(rows);
     expect(migrateRows('stakeholders_parties', rows, 2)).toBe(rows);
+    expect(migrateRows('stakeholders_parties', rows, 1, 2)).toEqual(migrateRows('stakeholders_parties', rows, 1));
+  });
+});
+
+describe('migração v2 → v3 (D10)', () => {
+  it('fixture dourada v2 importa: riscos sem "Reavaliar", testes não aplicáveis, multa desativada', () => {
+    const r = parseExport(structuredClone(v2));
+    if (!r.ok) throw new Error(r.error.message);
+    const s = r.value;
+    expect(s.project.schemaVersion).toBe(3);
+    const risks = Object.values(s.risks.risks);
+    expect(risks).toHaveLength(v2.data.risks_risks.length);
+    expect(risks.every((x) => x.reassess === null)).toBe(true);
+    const physical = Object.values(s.scope.deliverables).filter((d) => d.category === 'Entregável físico / serviço');
+    expect(physical.length).toBeGreaterThan(0);
+    for (const d of physical)
+      expect(d).toMatchObject({ fatStatus: 'Não Aplicável', fatDate: null, satStatus: 'Não Aplicável', satDate: null });
+    const docs = Object.values(s.scope.deliverables).filter((d) => d.category !== 'Entregável físico / serviço');
+    expect(docs.every((d) => !('fatStatus' in d))).toBe(true);
+    expect(s.governance.profile.latePenalty.enabled).toBe(false);
+    expect(s.project.counters).toEqual(v2.project.counters);
+  });
+
+  it('v1 passa pelas duas etapas até a v3', () => {
+    const r = parseExport(structuredClone(v1));
+    if (!r.ok) throw new Error(r.error.message);
+    expect(r.value.governance.profile.latePenalty.enabled).toBe(false);
+  });
+
+  it('migrateRows da v2 só toca riscos, entregáveis e perfil, e é idempotente', () => {
+    const risks = [{ id: 'r' }, { id: 'q', reassess: { scale: 3, probability: 1, impact: 1 } }];
+    expect(migrateRows('risks_risks', risks, 2)).toEqual([{ id: 'r', reassess: null }, risks[1]]);
+    const docs = [{ id: 'd', category: 'Documentação de engenharia' }];
+    expect(migrateRows('scope_deliverables', docs, 2)).toEqual(docs);
+    expect(migrateRows('scope_wbs', risks, 2)).toBe(risks);
+    expect(migrateRows('risks_risks', risks, 3)).toBe(risks);
   });
 });

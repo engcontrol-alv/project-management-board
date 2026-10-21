@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { expectedValue, exposure, riskMatrix } from './domain/exposure';
+import { bandOf, expectedValue, exposure, riskMatrix } from './domain/exposure';
+import { rescaleRisk } from './domain/rescale';
 import { risksRag } from './domain/rag';
-import { riskSchema, type Risk } from './model/risk';
-import { risksManifest } from './manifest';
+import { levelLabels, levelsFor, riskSchema, type Risk } from './model/risk';
+import { DEFAULT_BANDS, risksManifest, risksSettingsSchema } from './manifest';
 
 const settings = risksManifest.defaultSettings;
 
@@ -30,6 +31,7 @@ const risk = (o: Partial<Risk> = {}): Risk => ({
   deliverableIds: [],
   procurementIds: [],
   partyIds: [],
+  reassess: null,
   ...o,
 });
 
@@ -79,5 +81,71 @@ describe('risksRag', () => {
     expect(risksRag([risk({ probability: 1, impact: 1, status: 'Materializado' })], settings).rag).toBe('vermelho');
     expect(risksRag([risk({ probability: 3, impact: 3 })], settings).rag).toBe('vermelho');
     expect(risksRag([], settings)).toEqual({ rag: 'n/a', reason: 'Nenhum risco registrado' });
+  });
+});
+
+describe('escala 5×5 (SPEC §8.4)', () => {
+  const s5 = { ...settings, scale: 5 as const, bands: DEFAULT_BANDS[5] };
+  it('níveis e rótulos por escala', () => {
+    expect(levelsFor(3)).toEqual([1, 2, 3]);
+    expect(levelsFor(5)).toEqual([1, 2, 3, 4, 5]);
+    expect(levelLabels(5).probability).toEqual(['Muito baixa', 'Baixa', 'Média', 'Alta', 'Muito alta']);
+    expect(levelLabels(5).impact).toEqual(['Muito baixo', 'Baixo', 'Médio', 'Alto', 'Muito alto']);
+    expect(levelLabels(3).probability).toEqual(['Baixa', 'Média', 'Alta']);
+  });
+  it('faixas 5×5 padrão: 1–4 Baixo, 5–9 Moderado, 10–16 Alto, 20–25 Crítico', () => {
+    expect([4, 5, 9, 10, 16, 20, 25].map((n) => bandOf(n, DEFAULT_BANDS[5]))).toEqual([
+      'Baixo', 'Moderado', 'Moderado', 'Alto', 'Alto', 'Crítico', 'Crítico',
+    ]);
+    expect(exposure(risk({ probability: 5, impact: 4 }), s5)).toEqual({ score: 20, band: 'Crítico' });
+  });
+  it('schema: nível até 5 e avaliação original guardada em "reassess"', () => {
+    expect(riskSchema.safeParse(risk({ probability: 5, impact: 5 })).success).toBe(true);
+    expect(riskSchema.safeParse(risk({ probability: 6 as never })).success).toBe(false);
+    expect(riskSchema.safeParse(risk({ reassess: { scale: 3, probability: 2, impact: 3 } })).success).toBe(true);
+  });
+  it('parâmetros: escala 3 ou 5; faixa Alto abaixo de escala²', () => {
+    expect(risksSettingsSchema.safeParse(s5).success).toBe(true);
+    expect(risksSettingsSchema.safeParse({ ...s5, scale: 4 }).success).toBe(false);
+    expect(risksSettingsSchema.safeParse({ ...s5, bands: { low: 4, moderate: 9, high: 25 } }).success).toBe(false);
+    expect(risksSettingsSchema.safeParse({ ...settings, bands: DEFAULT_BANDS[5] }).success).toBe(false);
+  });
+});
+
+describe('troca de escala sem perda de dados (D1)', () => {
+  it('3 → 5 converte os níveis e guarda a avaliação original ("Reavaliar")', () => {
+    expect(rescaleRisk(risk({ probability: 1, impact: 2 }), 3, 5)).toMatchObject({
+      probability: 1,
+      impact: 3,
+      reassess: { scale: 3, probability: 1, impact: 2 },
+    });
+    expect(rescaleRisk(risk({ probability: 3, impact: 3 }), 3, 5)).toMatchObject({ probability: 5, impact: 5 });
+  });
+  it('5 → 3 agrupa os níveis', () => {
+    const r = risk({ probability: 2, impact: 4 });
+    expect(rescaleRisk(r, 5, 3)).toMatchObject({ probability: 1, impact: 3, reassess: { scale: 5, probability: 2, impact: 4 } });
+    expect(rescaleRisk(risk({ probability: 3, impact: 5 }), 5, 3)).toMatchObject({ probability: 2, impact: 3 });
+  });
+  it('voltar à escala original antes de reavaliar restaura os níveis exatos', () => {
+    for (const p of [1, 2, 3] as const)
+      for (const i of [1, 2, 3] as const) {
+        const original = risk({ probability: p, impact: i });
+        expect(rescaleRisk(rescaleRisk(original, 3, 5), 5, 3)).toEqual(original);
+      }
+    const five = risk({ probability: 4, impact: 2 });
+    expect(rescaleRisk(rescaleRisk(five, 5, 3), 3, 5)).toEqual(five);
+  });
+  it('risco não avaliado fica intacto; mesma escala não muda nada', () => {
+    const r = risk({ probability: null, impact: 2 });
+    expect(rescaleRisk(r, 3, 5)).toBe(r);
+    const a = risk();
+    expect(rescaleRisk(a, 3, 3)).toBe(a);
+  });
+  it('RAG equivalente nas duas escalas para o risco convertido', () => {
+    const s5 = { ...settings, scale: 5 as const, bands: DEFAULT_BANDS[5] };
+    for (const [p, i] of [[3, 3], [2, 3], [2, 2], [1, 1]] as const) {
+      const r = risk({ probability: p, impact: i });
+      expect(risksRag([rescaleRisk(r, 3, 5)], s5).rag).toBe(risksRag([r], settings).rag);
+    }
   });
 });

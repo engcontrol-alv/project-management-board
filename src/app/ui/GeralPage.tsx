@@ -56,6 +56,7 @@ export function GeralPage() {
   const baseline = currentBaseline(snapshot);
   const currency = config.settings.finances.baseCurrency;
   const fin = derived.finances;
+  const penalty = derived.penalty;
   const worst = dash.perModule.filter((m) => m.rag === dash.overall && m.rag !== 'verde' && m.rag !== 'n/a');
   const money = (v: number | null | undefined) => (v === null || v === undefined ? 'n/a' : formatMoneyBR(Math.round(v), currency));
   const sectionPath = (id: keyof typeof VIEWS) => `/projeto/${id}/${VIEWS[id].sections[0]?.path ?? ''}`;
@@ -79,7 +80,7 @@ export function GeralPage() {
     <Sparkline
       max={Math.max(...curve.map((p) => Math.max(p.pv, p.ev ?? 0, p.ac ?? 0)))}
       series={[
-        { values: curve.map((p) => p.pv), color: '#9aa7b4', dashed: true },
+        { values: curve.map((p) => p.pv), color: 'var(--chart-planned)', dashed: true },
         { values: curve.map((p) => p.ev), color: 'var(--navy)' },
         { values: curve.map((p) => p.ac), color: 'var(--red)' },
       ]}
@@ -88,7 +89,7 @@ export function GeralPage() {
     <Sparkline
       max={100}
       series={[
-        { values: derived.sCurve.map((p) => p.planned), color: '#9aa7b4', dashed: true },
+        { values: derived.sCurve.map((p) => p.planned), color: 'var(--chart-planned)', dashed: true },
         { values: derived.sCurve.map((p) => p.actual), color: 'var(--navy)' },
       ]}
     />
@@ -169,6 +170,49 @@ export function GeralPage() {
         </div>
       </section>
 
+      {/* Provisão de multa contratual por atraso (Governança × Cronograma × LB). */}
+      <section className="card tb-card" aria-label="Multa contratual por atraso">
+        <div className="card-head">
+          <h2>Multa contratual por atraso</h2>
+          <Link to="/projeto/governance/contrato" className="small">
+            {penalty ? 'Ver cláusula' : 'Configurar cláusula'}
+          </Link>
+        </div>
+        {penalty ? (
+          <div className="penalty-row">
+            <div>
+              <div className="eyebrow">Provisão (atraso real ou previsto)</div>
+              <div className="tb-mono penalty-value">{penalty.totalCents === null ? 'n/a' : formatMoneyBR(penalty.totalCents, currency)}</div>
+              {penalty.capped && <Badge text="Teto atingido" tone="red" />}
+            </div>
+            <div className="small" style={{ flex: 1, minWidth: 0 }}>
+              {penalty.reason ??
+                (penalty.items.length === 0 ? (
+                  <span className="muted">Nenhum marco contratual atrasado.</span>
+                ) : (
+                  <ul className="plain-list">
+                    {penalty.items.map((i) => (
+                      <li key={i.milestoneId}>
+                        <span className="tb-mono">
+                          {i.code} · {i.delayDays} dia(s)
+                        </span>{' '}
+                        <span className="muted">{i.name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ))}
+              <div className="muted" style={{ marginTop: 4 }}>
+                {penalty.clauseText}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="muted small" style={{ margin: 0 }}>
+            {profile.latePenalty.enabled ? 'Cronograma desligado.' : 'Cláusula de multa não configurada.'}
+          </p>
+        )}
+      </section>
+
       <div className="split" style={{ marginBottom: 16 }}>
         {/* c) Quadro financeiro + miniatura da Curva S. */}
         <section className="card tb-card" aria-label="Orçado × comprometido × realizado" style={{ marginBottom: 0 }}>
@@ -178,7 +222,7 @@ export function GeralPage() {
           {total ? (
             (
               [
-                ['Orçado', total.budgeted, '#aeb9c5'],
+                ['Orçado', total.budgeted, 'var(--chart-baseline)'],
                 ['Comprometido', total.committed, 'var(--amber)'],
                 ['Realizado', total.actual, 'var(--navy)'],
               ] as const

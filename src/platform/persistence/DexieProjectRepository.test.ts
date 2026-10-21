@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import Dexie from 'dexie';
 import { aChangeRequest, aPackage, aPerson, aProcurement, aRequirement } from '@/test/factories';
-import { STORES_V1 } from '@/project/migrations';
+import { STORES_V1, STORES_V2 } from '@/project/migrations';
 import v1 from '@/project/__fixtures__/export-v1.json';
+import v2 from '@/project/__fixtures__/export-v2.json';
 import { aContext, aSnapshot } from '@/test/builders';
 import { upsertEntity } from '@/commands/entities';
 import { applyChangeToBaseline, defineInitialBaseline } from '@/commands/baseline';
@@ -121,7 +122,7 @@ describe('DexieProjectRepository', () => {
     const parties = Object.values(loaded.snapshot.stakeholders.parties);
     expect(parties).toHaveLength(v1.data.stakeholders_parties.length);
     expect(parties.every((p) => p.analysis === null)).toBe(true);
-    expect(loaded.snapshot.project.schemaVersion).toBe(2);
+    expect(loaded.snapshot.project.schemaVersion).toBe(3);
     expect(loaded.snapshot.project.config.modules.stakeholders?.settings).toEqual({ supplierCommittedThresholdCents: 10_000_000 });
 
     const supplier = parties.find((p) => p.kind === 'Organização' && p.roles.includes('Fornecedor'))!;
@@ -129,5 +130,27 @@ describe('DexieProjectRepository', () => {
     expect(r.ok ? [] : r.error).toEqual([]);
     const after = await repo.loadSnapshot();
     expect(after.status === 'pronto' && Object.values(after.snapshot.finances.procurements)[0]?.code).toBe('CTR-001');
+  });
+
+  it('Review Focus 1 (Etapa 3): banco criado na v2 abre na v3 com os dados migrados', async () => {
+    const name = uniqueName();
+    const old = new Dexie(name);
+    old.version(1).stores(STORES_V1);
+    old.version(2).stores(STORES_V2);
+    await old.open();
+    const pid = v2.project.id;
+    await old.table('core_projects').put(v2.project);
+    await old.table('core_baselines').bulkPut(v2.baselines.map((b) => ({ ...b, projectId: pid })));
+    for (const [table, rows] of Object.entries(v2.data))
+      await old.table(table).bulkPut((rows as { id: string }[]).map((r) => ({ ...r, projectId: pid })));
+    old.close();
+
+    const loaded = await new DexieProjectRepository(name).loadSnapshot();
+    if (loaded.status !== 'pronto') throw new Error(JSON.stringify(loaded));
+    const s = loaded.snapshot;
+    expect(s.project.schemaVersion).toBe(3);
+    expect(Object.values(s.risks.risks).every((r) => r.reassess === null)).toBe(true);
+    expect(Object.values(s.scope.deliverables).filter((d) => d.category === 'Entregável físico / serviço').every((d) => d.fatStatus === 'Não Aplicável')).toBe(true);
+    expect(s.governance.profile.latePenalty.enabled).toBe(false);
   });
 });

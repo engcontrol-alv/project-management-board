@@ -6,7 +6,7 @@ import { ErrorList } from '@/shared/ui/Dialog';
 import { Field } from '@/shared/ui/fields';
 import { readFileText } from '@/platform/transfer/file';
 import { projectInfoSchema, type ProjectInfo } from '@/project/project';
-import { parseImportText } from '@/project/serialization';
+import { parseImportFile } from '@/project/serialization';
 import type { ProjectSnapshot } from '@/project/snapshot';
 import { BrandMark } from '@/shared/ui/BrandMark';
 
@@ -37,7 +37,7 @@ export function StartPage({
 
   const importFile = async (file: File | undefined) => {
     if (!file) return;
-    const r = parseImportText(await readFileText(file));
+    const r = await parseImportFile(await readFileText(file));
     if (!r.ok) return setImportError(r.error.message);
     setImportError(null);
     await onImport(r.value.snapshot);

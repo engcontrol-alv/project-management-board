@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/shared/ui/Card';
-import { ErrorList } from '@/shared/ui/Dialog';
+import { Dialog, ErrorList } from '@/shared/ui/Dialog';
 import { Field, MoneyInput } from '@/shared/ui/fields';
 import { CURRENCIES, type FinancesSettings } from '@/modules/finances';
 import type { ResourcesSettings } from '@/modules/resources';
-import type { RisksSettings } from '@/modules/risks';
+import { DEFAULT_BANDS, RISK_SCALES, type RiskScale, type RisksSettings } from '@/modules/risks';
 import type { StakeholdersSettings } from '@/modules/stakeholders';
 import { setModuleEnabledCmd, updateModuleSettings } from '@/commands/project';
 import { useAnalysis, useCommand } from '@/platform/react/hooks';
@@ -92,7 +92,13 @@ export function ConfigPage() {
       <GovernanceSettingsForm initial={settings.governance} onSave={(v) => save('governance', v)} />
       {enabled.schedule && <ScheduleSettingsForm initial={settings.schedule} onSave={(v) => save('schedule', v)} />}
       {enabled.finances && <FinancesSettingsForm initial={settings.finances} onSave={(v) => save('finances', v)} />}
-      {enabled.risks && <RisksSettingsForm initial={settings.risks} onSave={(v) => save('risks', v)} />}
+      {enabled.risks && (
+        <RisksSettingsForm
+          initial={settings.risks}
+          assessed={Object.values(analysis.snapshot.risks.risks).filter((r) => r.probability !== null && r.impact !== null).length}
+          onSave={(v) => save('risks', v)}
+        />
+      )}
       {enabled.resources && <ResourcesSettingsForm initial={settings.resources} onSave={(v) => save('resources', v)} />}
       {enabled.stakeholders && (
         <StakeholdersSettingsForm initial={settings.stakeholders} onSave={(v) => save('stakeholders', v)} />
@@ -222,15 +228,50 @@ function FinancesSettingsForm({ initial, onSave }: { initial: FinancesSettings; 
   );
 }
 
-function RisksSettingsForm({ initial, onSave }: { initial: RisksSettings; onSave: (v: unknown) => void }) {
+function RisksSettingsForm({
+  initial,
+  assessed,
+  onSave,
+}: {
+  initial: RisksSettings;
+  /** Riscos com probabilidade e impacto: trocar a escala com eles pede confirmação (SPEC caso 27). */
+  assessed: number;
+  onSave: (v: unknown) => void;
+}) {
+  const [scale, setScale] = useState<RiskScale>(initial.scale);
   const [low, setLow] = useState(String(initial.bands.low));
   const [moderate, setModerate] = useState(String(initial.bands.moderate));
   const [high, setHigh] = useState(String(initial.bands.high));
   const [categories, setCategories] = useState(initial.categories.join('\n'));
+  const [confirming, setConfirming] = useState(false);
+  // Trocar a escala preenche as faixas padrão da nova escala (D2).
+  const changeScale = (next: RiskScale) => {
+    setScale(next);
+    setLow(String(DEFAULT_BANDS[next].low));
+    setModerate(String(DEFAULT_BANDS[next].moderate));
+    setHigh(String(DEFAULT_BANDS[next].high));
+  };
+  const submit = () =>
+    onSave({
+      scale,
+      bands: { low: Number(low), moderate: Number(moderate), high: Number(high) },
+      categories: lines(categories),
+    });
   return (
     <Card title="Parâmetros — Riscos">
-      <p className="muted small">Matriz 3×3 (probabilidade × impacto, pontuação de 1 a 9).</p>
+      <p className="muted small">
+        Matriz {scale}×{scale} (probabilidade × impacto, pontuação de 1 a {scale * scale}).
+      </p>
       <div className="form-grid">
+        <Field id="cfg-scale" label="Escala da matriz" hint="Trocar com riscos avaliados converte os níveis e marca os riscos para reavaliar.">
+          <select id="cfg-scale" value={scale} onChange={(e) => changeScale(Number(e.target.value) as RiskScale)}>
+            {RISK_SCALES.map((n) => (
+              <option key={n} value={n}>
+                {n}×{n}
+              </option>
+            ))}
+          </select>
+        </Field>
         <Field id="cfg-low" label="Baixo até a pontuação">
           <input id="cfg-low" type="number" min={1} value={low} onChange={(e) => setLow(e.target.value)} />
         </Field>
@@ -244,18 +285,39 @@ function RisksSettingsForm({ initial, onSave }: { initial: RisksSettings; onSave
           <textarea id="cfg-categories" rows={5} value={categories} onChange={(e) => setCategories(e.target.value)} />
         </Field>
       </div>
-      <button
-        className="btn"
-        onClick={() =>
-          onSave({
-            scale: 3,
-            bands: { low: Number(low), moderate: Number(moderate), high: Number(high) },
-            categories: lines(categories),
-          })
-        }
-      >
+      <button className="btn" onClick={() => (scale !== initial.scale && assessed > 0 ? setConfirming(true) : submit())}>
         Salvar parâmetros de Riscos
       </button>
+      <Dialog
+        open={confirming}
+        title={`Mudar a matriz para ${scale}×${scale}?`}
+        onClose={() => setConfirming(false)}
+        actions={
+          <>
+            <button className="btn" onClick={() => setConfirming(false)}>
+              Cancelar
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                setConfirming(false);
+                submit();
+              }}
+            >
+              Converter para {scale}×{scale}
+            </button>
+          </>
+        }
+      >
+        <p>
+          {assessed} risco(s) avaliado(s) terão probabilidade e impacto convertidos para a escala {scale}×{scale} e ficarão
+          marcados como <strong>Reavaliar</strong>.
+        </p>
+        <p className="muted small" style={{ marginBottom: 0 }}>
+          Nada é perdido: a avaliação anterior fica guardada e volta exatamente se a escala voltar a {initial.scale}×
+          {initial.scale} antes da reavaliação.
+        </p>
+      </Dialog>
     </Card>
   );
 }

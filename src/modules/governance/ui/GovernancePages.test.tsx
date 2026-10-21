@@ -7,6 +7,7 @@ import { renderWithProject } from '@/test/render';
 import { BaselinePanel } from './BaselinePanel';
 import { CharterPage } from './CharterPage';
 import { DocsProcurementPage, OWN_REVENUE_NOTE } from './DocsProcurementPage';
+import { ContractPage } from './ContractPage';
 import { PhasesPage } from './PhasesPage';
 import { governanceView } from './view';
 
@@ -17,6 +18,7 @@ describe('Governança sem o painel executivo', () => {
       'Fases do ciclo de vida',
       'Normas',
       'Documentação e aquisições',
+      'Contrato',
       'Reuniões',
       'Lições aprendidas',
     ]);
@@ -98,5 +100,36 @@ describe('DocsProcurementPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
     await waitFor(async () => expect((await load()).governance.profile.documentTemplate.template).toBe('Externo (cliente)'));
     expect((await load()).governance.profile.procurementPolicy.billing).toBe('Direto ao cliente');
+  });
+});
+
+describe('ContractPage (D7, D8)', () => {
+  it('cláusula de multa desativada por padrão; ativar mostra os parâmetros e grava', async () => {
+    const { load } = await renderWithProject(<ContractPage />);
+    const on = await screen.findByLabelText('Aplicar multa por atraso');
+    expect(on).not.toBeChecked();
+    expect(screen.queryByLabelText('Multa por período (%)')).toBeNull();
+    await userEvent.click(on);
+    await userEvent.type(screen.getByLabelText('Multa por período (%)'), '0.1');
+    await userEvent.selectOptions(screen.getByLabelText('Período'), 'Diário');
+    await userEvent.selectOptions(screen.getByLabelText('Base de cálculo'), 'Valor do contrato');
+    await userEvent.type(screen.getByLabelText('Valor do contrato'), '1.500.000,00');
+    await userEvent.type(screen.getByLabelText('Teto (% do valor do contrato)'), '10');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+    await waitFor(async () => expect((await load()).governance.profile.latePenalty.enabled).toBe(true));
+    expect((await load()).governance.profile.latePenalty).toMatchObject({
+      ratePct: 0.1,
+      period: 'Diário',
+      base: 'Valor do contrato',
+      contractValueCents: 150_000_000,
+      capPct: 10,
+    });
+  });
+
+  it('ativada sem percentual mostra o erro', async () => {
+    await renderWithProject(<ContractPage />);
+    await userEvent.click(await screen.findByLabelText('Aplicar multa por atraso'));
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('informe o percentual da multa por período');
   });
 });

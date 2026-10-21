@@ -96,13 +96,13 @@ describe('applyChangeset', () => {
 
 describe('migrateExport', () => {
   it('versão mais nova é recusada; a versão atual passa intacta', () => {
-    expect(() => migrateExport({ schemaVersion: 3 })).toThrow(UnsupportedVersionError);
+    expect(() => migrateExport({ schemaVersion: 4 })).toThrow(UnsupportedVersionError);
     try {
-      migrateExport({ schemaVersion: 3 });
+      migrateExport({ schemaVersion: 4 });
     } catch (e) {
-      expect((e as UnsupportedVersionError).found).toBe(3);
+      expect((e as UnsupportedVersionError).found).toBe(4);
     }
-    const current = { schemaVersion: 2 };
+    const current = { schemaVersion: 3 };
     expect(migrateExport(current)).toBe(current);
   });
 });

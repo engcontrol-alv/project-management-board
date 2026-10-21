@@ -1,0 +1,92 @@
+﻿**********************
+Início da transcrição do Windows PowerShell
+Hora de início: 20261019104309
+Nome de Usuário: DESKTOP-F1B8FD3\CnNcT
+Executar como Usuário: DESKTOP-F1B8FD3\CnNcT
+Nome da Configuração: 
+Computador: DESKTOP-F1B8FD3 (Microsoft Windows NT 10.0.26200.0)
+Aplicativo Host: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe
+ID do Processo: 18224
+PSVersion: 5.1.26100.9711
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9711
+BuildVersion: 10.0.26100.9711
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcrição iniciada, o arquivo de saída é C:\Users\CnNcT\Documents\GitHub\project-management-board\script.txt
+PS C:\Users\CnNcT\Documents\GitHub\project-management-board> npm install
+
+up to date, audited 369 packages in 3s
+
+84 packages are looking for funding
+  run `npm fund` for details
+
+13 vulnerabilities (5 moderate, 5 high, 3 critical)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+PS C:\Users\CnNcT\Documents\GitHub\project-management-board> npm test
+tra a tabela alternativa
+The width(0) and height(0) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(1
+00%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to c
+ontrol the
+       height and width.
+
+stderr | src/app/ui/ProjectLayout.test.tsx > ProjectLayout — navegação horizontal
+ > sem sidebar; faixa de domínios com ícone + nome e aba ativa em qualquer seção
+�� React Router Future Flag Warning: React Router will begin wrapping state updat
+es in `React.startTransition` in v7. You can use the `v7_startTransition` future
+flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrad
+ing/future#v7_starttransition.
+�� React Router Future Flag Warning: Relative route resolution within Splat route
+s is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in
+ early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_
+relativesplatpath.
+
+ ✓ src/analytics/analytics.test.ts (14)
+ ✓ src/app/App.test.tsx (7) 1533ms
+ ✓ src/commands/commands.test.ts (11)
+ ✓ src/core/indicators.test.ts (2)
+ ✓ src/project/integrity.test.ts (8)
+ ✓ src/project/project.test.ts (9)
+ ✓ src/registers/RegisterView.test.tsx (5) 2112ms
+ ✓ src/app/demo/demo-project.test.ts (4)
+ ✓ src/app/ui/AppPages.test.tsx (6) 2131ms
+ ✓ src/app/ui/ProjectLayout.test.tsx (4) 932ms
+ ✓ src/platform/persistence/DexieProjectRepository.test.ts (7)
+ ✓ src/shared/lib/lib.test.ts (8)
+ ✓ src/modules/schedule/domain/cpm.test.ts (9)
+ ✓ src/modules/schedule/domain/progress.test.ts (7)
+ ✓ src/modules/scope/domain/scope-domain.test.ts (5)
+ ✓ src/modules/schedule/ui/SchedulePages.test.tsx (6) 1026ms
+ ✓ src/modules/scope/model/scope-model.test.ts (8)
+ ✓ src/modules/scope/ui/ScopePages.test.tsx (12) 3533ms
+ ✓ src/modules/stakeholders/model/party.test.ts (5)
+ ✓ src/modules/governance/governance.test.ts (5)
+ ✓ src/modules/governance/ui/GovernancePages.test.tsx (7) 2093ms
+
+ Test Files  21 passed (21)
+      Tests  149 passed (149)
+   Start at  10:45:06
+   Duration  16.91s (transform 4.21s, setup 15.58s, collect 23.61s, tests 13.94s,
+ environment 42.04s, prepare 5.80s)
+PS C:\Users\CnNcT\Documents\GitHub\project-management-board> npm run lint
+
+PS C:\Users\CnNcT\Documents\GitHub\project-management-board> npm run build
+
+PS C:\Users\CnNcT\Documents\GitHub\project-management-board> npm run dev
+
+PS C:\Users\CnNcT\Documents\GitHub\project-management-board> cd C:\Users\CnNcT\Documents\GitHub\project-management-board
+PS C:\Users\CnNcT\Documents\GitHub\project-management-board> # 1. Encerra a transcrição do PowerShell (caso ainda esteja ativa nesta janela)
+PS C:\Users\CnNcT\Documents\GitHub\project-management-board> Stop-Transcript -ErrorAction SilentlyContinue
+**********************
+Fim da transcrição do Windows PowerShell
+Hora de término: 20261019105158
+**********************

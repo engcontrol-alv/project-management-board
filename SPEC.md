@@ -121,6 +121,10 @@ Tela inicial do projeto. Contém painel, definições do projeto e quatro regist
 - Código, tipo (`Status semanal`, `Comitê mensal`, `Revisão de fase`, `Outra`), data, participantes (→ partes interessadas, múltiplo), decisões (texto), ações geradas (texto), status (`Agendada`, `Realizada`, `Cancelada`).
 - `Realizada` exige data ≤ hoje `[RF]`.
 
+**g2) Contrato — multa por atraso** (opcional, Etapa 3)
+- Cláusula: aplicar (sim/não), % por período, período (`Diário`, `Semanal` = semana ou fração), base (`Valor do contrato` informado na cláusula, ou `Valor do marco` = Σ receitas não canceladas vinculadas ao marco, exige Finanças), teto em % do valor do contrato (opcional), texto da cláusula.
+- Vale para marcos do tipo `Contratual`; regra de cálculo em §8.6. A provisão aparece no Resumo de Finanças e na aba Geral.
+
 **h) Lições aprendidas** (simplificado)
 - Código, título, tipo (`Ponto de melhoria`, `Boa prática`), categoria (`Técnica`, `Metodologia`, `Comercial/Cliente`, `Fornecedores/Aquisição`, `Equipe/Pessoas`, `Comunicação`, `Outro`), contexto, recomendação, data, responsável.
 - Sem vínculo com processos.
@@ -148,14 +152,16 @@ Tela inicial do projeto. Contém painel, definições do projeto e quatro regist
 |---|---|
 | **Documentação de engenharia** (prevista) | Memorial descritivo, Memorial de cálculo, Diagrama (P&ID, unifilar, elétrico), Desenho técnico, Especificação técnica, Folha de dados, Manual de operação/manutenção, Relatório de teste (TAF/TAC/TAP/TDS), Data book, Outro |
 | **Documentação de gerenciamento de projeto** | Cronograma, Plano de projeto, Ata de reunião, Relatório de status, Relatório de medição, Termo de abertura, Termo de encerramento, Outro |
-| **Entregável físico / serviço** | Equipamento, Painel/Sistema, Instalação/Montagem, Comissionamento, Treinamento, Serviço de campo, Outro |
+| **Entregável físico / serviço** | Equipamento, Painel/Sistema, Software de CLP/IHM, Instalação/Montagem, Comissionamento, Treinamento, Serviço de campo, Outro |
 
 - Pacote de trabalho que o produz (→ EAP, opcional), marco associado (→ Cronograma, opcional), requisitos atendidos (vista reversa de §6.2a), data prevista, data real, responsável, exige aprovação do cliente (sim/não).
 - Só documentações: revisão (`0`, `A`, `B`…) e **template** (`Interno`/`Externo (cliente)`, padrão = Governança §6.1e, sobrescrevível).
 - Status por categoria `[ECC]`:
   - Documentações: `Não iniciado`, `Em elaboração`, `Em revisão interna`, `Emitido ao cliente`, `Comentado`, `Aprovado`, `Cancelado`.
   - Físico/Serviço: `Não iniciado`, `Em execução`, `Concluído`, `Aceito pelo cliente`, `Cancelado`.
-- Trocar a categoria de um entregável limpa tipo, revisão, template e status incompatíveis (o formulário avisa).
+- Só físicos/serviços: **TAF/FAT** (Teste de Aceitação em Fábrica) e **TAC/SAT** (Teste de Aceitação em Campo), cada um com status (`Não Aplicável`, `Pendente`, `Aprovado`, `Aprovado com Ressalvas`, `Reprovado`) e data. Executado (`Aprovado`, `Aprovado com Ressalvas`, `Reprovado`) exige data; `Pendente` aceita a data prevista; `Não Aplicável` não tem data. `Equipamento`, `Painel/Sistema` e `Software de CLP/IHM` começam `Pendente`; os demais tipos, `Não Aplicável` (Etapa 3).
+- Coerência dos testes: `Aceito pelo cliente` exige TAF e TAC aprovados (ou com ressalvas); `Concluído` (entregue) exige o TAF — o TAC acontece em campo depois. Incoerência gera alerta (§9.2).
+- Trocar a categoria de um entregável limpa tipo, revisão, template, status e testes incompatíveis (o formulário avisa).
 - Indicador derivado: % entregues por categoria (`Aprovado`/`Aceito pelo cliente` ÷ total não cancelado).
 
 **d) Controle de mudanças** — em Escopo `[ECC][final]`
@@ -217,7 +223,7 @@ Valores em centavos na moeda do item; totais sempre na **moeda base** do projeto
 - Quantitativos opcionais `[ECC][RF]`: probabilidade (%), impacto em custo, impacto em prazo (dias) → valor esperado = prob.% × impacto.
 - Vínculos opcionais: pacotes, entregáveis, marcos, contratações, partes interessadas.
 - `Em mitigação` exige tipo de resposta e ação. Risco sem probabilidade ou impacto = "Não avaliado", fora da matriz.
-- Mudar o tamanho da matriz (3×3 ↔ 5×5) com riscos avaliados exige confirmação; os níveis são limpos e os riscos ficam "Reavaliar" `[RF]`.
+- Mudar o tamanho da matriz (3×3 ↔ 5×5) com riscos avaliados exige confirmação; os riscos ficam "Reavaliar" `[RF]`. **Sem perda de dados (Etapa 3, decisão do usuário):** os níveis são convertidos (3→5: 1→1, 2→3, 3→5; 5→3: 1–2→1, 3→2, 4–5→3, o que preserva a faixa dos 9 pares 3×3) e a avaliação anterior fica guardada; voltar à escala original antes de reavaliar restaura os níveis exatos. Desmarcar "Reavaliar" (ou mudar P/I) confirma a avaliação.
 - Telas: registro; matriz P × I (clique filtra); exposição por categoria.
 
 ### 6.6 Recursos
@@ -325,6 +331,11 @@ Todas são funções puras, testadas, que recebem a data de status por parâmetr
 - Armazenado em inteiros de centavos + código da moeda; taxa decimal informada no item; conversão para a base com arredondamento half-even no fim.
 - Entrada aceita "R$", separador de milhar e vírgula decimal; normaliza para centavos `[RF]`.
 
+### 8.6 Multa contratual por atraso (Etapa 3)
+- Marcos do tipo `Contratual`. Prazo = data do marco na LB vigente; sem LB, a data manual; sem nenhuma, fora do cálculo.
+- Dias de atraso = (data real, se concluído; senão o maior entre previsão e data de status) − prazo, quando > 0. É uma **provisão** (atraso real ou previsto), projeção derivada, nunca gravada.
+- Multa do marco = base × % × períodos (dias, ou ⌈dias/7⌉ no semanal), half-even nos centavos. Total limitado pelo teto (% do valor do contrato). Base `Valor do marco` com Finanças desligado = "n/a".
+
 ## 9. RAG e alertas
 
 ### 9.1 RAG
@@ -353,6 +364,7 @@ Limites configuráveis por projeto. Sem dados suficientes, o módulo é "n/a" (e
 | Fornecedor em `Gerenciar de perto` + `Opositor` com contratação crítica | "Fornecedor crítico desengajado" | Abrir PI |
 | Entregável de documentação com data prevista vencida e não aprovado | "ENT-010 vencido sem aprovação" | Abrir entregável |
 | Pacote da LB excluído | "Pacote da linha de base excluído sem mudança" | Abrir mudança |
+| Entregável físico `Aceito pelo cliente` com TAF ou TAC `Pendente`/`Reprovado`, ou `Concluído` com TAF `Pendente`/`Reprovado` | "ENT-009 aceito pelo cliente com TAC/SAT Reprovado" (Reprovado = vermelho; Pendente = amarelo) | Abrir entregável |
 
 Regra que depende de módulo desligado não roda.
 
@@ -414,7 +426,7 @@ Herdada do protótipo: fundo `#f5f7fa`, azul petróleo `#3f6d8f`, IBM Plex Mono 
 | 24 | Código de registro excluído | Nunca reutilizado | RF |
 | 25 | % = 100 sem término real (ou o contrário) | Validação bloqueia | RF |
 | 26 | Troca de categoria do entregável | Campos incompatíveis limpos com aviso | final |
-| 27 | Mudar tamanho da matriz de risco | Confirmação; riscos ficam "Reavaliar" | RF |
+| 27 | Mudar tamanho da matriz de risco | Confirmação; níveis convertidos, riscos ficam "Reavaliar"; voltar à escala restaura | RF |
 | 28 | Orçamento = 0 / BAC = 0 | Percentuais e índices "n/a"; desvios só em valor | RF |
 | 29 | Item financeiro sem data | Fora do fluxo de caixa, listado em "itens sem data" | RF |
 | 30 | Projeto encerrado | Somente leitura; alertas ocultos; "Reabrir" disponível | RF |
@@ -422,6 +434,7 @@ Herdada do protótipo: fundo `#f5f7fa`, azul petróleo `#3f6d8f`, IBM Plex Mono 
 | 32 | Duas abas abertas | Gravações vão para o mesmo IndexedDB; a outra aba atualiza ao vivo (consulta reativa); conflito de edição simultânea não é tratado na V1 | final |
 | 33 | Virada do dia com a aplicação aberta | Data de status "hoje" recalcula na próxima interação | RF |
 | 34 | Valor digitado com "R$" e milhar | Normalizado para centavos | RF |
+| 35 | Importar arquivo com `checksumSha256` que não confere | Recusa: "Integridade SHA-256 não confere: o arquivo foi alterado ou corrompido depois da exportação."; nada muda. Arquivo sem checksum (exportação antiga) é aceito | Etapa 3 |
 
 ## 14. Critérios de aceite da V1
 1. Navegador limpo mostra "Criar ou importar projeto" e não cria banco IndexedDB.
@@ -443,7 +456,7 @@ Herdada do protótipo: fundo `#f5f7fa`, azul petróleo `#3f6d8f`, IBM Plex Mono 
 |---|---|---|
 | 1 | Núcleo (persistência, export/import, apagar, exemplos, configuração de módulos, cadastro básico de pessoas/organizações) + **Escopo** (requisitos, EAP, entregáveis, mudanças) + **Cronograma** + **Governança** (painel, abertura/encerramento, normas, template, estratégia de aquisições, reuniões, lições) + linha de base | 1, 2, 3, 4, 5 (sem Finanças), 6, 10, 11, 12 |
 | 2 | **Finanças** (linhas de orçamento, contratações, resumo, fluxo de caixa, contingência, EVM, Curva S monetária) + **Partes Interessadas** completo (análise, comunicação, painel de fornecedor) + **Riscos** (matriz 3×3) + **Recursos** (custo homem-hora, carga semanal) — antecipados da Etapa 3 por decisão do usuário (plano da Etapa 2, D1) | 5, 7, 8 + RAG de Riscos e Recursos |
-| 3 | Escala 5×5 da matriz de riscos com "Reavaliar" (caso 27), adiada na Etapa 2 (D2) | — |
+| 3 | Frente 1 — Engenharia Industrial e fechamento do SPEC: escala 5×5 com "Reavaliar" sem perda de dados (caso 27), TAF/FAT e TAC/SAT nos entregáveis físicos, multa contratual por atraso (§6.1g2, §8.6), checksum SHA-256 no backup JSON (caso 35) — plano `docs/plans/2026-10-20-etapa-3-industrial.md` | 2, 3 (com checksum) |
 | 4 | **Relatório** imprimível | 9 |
 
 ## 16. Decisões da consolidação e questões em aberto
