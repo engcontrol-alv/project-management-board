@@ -2,7 +2,7 @@
 
 > **For agentic workers:** steps use checkbox (`- [ ]`) syntax. TDD: cada Task começa pelo teste que falha.
 
-**Goal:** Fechar o SPEC (§15 Etapa 3: matriz 5×5 com "Reavaliar", caso 27) e acrescentar três capacidades de engenharia industrial: rastreabilidade TAF/FAT e TAC/SAT nos entregáveis físicos, cláusula de multa contratual por atraso com provisão automática e checksum SHA-256 no backup JSON. Atualizar o Projeto Demo de Automação Industrial para exercitar tudo.
+**Goal:** Fechar o SPEC (§15 Etapa 3: matriz 5×5 com "Reavaliar", caso 27) e acrescentar três capacidades de engenharia industrial: rastreabilidade TAF/FAT e TAC/SAT nos entregáveis físicos, cláusula de multa contratual por atraso com provisão automática e checksum SHA-256 no backup JSON. O projeto de referência dos testes (automação industrial) exercita tudo.
 
 **Architecture:** Inalterada (ARCHITECTURE §3): `shared → core → module-logic → project → analytics → commands → platform → module-ui/registers → app`. Campos novos entram nos schemas Zod dos módulos; a mudança de formato sobe `SCHEMA_VERSION` 2 → 3 com migração única usada pela importação **e** pelo upgrade do Dexie (§6.5). Cálculos cruzados (multa = Governança × Cronograma × LB × Finanças; alerta de testes = Escopo) só em `analytics/`. O checksum é uma função pura assíncrona em `project/serialization.ts` sobre Web Crypto (`crypto.subtle.digest`).
 
@@ -11,6 +11,10 @@
 **Spec:** `SPEC.md` §6.1, §6.2c, §6.3a, §6.4, §6.5, §7.3, §8.4, §9.2, §10.1, §13 (casos 4, 27), §14 (critérios 2, 3), §15. `ARCHITECTURE.md` §5–§8.
 
 Caminhos e comandos relativos à raiz do app (`_bakeoff/3-ruflo`).
+
+> **Alinhamento com o código atual (2026-10-21).** Dois ajustes posteriores à implementação mudaram o contexto deste plano:
+> - **Projeto Demo removido do app.** Não há mais botão no cabeçalho nem na tela inicial; o sistema opera só com projetos criados pelo usuário ou importados via JSON. O antigo `src/app/demo/demo-project.ts` virou o projeto de referência dos testes em `src/test/demo-project.ts`, e os E2E o geram para "hoje" e o importam pela tela inicial (`e2e/support.ts`, `importReferenceProject`).
+> - **Mudanças dentro de Governança.** As solicitações de mudança saíram do Escopo: seção **Governança › Mudanças** (`/projeto/governance/mudancas`), coleção `governance.changeRequests` (tabela `governance_changeRequests`). A troca de tabela subiu os dados para a versão 4 (`TABLE_RENAMES[3]`); a migração v2 → v3 desta etapa (D10) continua valendo como passo intermediário.
 
 ---
 
@@ -112,9 +116,9 @@ Valem todas as das Etapas 1 e 2, mais:
 - [x] Teste: exportação baixada contém checksum; importar o próprio arquivo → prévia com "Integridade verificada (SHA-256)"; arquivo alterado → "Importação recusada" com a mensagem de integridade e nada muda; arquivo antigo sem checksum → prévia com "sem checksum (exportação antiga)".
 - [x] Implementar.
 
-### Task 12 — Projeto Demo + E2E
-**Files:** `src/app/demo/demo-project.ts`, `demo-project.test.ts`, `e2e/etapa3.spec.ts`.
-- [x] Demo: painéis `Painel/Sistema` com TAF `Pendente`; `ENT-009 Software de CLP e IHM — release da célula piloto` (`Software de CLP/IHM`, `Aceito pelo cliente`, TAF `Aprovado com Ressalvas`, TAC `Reprovado`) → alerta; treinamento `Não Aplicável`; cláusula 0,1%/dia sobre R$ 1.500.000,00, teto 10% → provisão pelo atraso de M-002.
+### Task 12 — Projeto de referência + E2E
+**Files:** `src/test/demo-project.ts`, `src/test/demo-project.test.ts`, `e2e/support.ts`, `e2e/etapa3.spec.ts` (originalmente `src/app/demo/`; o Projeto Demo saiu do app depois — ver o alinhamento no topo).
+- [x] Projeto de referência: painéis `Painel/Sistema` com TAF `Pendente`; `ENT-009 Software de CLP e IHM — release da célula piloto` (`Software de CLP/IHM`, `Aceito pelo cliente`, TAF `Aprovado com Ressalvas`, TAC `Reprovado`) → alerta; treinamento `Não Aplicável`; cláusula 0,1%/dia sobre R$ 1.500.000,00, teto 10% → provisão de R$ 12.000,00 pelo atraso de M-002 e M-005 (4 dias cada; o atraso se propaga pelo caminho crítico).
 - [x] E2E: (a) 3×3 → 5×5 → 3×3 sem perda pela tela; (b) TAF/TAC no entregável e alerta no Geral; (c) multa no Resumo e no Geral; (d) exportar → importar com checksum; arquivo adulterado recusado; fixture antiga aceita.
 
 ### Task 13 — Documentação e bateria

@@ -456,7 +456,7 @@ Herdada do protótipo: fundo `#f5f7fa`, azul petróleo `#3f6d8f`, IBM Plex Mono 
 |---|---|---|
 | 1 | Núcleo (persistência, export/import, apagar, exemplos, configuração de módulos, cadastro básico de pessoas/organizações) + **Escopo** (requisitos, EAP, entregáveis, mudanças) + **Cronograma** + **Governança** (painel, abertura/encerramento, normas, template, estratégia de aquisições, reuniões, lições) + linha de base | 1, 2, 3, 4, 5 (sem Finanças), 6, 10, 11, 12 |
 | 2 | **Finanças** (linhas de orçamento, contratações, resumo, fluxo de caixa, contingência, EVM, Curva S monetária) + **Partes Interessadas** completo (análise, comunicação, painel de fornecedor) + **Riscos** (matriz 3×3) + **Recursos** (custo homem-hora, carga semanal) — antecipados da Etapa 3 por decisão do usuário (plano da Etapa 2, D1) | 5, 7, 8 + RAG de Riscos e Recursos |
-| 3 | Frente 1 — Engenharia Industrial e fechamento do SPEC: escala 5×5 com "Reavaliar" sem perda de dados (caso 27), TAF/FAT e TAC/SAT nos entregáveis físicos, multa contratual por atraso (§6.1g2, §8.6), checksum SHA-256 no backup JSON (caso 35) — plano `docs/plans/2026-10-20-etapa-3-industrial.md` | 2, 3 (com checksum) |
+| 3 | Frente 1 — Engenharia Industrial e fechamento do SPEC: escala 5×5 com "Reavaliar" sem perda de dados (caso 27), TAF/FAT e TAC/SAT nos entregáveis físicos, multa contratual por atraso (§6.1g2, §8.6), checksum SHA-256 no backup JSON (caso 35) — plano `docs/plans/2026-10-21-etapa-3-industrial.md` | 2, 3 (com checksum) |
 | 4 | **Relatório** imprimível | 9 |
 
 ## 16. Decisões da consolidação e questões em aberto
