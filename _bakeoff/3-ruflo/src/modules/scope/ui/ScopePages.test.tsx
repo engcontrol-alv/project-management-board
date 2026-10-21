@@ -1,15 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { aChangeRequest, aDocument, aGroup, aPackage, aPerson, aPhysical } from '@/test/factories';
-import { aSnapshot, PROJECT_START } from '@/test/builders';
+import { aDocument, aGroup, aPackage, aPhysical } from '@/test/factories';
+import { aSnapshot } from '@/test/builders';
 import { renderWithProject } from '@/test/render';
-import { snapshotBaseline } from '@/analytics/baseline-snapshot';
-import { deriveProject } from '@/analytics/derive';
 import type { ProjectSnapshot } from '@/project/snapshot';
 import { WbsPage } from './WbsPage';
 import { DeliverablesPage, CATEGORY_CHANGED_NOTICE } from './DeliverablesPage';
-import { ChangeRequestsPage } from './ChangeRequestsPage';
+import { scopeView } from './view';
 
 const row = (container: HTMLElement, id: string) => container.querySelector<HTMLElement>(`tr[data-row-id="${id}"]`)!;
 
@@ -139,56 +137,8 @@ describe('DeliverablesPage', () => {
   });
 });
 
-describe('ChangeRequestsPage', () => {
-  const person = aPerson();
-  const decided = { approverId: person.id, decisionDate: '2026-01-04' };
-
-  it('botões só para transições permitidas', async () => {
-    await renderWithProject(<ChangeRequestsPage />, {
-      snapshot: aSnapshot().withParty(person).withChangeRequest(aChangeRequest()).build(),
-    });
-    expect(await screen.findByRole('button', { name: 'Em análise MUD-001' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Cancelada MUD-001' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Aprovada MUD-001' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Aplicar à linha de base' })).toBeNull();
-  });
-
-  it('aprovar pede aprovador e data da decisão', async () => {
-    const { load } = await renderWithProject(<ChangeRequestsPage />, {
-      snapshot: aSnapshot().withParty(person).withChangeRequest(aChangeRequest({ status: 'Em análise' })).build(),
-    });
-    await userEvent.click(await screen.findByRole('button', { name: 'Aprovada MUD-001' }));
-    const dialog = screen.getByRole('dialog', { name: 'Aprovar MUD-001' });
-    await userEvent.selectOptions(within(dialog).getByLabelText('Aprovador'), person.id);
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Confirmar decisão' }));
-    await waitFor(async () => expect((await load()).scope.changeRequests['cr1' as never]?.status).toBe('Aprovada'));
-    expect((await load()).scope.changeRequests['cr1' as never]?.decisionDate).toBe(PROJECT_START);
-  });
-
-  it('"Aplicar à linha de base" só com LB e mudança aprovada', async () => {
-    const base = aSnapshot()
-      .withParty(person)
-      .withPackage(aPackage({ id: 'A', duration: 5 }))
-      .withChangeRequest(aChangeRequest({ status: 'Aprovada', ...decided }))
-      .build();
-    const s = { ...base, baselines: [snapshotBaseline(base, deriveProject(base, PROJECT_START), { id: 'b1', now: 'now', changeRequestId: null })] };
-    const { load } = await renderWithProject(<ChangeRequestsPage />, { snapshot: s });
-    expect(screen.queryByRole('button', { name: 'Implementada MUD-001' })).toBeNull();
-    await userEvent.click(await screen.findByRole('button', { name: 'Aplicar à linha de base' }));
-    await waitFor(async () => expect((await load()).baselines).toHaveLength(2));
-    expect((await load()).scope.changeRequests['cr1' as never]?.status).toBe('Implementada');
-  });
-
-  it('sem LB, aprovada pode ser implementada manualmente', async () => {
-    await renderWithProject(<ChangeRequestsPage />, {
-      snapshot: aSnapshot().withParty(person).withChangeRequest(aChangeRequest({ status: 'Aprovada', ...decided })).build(),
-    });
-    expect(await screen.findByRole('button', { name: 'Implementada MUD-001' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Aplicar à linha de base' })).toBeNull();
-  });
-
-  it('?nova=1 abre o formulário de nova mudança', async () => {
-    await renderWithProject(<ChangeRequestsPage />, { route: '/projeto/scope/mudancas?nova=1' });
-    expect(await screen.findByRole('dialog', { name: /Novo/ })).toBeInTheDocument();
+describe('Escopo sem Mudanças', () => {
+  it('seções do Escopo: as solicitações de mudança moram na Governança', () => {
+    expect(scopeView.sections.map((x) => x.label)).toEqual(['Requisitos', 'EAP', 'Entregáveis']);
   });
 });

@@ -11,8 +11,9 @@ export default defineConfig({
       output: {
         // Bibliotecas estáveis em chunks próprios (cache entre versões); Recharts já é carregado sob demanda.
         manualChunks: {
-          react: ['react', 'react-dom', 'react-router-dom'],
-          data: ['dexie', 'dexie-react-hooks', 'zod'],
+          // dexie-react-hooks importa React: no chunk `data` criaria o ciclo react → data → react.
+          react: ['react', 'react-dom', 'react-router-dom', 'dexie-react-hooks'],
+          data: ['dexie', 'zod'],
         },
       },
     },

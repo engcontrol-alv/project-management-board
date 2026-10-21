@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { aChangeRequest, aDocument, aGroup, aPackage, aPhysical, aRequirement } from '@/test/factories';
+import { aDocument, aGroup, aPackage, aPhysical, aRequirement } from '@/test/factories';
 import { wbsNodeSchema } from './wbs';
 import { requirementSchema } from './requirement';
 import { deliverableSchema, PHYSICAL_TYPES, TEST_STATUSES } from './deliverable';
-import { changeRequestSchema } from './change-request';
 import { effectiveTemplate } from '../domain/deliverables';
 import { acceptanceIssues, defaultTestStatus } from '../domain/acceptance';
 
@@ -82,22 +81,6 @@ describe('Entregável', () => {
       'Interno',
     );
     expect(effectiveTemplate(aPhysical(), 'Externo (cliente)')).toBeNull();
-  });
-});
-
-describe('Mudança', () => {
-  it('impactos negativos são aceitos; custo em centavos inteiros', () => {
-    expect(
-      ok(changeRequestSchema, aChangeRequest({ scheduleImpactDays: -5, costImpactCents: -100000 })),
-    ).toBe(true);
-    expect(ok(changeRequestSchema, aChangeRequest({ costImpactCents: 10.5 }))).toBe(false);
-  });
-  it('Aprovada e Rejeitada exigem aprovador e data da decisão', () => {
-    const decided = { approverId: 'p1' as never, decisionDate: '2026-01-10' };
-    expect(ok(changeRequestSchema, aChangeRequest({ status: 'Aprovada', approverId: 'p1' as never }))).toBe(false);
-    expect(ok(changeRequestSchema, aChangeRequest({ status: 'Aprovada', decisionDate: '2026-01-10' }))).toBe(false);
-    expect(ok(changeRequestSchema, aChangeRequest({ status: 'Rejeitada', approverId: 'p1' as never }))).toBe(false);
-    expect(ok(changeRequestSchema, aChangeRequest({ status: 'Aprovada', ...decided }))).toBe(true);
   });
 });
 

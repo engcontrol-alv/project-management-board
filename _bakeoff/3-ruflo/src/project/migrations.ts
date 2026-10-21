@@ -1,5 +1,5 @@
 /** Versão única de dados e do banco. Cada etapa que adiciona coleções incrementa. */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export class UnsupportedVersionError extends Error {
   constructor(public readonly found: number) {
@@ -35,6 +35,14 @@ export const STORES_V2: Record<string, string> = {
   risks_risks: 'id, projectId',
   resources_resources: 'id, projectId',
   resources_allocations: 'id, projectId',
+};
+
+/** Tabelas Dexie da v3 (Etapa 3), congeladas: iguais às da v2 (a v3 só migrou linhas). */
+export const STORES_V3: Record<string, string> = { ...STORES_V2 };
+
+/** Tabelas renomeadas por versão de origem (v3 → v4: mudanças saem do Escopo para a Governança). */
+export const TABLE_RENAMES: Record<number, Record<string, string>> = {
+  3: { scope_changeRequests: 'governance_changeRequests' },
 };
 
 type Row = Record<string, unknown>;
@@ -106,11 +114,14 @@ export function migrateExport(raw: unknown): unknown {
   if (typeof version !== 'number') return raw;
   if (version > SCHEMA_VERSION) throw new UnsupportedVersionError(version);
   if (version === SCHEMA_VERSION) return raw;
-  const data = isRow(raw.data)
-    ? Object.fromEntries(
-        Object.entries(raw.data).map(([t, rows]) => [t, Array.isArray(rows) ? migrateRows(t, rows, version) : rows]),
-      )
-    : raw.data;
+  let data = raw.data;
+  // Uma versão por vez: migra as linhas e depois aplica as renomeações de tabela daquela versão.
+  for (let v = version; v < SCHEMA_VERSION && isRow(data); v++) {
+    const renames = TABLE_RENAMES[v] ?? {};
+    data = Object.fromEntries(
+      Object.entries(data).map(([t, rows]) => [renames[t] ?? t, Array.isArray(rows) ? migrateRows(t, rows, v, v + 1) : rows]),
+    );
+  }
   return { ...raw, schemaVersion: SCHEMA_VERSION, project: migrateProject(raw.project, version), data };
 }
 

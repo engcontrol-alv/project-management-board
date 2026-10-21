@@ -1,17 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { importReferenceProject } from './support';
 
 const fixture = (name: string) => fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
 
 async function go(page: Page, path: string) {
   await page.goto(`/#${path}`);
-}
-
-async function loadDemo(page: Page) {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Carregar projeto de demonstração' }).click();
-  await expect(page.getByText('Painel executivo')).toBeVisible();
 }
 
 async function setScale(page: Page, n: 3 | 5) {
@@ -27,7 +22,7 @@ async function setScale(page: Page, n: 3 | 5) {
 const exposures = (page: Page) => page.getByRole('table').locator('tbody tr').evaluateAll((rows) => rows.map((r) => r.textContent));
 
 test('Matriz de riscos 3×3 → 5×5 → 3×3 pela tela, sem perda de dados', async ({ page }) => {
-  await loadDemo(page);
+  await importReferenceProject(page);
   await go(page, '/projeto/risks/registro');
   await expect(page.getByText('R-001').first()).toBeVisible();
   const before = await exposures(page);
@@ -38,7 +33,7 @@ test('Matriz de riscos 3×3 → 5×5 → 3×3 pela tela, sem perda de dados', as
   await expect(grid.getByRole('button')).toHaveCount(25);
   await expect(grid.getByRole('row').first()).toContainText('Muito alta');
   await expect(page.getByRole('region', { name: 'Reavaliar' })).toContainText('R-001');
-  // Clicar numa célula filtra a tabela; RAG continua com texto.
+  // Clicar numa célula filtra a tabela.
   const critical = grid.getByRole('button', { name: /Probabilidade Muito alta, impacto Muito alto: [1-9] risco\(s\), Crítico/ });
   await critical.click();
   await expect(critical).toHaveAttribute('aria-pressed', 'true');
@@ -54,7 +49,7 @@ test('Matriz de riscos 3×3 → 5×5 → 3×3 pela tela, sem perda de dados', as
 });
 
 test('TAF/FAT e TAC/SAT nos entregáveis e alerta do entregue sem teste aprovado', async ({ page }) => {
-  await loadDemo(page);
+  await importReferenceProject(page);
   await expect(page.getByText('ENT-009 aceito pelo cliente com TAC/SAT Reprovado')).toBeVisible();
   await go(page, '/projeto/scope/entregaveis');
   const row = page.getByRole('row', { name: /ENT-009/ });
@@ -76,7 +71,7 @@ test('TAF/FAT e TAC/SAT nos entregáveis e alerta do entregue sem teste aprovado
 });
 
 test('Multa contratual por atraso: cláusula em Governança, provisão no Resumo e na Geral', async ({ page }) => {
-  await loadDemo(page);
+  await importReferenceProject(page);
   const card = page.getByRole('region', { name: 'Multa contratual por atraso' });
   await expect(card).toContainText('M-002');
   await expect(card).toContainText('0,1% por dia sobre o valor do contrato · teto 10%');
@@ -102,13 +97,13 @@ test('Multa contratual por atraso: cláusula em Governança, provisão no Resumo
 });
 
 test('Backup JSON com SHA-256: exportar → importar verificado; adulterado recusado; antigo aceito', async ({ page }) => {
-  await loadDemo(page);
+  await importReferenceProject(page);
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Exportar', exact: true }).click();
   const text = readFileSync(await (await download).path(), 'utf8');
   const file = JSON.parse(text);
   expect(file.checksumSha256).toMatch(/^[0-9a-f]{64}$/);
-  expect(file.schemaVersion).toBe(3);
+  expect(file.schemaVersion).toBe(4);
 
   await page.locator('#data-import').setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: Buffer.from(text) });
   const preview = page.getByRole('dialog', { name: 'Substituir o projeto atual?' });

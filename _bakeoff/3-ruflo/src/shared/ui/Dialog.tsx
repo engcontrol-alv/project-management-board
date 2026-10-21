@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 export function Dialog({
   open,
@@ -14,7 +15,8 @@ export function Dialog({
   actions?: ReactNode;
 }) {
   if (!open) return null;
-  return (
+  // Portal no body: um ancestral com backdrop-filter/transform (ex.: o cabeçalho) prenderia o overlay fixo.
+  return createPortal(
     <div
       className="dialog-backdrop"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
@@ -27,7 +29,8 @@ export function Dialog({
         <div className="dialog-body">{children}</div>
         {actions && <div className="dialog-actions">{actions}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

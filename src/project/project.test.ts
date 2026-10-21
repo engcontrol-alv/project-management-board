@@ -3,7 +3,7 @@ import { aPackage } from '@/test/factories';
 import { aSnapshot } from '@/test/builders';
 import { defaultConfig, resolveConfig, setModuleEnabled } from './config';
 import { applyChangeset } from './changeset';
-import { migrateExport, UnsupportedVersionError } from './migrations';
+import { migrateExport, SCHEMA_VERSION, UnsupportedVersionError } from './migrations';
 import { ALL_COLLECTIONS, getCollection, manifestOf, MANIFESTS } from './registry';
 import type { Baseline } from './baseline';
 
@@ -96,13 +96,13 @@ describe('applyChangeset', () => {
 
 describe('migrateExport', () => {
   it('versão mais nova é recusada; a versão atual passa intacta', () => {
-    expect(() => migrateExport({ schemaVersion: 4 })).toThrow(UnsupportedVersionError);
+    expect(() => migrateExport({ schemaVersion: 5 })).toThrow(UnsupportedVersionError);
     try {
-      migrateExport({ schemaVersion: 4 });
+      migrateExport({ schemaVersion: 5 });
     } catch (e) {
-      expect((e as UnsupportedVersionError).found).toBe(4);
+      expect((e as UnsupportedVersionError).found).toBe(5);
     }
-    const current = { schemaVersion: 3 };
+    const current = { schemaVersion: SCHEMA_VERSION };
     expect(migrateExport(current)).toBe(current);
   });
 });

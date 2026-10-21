@@ -20,7 +20,8 @@ import type { Communication, Organization, Person, StakeholderAnalysis } from '@
 import type { BudgetLine, Procurement } from '@/modules/finances';
 import type { Risk } from '@/modules/risks';
 import type { Allocation, Resource } from '@/modules/resources';
-import type { ChangeRequest, Deliverable, Requirement, WbsNode } from '@/modules/scope';
+import type { ChangeRequest } from '@/modules/governance';
+import type { Deliverable, Requirement, WbsNode } from '@/modules/scope';
 import type { Milestone } from '@/modules/schedule';
 import type { Lesson, Meeting, Norm } from '@/modules/governance';
 

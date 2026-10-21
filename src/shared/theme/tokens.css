@@ -645,6 +645,14 @@ h3 {
   letter-spacing: 0.01em;
   white-space: nowrap;
 }
+/* Situação (verde/amarelo/vermelho/sem dados) só pela cor; o nome fica no aria-label/title. */
+.rag-dot {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
 .tb-badge .dot {
   width: 6px;
   height: 6px;
@@ -897,12 +905,14 @@ fieldset {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 6vh 16px;
+  padding: 24px 16px;
   overflow-y: auto;
-  z-index: 20;
+  z-index: 1000;
   animation: fade-in 160ms var(--ease-out);
 }
 .dialog {
+  /* Centralizado na janela; se for mais alto que ela, as margens automáticas zeram e o overlay rola. */
+  margin-block: auto;
   background: var(--surface);
   border-radius: var(--radius);
   width: min(780px, 100%);
@@ -996,12 +1006,8 @@ fieldset {
   background: var(--surface);
   box-shadow: var(--shadow-1);
 }
-.health .status-dot {
-  flex: none;
-  width: 10px;
-  height: 10px;
+.health .rag-dot {
   margin-top: 5px;
-  border-radius: 1px;
 }
 .alert-item {
   display: flex;
@@ -1048,11 +1054,6 @@ fieldset {
 .start-hero p {
   max-width: 620px;
   font-size: 15px;
-}
-.start .demo {
-  margin-top: 18px;
-  text-align: center;
-  font-size: 13px;
 }
 
 /* ───────────────────────── Gantt ───────────────────────── */

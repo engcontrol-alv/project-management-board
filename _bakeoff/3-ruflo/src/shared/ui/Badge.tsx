@@ -1,4 +1,4 @@
-import { RAG_LABEL, ragTone, statusTone, type RagValue, type Tone } from './tones';
+import { RAG_LABEL, statusTone, type RagValue, type Tone } from './tones';
 
 export function Badge({ text, tone, title, dot }: { text: string; tone: Tone; title?: string; dot?: boolean }) {
   return (
@@ -17,7 +17,23 @@ export function StatusBadge({ status }: { status: string }) {
   return <Badge text={status || '—'} tone={statusTone(status)} />;
 }
 
-/** RAG sempre com texto, nunca só cor. */
-export function RagBadge({ rag, reason }: { rag: RagValue; reason?: string }) {
-  return <Badge text={`RAG ${RAG_LABEL[rag]}`} tone={ragTone(rag)} title={reason} dot />;
+const RAG_COLOR: Record<RagValue, string> = {
+  verde: 'var(--green)',
+  amarelo: 'var(--amber)',
+  vermelho: 'var(--red)',
+  'n/a': 'var(--gray)',
+};
+
+/** Situação só pela bolinha colorida; o nome fica no aria-label e no title (motivo ao passar o mouse). */
+export function RagDot({ rag, reason }: { rag: RagValue; reason?: string }) {
+  const label = `Situação: ${RAG_LABEL[rag]}`;
+  return (
+    <span
+      className="rag-dot"
+      role="img"
+      aria-label={label}
+      title={reason ? `${label} — ${reason}` : label}
+      style={{ background: RAG_COLOR[rag] }}
+    />
+  );
 }

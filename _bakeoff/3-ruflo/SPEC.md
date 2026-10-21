@@ -60,7 +60,7 @@ A V1 conecta os módulos **por ID**, calcula cronograma, avanço físico e valor
 | **Código** | Sequencial por tipo, **nunca reutilizado**, mesmo após exclusão `[RF]`. |
 | **Plano atual** | Durações, datas e valores editáveis no dia a dia. |
 | **Linha de base (LB)** | Fotografia congelada do plano (v1, v2…), referência para PV, SPI e desvios. |
-| **Solicitação de mudança (MUD)** | Registro em **Escopo** com impacto em escopo, prazo e custo; única forma de criar LB v2+. |
+| **Solicitação de mudança (MUD)** | Registro em **Governança** (seção Mudanças) com impacto em escopo, prazo e custo; única forma de criar LB v2+. |
 | **Exemplo** | Registro ilustrativo exibido na UI; nunca salvo, contado ou exportado. |
 | **Data de status** | Data de corte dos cálculos. Padrão: hoje; editável no projeto. |
 | **n/a** | Indicador sem base de cálculo (divisão por zero, módulo desligado, sem LB). Nunca `NaN`/`Infinity`. |
@@ -164,7 +164,7 @@ Tela inicial do projeto. Contém painel, definições do projeto e quatro regist
 - Trocar a categoria de um entregável limpa tipo, revisão, template, status e testes incompatíveis (o formulário avisa).
 - Indicador derivado: % entregues por categoria (`Aprovado`/`Aceito pelo cliente` ÷ total não cancelado).
 
-**d) Controle de mudanças** — em Escopo `[ECC][final]`
+**d) Controle de mudanças** — em **Governança › Mudanças** (movido do Escopo; dados versão 4) `[ECC][final]`
 - Código, título, descrição, justificativa, solicitante (→ PI), data da solicitação, categorias afetadas (múltipla: `Escopo`, `Cronograma`, `Custo`, `Qualidade`, `Contratual`, `Técnica`), impacto em escopo (texto + pacotes e entregáveis afetados), **impacto em prazo (dias, inteiro; negativo = antecipação)**, **impacto em custo (valor em moeda base; negativo = economia)** `[RF]`, nível (`Baixo`, `Médio`, `Alto`), status, aprovador (→ PI), data da decisão, responsável pela implementação.
 - Máquina de estados `[RF]`:
   - `Solicitada` → `Em análise` | `Cancelada`
@@ -461,7 +461,7 @@ Herdada do protótipo: fundo `#f5f7fa`, azul petróleo `#3f6d8f`, IBM Plex Mono 
 
 ## 16. Decisões da consolidação e questões em aberto
 
-**Decisões do usuário (esta consolidação):** Processos removido; Qualidade = só normas; Documentos = só indicador de template em Governança + Lista de Entregáveis categorizada em Escopo; Aquisições = política em Governança + contratações em Finanças com orçado/comprometido/realizado e fornecedor por ID; Mudanças em Escopo; Abertura/Encerramento, Reuniões e Lições simplificados em Governança.
+**Decisões do usuário (esta consolidação):** Processos removido; Qualidade = só normas; Documentos = só indicador de template em Governança + Lista de Entregáveis categorizada em Escopo; Aquisições = política em Governança + contratações em Finanças com orçado/comprometido/realizado e fornecedor por ID; Mudanças em Escopo (depois movidas para Governança, controle integrado de mudanças); Abertura/Encerramento, Reuniões e Lições simplificados em Governança.
 
 **[decisão do arquiteto]** — revisáveis:
 1. Requisitos mantidos em Escopo (todas as propostas tinham; alimentam o RAG de Escopo).

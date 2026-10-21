@@ -104,6 +104,8 @@ describe('CashflowPage', () => {
     expect(within(table).getByText('02/2026')).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Itens sem data' })).toHaveTextContent('ORC-002');
     expect(screen.getByText('Risco de deslocamento')).toBeInTheDocument();
+    // O gráfico é lazy: esperar o carregamento dentro do act.
+    await waitFor(() => expect(screen.queryByText('Carregando gráfico…')).not.toBeInTheDocument());
   });
 });
 

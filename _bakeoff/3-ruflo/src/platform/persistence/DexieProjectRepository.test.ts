@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import Dexie from 'dexie';
 import { aChangeRequest, aPackage, aPerson, aProcurement, aRequirement } from '@/test/factories';
-import { STORES_V1, STORES_V2 } from '@/project/migrations';
+import { STORES_V1, STORES_V2, STORES_V3 } from '@/project/migrations';
 import v1 from '@/project/__fixtures__/export-v1.json';
 import v2 from '@/project/__fixtures__/export-v2.json';
 import { aContext, aSnapshot } from '@/test/builders';
 import { upsertEntity } from '@/commands/entities';
 import { applyChangeToBaseline, defineInitialBaseline } from '@/commands/baseline';
+import { toExport } from '@/project/serialization';
 import { DexieProjectRepository } from './DexieProjectRepository';
 
 let n = 0;
@@ -41,11 +42,11 @@ describe('DexieProjectRepository', () => {
   it('commit grava o registro e os contadores', async () => {
     const repo = new DexieProjectRepository(uniqueName());
     await repo.replaceAll(snapshot());
-    const r = await repo.commit(upsertEntity('scope', 'changeRequests', aChangeRequest({ code: '' })), aContext());
+    const r = await repo.commit(upsertEntity('governance', 'changeRequests', aChangeRequest({ code: '' })), aContext());
     expect(r.ok).toBe(true);
     const loaded = await repo.loadSnapshot();
     if (loaded.status !== 'pronto') throw new Error(loaded.status);
-    expect(loaded.snapshot.scope.changeRequests['cr1' as never]?.code).toBe('MUD-001');
+    expect(loaded.snapshot.governance.changeRequests['cr1' as never]?.code).toBe('MUD-001');
     expect(loaded.snapshot.project.counters.MUD).toBe(1);
   });
 
@@ -69,14 +70,14 @@ describe('DexieProjectRepository', () => {
     // Mudança adulterada: Aprovada sem aprovador nem data da decisão.
     const raw = new Dexie(name);
     await raw.open();
-    await raw.table('scope_changeRequests').put({ ...aChangeRequest({ status: 'Aprovada' }), projectId: 'proj-1' });
+    await raw.table('governance_changeRequests').put({ ...aChangeRequest({ status: 'Aprovada' }), projectId: 'proj-1' });
     raw.close();
     const r = await repo.commit(applyChangeToBaseline('cr1' as never), aContext());
     expect(r.ok).toBe(false);
     const check = new Dexie(name);
     await check.open();
     expect(await check.table('core_baselines').count()).toBe(1);
-    expect((await check.table('scope_changeRequests').get('cr1')).status).toBe('Aprovada');
+    expect((await check.table('governance_changeRequests').get('cr1')).status).toBe('Aprovada');
     check.close();
   });
 
@@ -122,7 +123,7 @@ describe('DexieProjectRepository', () => {
     const parties = Object.values(loaded.snapshot.stakeholders.parties);
     expect(parties).toHaveLength(v1.data.stakeholders_parties.length);
     expect(parties.every((p) => p.analysis === null)).toBe(true);
-    expect(loaded.snapshot.project.schemaVersion).toBe(3);
+    expect(loaded.snapshot.project.schemaVersion).toBe(4);
     expect(loaded.snapshot.project.config.modules.stakeholders?.settings).toEqual({ supplierCommittedThresholdCents: 10_000_000 });
 
     const supplier = parties.find((p) => p.kind === 'Organização' && p.roles.includes('Fornecedor'))!;
@@ -148,9 +149,36 @@ describe('DexieProjectRepository', () => {
     const loaded = await new DexieProjectRepository(name).loadSnapshot();
     if (loaded.status !== 'pronto') throw new Error(JSON.stringify(loaded));
     const s = loaded.snapshot;
-    expect(s.project.schemaVersion).toBe(3);
+    expect(s.project.schemaVersion).toBe(4);
     expect(Object.values(s.risks.risks).every((r) => r.reassess === null)).toBe(true);
     expect(Object.values(s.scope.deliverables).filter((d) => d.category === 'Entregável físico / serviço').every((d) => d.fatStatus === 'Não Aplicável')).toBe(true);
     expect(s.governance.profile.latePenalty.enabled).toBe(false);
+  });
+
+  it('banco criado na v3 abre na v4 com as mudanças movidas para governance_changeRequests', async () => {
+    const name = uniqueName();
+    const old = new Dexie(name);
+    old.version(1).stores(STORES_V1);
+    old.version(2).stores(STORES_V2);
+    old.version(3).stores(STORES_V3);
+    await old.open();
+    const s0 = aSnapshot().withParty(aPerson()).withChangeRequest(aChangeRequest({ code: 'MUD-001' })).build();
+    const file = toExport(s0, 'now');
+    const pid = s0.project.id;
+    await old.table('core_projects').put({ ...file.project, schemaVersion: 3 });
+    for (const [table, rows] of Object.entries(file.data)) {
+      const t = table === 'governance_changeRequests' ? 'scope_changeRequests' : table;
+      await old.table(t).bulkPut((rows as { id: string }[]).map((r) => ({ ...r, projectId: pid })));
+    }
+    old.close();
+
+    const loaded = await new DexieProjectRepository(name).loadSnapshot();
+    if (loaded.status !== 'pronto') throw new Error(JSON.stringify(loaded));
+    expect(loaded.snapshot.project.schemaVersion).toBe(4);
+    expect(Object.values(loaded.snapshot.governance.changeRequests).map((c) => c.code)).toEqual(['MUD-001']);
+    const raw = new Dexie(name);
+    await raw.open();
+    expect(raw.tables.map((t) => t.name)).not.toContain('scope_changeRequests');
+    raw.close();
   });
 });

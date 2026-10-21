@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { domainCard, importReferenceProject, situationDot } from './support';
 
 const fixture = (name: string) => fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
 
@@ -67,7 +68,7 @@ test('Review Focus 1: arquivo exportado na Etapa 1 importa e reexporta na versã
   await go(page, '/projeto/finances/contratacoes');
   await expect(page.getByText('Exemplo').first()).toBeVisible();
   const file = await exportProject(page);
-  expect(file.schemaVersion).toBe(3);
+  expect(file.schemaVersion).toBe(4);
   expect((file.data.stakeholders_parties as { analysis: unknown }[]).every((p) => p.analysis === null)).toBe(true);
 });
 
@@ -124,7 +125,7 @@ test('Critério 5 (completo): atraso crítico atualiza Cronograma e alertas sem 
   await save(page);
 
   await go(page, '/projeto/geral');
-  await expect(page.getByLabel('RAG Cronograma')).toContainText('RAG Vermelho');
+  await expect(situationDot(domainCard(page, 'Cronograma'), 'Vermelho')).toBeVisible();
   await expect(page.getByText('Marco M-001 previsto 7 dias após a linha de base — considerar solicitação de mudança')).toBeVisible();
   await expect(page.getByText('Entrega de CTR-001 ameaça o marco M-001')).toBeVisible();
   expect(financeTables(await exportProject(page))).toEqual(before);
@@ -153,7 +154,7 @@ test('Critério 7: desligar Finanças oculta o módulo e o CPI; religar preserva
   await expect(page.getByRole('cell', { name: 'ORC-001', exact: true })).toBeVisible();
 });
 
-test('Riscos: P3 × I3 é Crítico, deixa o RAG vermelho e a matriz filtra', async ({ page }) => {
+test('Riscos: P3 × I3 é Crítico, deixa a situação vermelha e a matriz filtra', async ({ page }) => {
   await createProject(page);
   await go(page, '/projeto/risks/registro');
   const d = await openNew(page);
@@ -164,7 +165,7 @@ test('Riscos: P3 × I3 é Crítico, deixa o RAG vermelho e a matriz filtra', asy
   await expect(page.getByText('9 · Crítico')).toBeVisible();
 
   await go(page, '/projeto/geral');
-  await expect(page.getByLabel('RAG Riscos')).toContainText('RAG Vermelho');
+  await expect(situationDot(domainCard(page, 'Riscos'), 'Vermelho')).toBeVisible();
 
   await go(page, '/projeto/risks/matriz');
   const cell = page.getByRole('button', { name: 'Probabilidade Alta, impacto Alto: 1 risco(s), Crítico' });
@@ -173,7 +174,7 @@ test('Riscos: P3 × I3 é Crítico, deixa o RAG vermelho e a matriz filtra', asy
   await expect(page.getByRole('table', { name: 'Riscos da seleção' }).getByText('Atraso na importação do CLP')).toBeVisible();
 });
 
-test('Recursos: duas alocações de 60% na mesma semana = 120% e RAG amarelo', async ({ page }) => {
+test('Recursos: duas alocações de 60% na mesma semana = 120% e situação amarela', async ({ page }) => {
   await createProject(page);
   await go(page, '/projeto/resources/recursos');
   let d = await openNew(page);
@@ -192,25 +193,27 @@ test('Recursos: duas alocações de 60% na mesma semana = 120% e RAG amarelo', a
   await go(page, '/projeto/resources/carga');
   await expect(page.getByRole('img', { name: 'Histograma de carga' }).getByText('120%', { exact: true })).toBeVisible();
   await go(page, '/projeto/geral');
-  await expect(page.getByLabel('RAG Recursos')).toContainText('RAG Amarelo');
+  await expect(situationDot(domainCard(page, 'Recursos'), 'Amarelo')).toBeVisible();
 });
 
-test('Projeto demo: 7 domínios cruzados no painel, Curva S monetária, matriz e histograma', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Carregar projeto de demonstração' }).click();
-  await expect(page.getByText('Painel executivo')).toBeVisible();
+test('Projeto importado: 7 domínios cruzados no painel, Curva S monetária, matriz e histograma', async ({ page }) => {
+  await importReferenceProject(page);
   const bar = page.getByRole('navigation', { name: 'Domínios' });
   const domains = ['Governança', 'Escopo', 'Cronograma', 'Recursos', 'Custos & Finanças', 'Riscos', 'Partes Interessadas'];
   await expect(bar.getByRole('link')).toHaveText(['Geral', ...domains]);
   await expect(bar.getByRole('link', { name: 'Geral' })).toHaveAttribute('aria-current', 'page');
   await expect(bar.getByRole('separator')).toBeVisible();
-  for (const m of domains)
-    await expect(page.getByLabel(`RAG ${m}`)).not.toContainText('RAG n/a');
+  // Situação só pela bolinha: nenhum domínio sem dados e nenhum texto "RAG"/cor na tela.
+  for (const m of domains) {
+    await expect(domainCard(page, m).getByRole('img', { name: /^Situação: / })).toBeVisible();
+    await expect(situationDot(domainCard(page, m), 'Sem dados')).toHaveCount(0);
+  }
+  await expect(page.locator('body')).not.toContainText(/RAG|Verde|Amarelo|Vermelho/);
   await expect(page.getByText('CPI', { exact: true })).toBeVisible();
   await expect(page.getByText('EAC', { exact: true })).toBeVisible();
   await expect(page.getByText('Entrega de CTR-001 ameaça o marco M-004')).toBeVisible();
   // Clicar no card do semáforo leva ao domínio.
-  await page.getByLabel('RAG Riscos').click();
+  await domainCard(page, 'Riscos').click();
   await expect(page).toHaveURL(/#\/projeto\/risks\/registro$/);
   await expect(bar.getByRole('link', { name: 'Riscos' })).toHaveAttribute('aria-current', 'page');
 
@@ -225,13 +228,21 @@ test('Projeto demo: 7 domínios cruzados no painel, Curva S monetária, matriz e
   await expect(page.getByRole('region', { name: /PI-002 Painéis Elétricos/ })).toBeVisible();
 });
 
-test('Novo Projeto: sair do demo e voltar à tela inicial sem digitar APAGAR', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Carregar projeto de demonstração' }).click();
-  await expect(page.getByText('Painel executivo')).toBeVisible();
+test('Novo Projeto: sair do projeto atual e voltar à tela inicial sem digitar APAGAR', async ({ page }) => {
+  await importReferenceProject(page);
   await page.getByRole('button', { name: /Novo Projeto/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Começar um novo projeto?' });
   await expect(dialog.getByRole('button', { name: 'Exportar o atual' })).toBeVisible();
+  // Fora do <header> (portal no body): overlay cobre a janela e o diálogo fica centralizado, inteiro.
+  expect(await dialog.evaluate((el) => !!el.closest('header'))).toBe(false);
+  const vp = page.viewportSize()!;
+  expect(await page.locator('.dialog-backdrop').boundingBox()).toEqual({ x: 0, y: 0, width: vp.width, height: vp.height });
+  await expect(page.locator('.dialog-backdrop')).toHaveCSS('z-index', '1000');
+  const box = (await dialog.boundingBox())!;
+  expect(box.height).toBeGreaterThan(180);
+  expect(box.y).toBeGreaterThan(0);
+  expect(box.y + box.height).toBeLessThan(vp.height);
+  expect(Math.abs(box.y + box.height / 2 - vp.height / 2)).toBeLessThan(2);
   await expect(dialog.getByRole('textbox')).toHaveCount(0);
   await dialog.getByRole('button', { name: 'Apagar e começar novo' }).click();
   await expect(page.getByRole('button', { name: 'Criar projeto' })).toBeVisible();
@@ -240,9 +251,7 @@ test('Novo Projeto: sair do demo e voltar à tela inicial sem digitar APAGAR', a
 });
 
 test('Layout: 7 abas sem rolagem horizontal da página em 380 e 1440 px', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Carregar projeto de demonstração' }).click();
-  await expect(page.getByText('Painel executivo')).toBeVisible();
+  await importReferenceProject(page);
   for (const width of [380, 1440]) {
     await page.setViewportSize({ width, height: 800 });
     await go(page, '/projeto/finances/resumo');

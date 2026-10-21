@@ -65,33 +65,43 @@ const project = () =>
       .build(),
   );
 
+/** Card do domínio no semáforo, pelo nome do domínio. */
+const domainCard = (label: string) =>
+  within(screen.getByRole('list', { name: 'Semáforo dos domínios' })).getByText(label, { selector: 'strong' }).closest('a')!;
+
 describe('GeralPage — centro de comando', () => {
-  it('RAG com texto, alerta com atalho e definições do projeto', async () => {
+  it('situação por bolinha colorida (sem texto de cor), alerta com atalho e definições do projeto', async () => {
     await renderWithProject(withRoutes(<GeralPage />), { snapshot: delayed() });
     expect(await screen.findByRole('heading', { name: 'Painel executivo' })).toBeInTheDocument();
-    expect(screen.getAllByText('RAG Vermelho').length).toBeGreaterThan(0);
-    expect(screen.getByLabelText('RAG Cronograma')).toHaveTextContent('marco(s) crítico(s) atrasado(s)');
+    const overall = within(screen.getByRole('heading', { name: 'Painel executivo' }).parentElement!).getByRole('img', { name: 'Situação: Vermelho' });
+    expect(overall).toHaveClass('rag-dot');
+    expect(overall).toHaveStyle({ background: 'var(--red)' });
+    const schedule = domainCard('Cronograma');
+    expect(schedule).toHaveTextContent('marco(s) crítico(s) atrasado(s)');
+    expect(within(schedule).getByRole('img', { name: 'Situação: Vermelho' })).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/RAG|Verde|Amarelo|Vermelho/);
     expect(screen.getByText('ISO 9001:2015')).toBeInTheDocument();
     expect(screen.getByText('Externo (cliente)')).toBeInTheDocument();
     expect(screen.getByText(/Modalidade: Concorrência/)).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/Processo/);
     await userEvent.click(screen.getByRole('button', { name: 'Abrir solicitação de mudança' }));
-    expect(await screen.findByText('Rota: /projeto/scope/mudancas?nova=1')).toBeInTheDocument();
+    expect(await screen.findByText('Rota: /projeto/governance/mudancas?nova=1')).toBeInTheDocument();
   });
 
   it('semáforo dos 7 domínios; clicar no card navega para o domínio', async () => {
     await renderWithProject(withRoutes(<GeralPage />), { snapshot: project() });
     const cards = await screen.findByRole('list', { name: 'Semáforo dos domínios' });
-    expect(within(cards).getAllByRole('link').map((l) => l.getAttribute('aria-label'))).toEqual([
-      'RAG Governança',
-      'RAG Escopo',
-      'RAG Cronograma',
-      'RAG Recursos',
-      'RAG Custos & Finanças',
-      'RAG Riscos',
-      'RAG Partes Interessadas',
+    expect(within(cards).getAllByRole('link').map((l) => l.querySelector('strong')?.textContent)).toEqual([
+      'Governança',
+      'Escopo',
+      'Cronograma',
+      'Recursos',
+      'Custos & Finanças',
+      'Riscos',
+      'Partes Interessadas',
     ]);
-    await userEvent.click(screen.getByLabelText('RAG Riscos'));
+    for (const link of within(cards).getAllByRole('link')) expect(within(link).getByRole('img', { name: /^Situação: / })).toHaveClass('rag-dot');
+    await userEvent.click(domainCard('Riscos'));
     expect(await screen.findByText('Rota: /projeto/risks/registro')).toBeInTheDocument();
   });
 

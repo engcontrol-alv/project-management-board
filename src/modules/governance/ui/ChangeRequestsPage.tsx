@@ -103,7 +103,7 @@ export function ChangeRequestsPage() {
     <>
       <ErrorList errors={errors} />
       <RegisterView<ChangeRequest>
-        module="scope"
+        module="governance"
         collection="changeRequests"
         title="Controle de mudanças"
         fields={fields}

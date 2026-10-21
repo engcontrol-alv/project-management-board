@@ -1,6 +1,6 @@
 import Dexie, { type Transaction } from 'dexie';
 import type { ModuleManifest } from '@/core/module-contract';
-import { migrateProjectRow, migrateRows, STORES_V1, STORES_V2 } from '@/project/migrations';
+import { migrateProjectRow, migrateRows, STORES_V1, STORES_V2, STORES_V3, TABLE_RENAMES } from '@/project/migrations';
 import { MANIFESTS } from '@/project/registry';
 
 export const PROJECTS_TABLE = 'core_projects';
@@ -34,6 +34,14 @@ export function createDb(name = 'pmb'): Dexie {
   // v2 (Etapa 2): tabelas novas.
   db.version(2).stores(STORES_V2).upgrade(upgradeFrom(1, STORES_V1));
   // v3 (Etapa 3): sem tabelas novas; riscos, entregáveis e perfil ganham campos.
-  db.version(3).stores(buildStores(MANIFESTS)).upgrade(upgradeFrom(2, STORES_V2));
+  db.version(3).stores(STORES_V3).upgrade(upgradeFrom(2, STORES_V2));
+  // v4: mudanças saem do Escopo para a Governança — copia as linhas para a tabela nova e apaga a antiga.
+  const removed = Object.fromEntries(Object.keys(TABLE_RENAMES[3]!).map((t) => [t, null]));
+  db.version(4)
+    .stores({ ...buildStores(MANIFESTS), ...removed })
+    .upgrade(async (tx) => {
+      await upgradeFrom(3, STORES_V3)(tx);
+      for (const [from, to] of Object.entries(TABLE_RENAMES[3]!)) await tx.table(to).bulkPut(await tx.table(from).toArray());
+    });
   return db;
 }

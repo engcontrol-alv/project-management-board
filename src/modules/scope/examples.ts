@@ -1,5 +1,4 @@
 import type { Example } from '@/registers/types';
-import type { ChangeRequest } from './model/change-request';
 import type { Deliverable } from './model/deliverable';
 import type { Requirement } from './model/requirement';
 import type { WbsNode } from './model/wbs';
@@ -90,24 +89,6 @@ export const deliverableExamples: Example<Deliverable>[] = [
       type: 'Painel/Sistema',
       status: 'Não iniciado',
       clientApproval: true,
-    },
-  },
-];
-
-export const changeRequestExamples: Example<ChangeRequest>[] = [
-  {
-    title: 'Mudança de prazo e custo',
-    explanation:
-      'Registre o impacto em dias (negativo = antecipação) e em custo (negativo = economia). Só uma mudança aprovada pode revisar a linha de base.',
-    values: {
-      title: 'Inclusão de um segundo painel',
-      description: 'Cliente solicitou um painel adicional para a ampliação.',
-      justification: 'Ampliação da planta prevista para o próximo ano.',
-      categories: ['Escopo', 'Cronograma', 'Custo'],
-      scopeImpact: 'Novo pacote de montagem e novo diagrama unifilar.',
-      scheduleImpactDays: 20,
-      costImpactCents: 15000000,
-      impactLevel: 'Alto',
     },
   },
 ];

@@ -6,7 +6,7 @@ export function governanceIndicators({ snapshot, derived, config }: AnalysisCont
   if (!config.enabled.scope)
     return { rag: 'n/a', ragReason: 'Escopo desligado', kpis: [], alerts: [] };
   const stale = staleChangeRequests(
-    Object.values(snapshot.scope.changeRequests),
+    Object.values(snapshot.governance.changeRequests),
     derived.statusDate,
     config.settings.governance.staleChangeDays,
   );

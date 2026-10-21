@@ -22,7 +22,7 @@ export async function renderWithProject(
   await repository.replaceAll(opts.snapshot ?? aSnapshot().build());
   const utils = render(
     <RepositoryProvider repository={repository} clock={testClock}>
-      <MemoryRouter initialEntries={[opts.route ?? '/']}>{ui}</MemoryRouter>
+      <MemoryRouter initialEntries={[opts.route ?? '/']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>{ui}</MemoryRouter>
     </RepositoryProvider>,
   );
   const load = async () => {

@@ -297,7 +297,7 @@ Assim as regras ficam testáveis sem banco (comandos e `applyChangeset` são pur
 - `SCHEMA_VERSION` único para dados e banco. Cada etapa que adiciona coleções incrementa a versão: `db.version(n).stores(buildStores(manifestsDaVersao(n)))`.
 - Migrações de dados são funções sobre o **formato de exportação** (`ExportV_n → ExportV_n+1`), usadas pela importação e pelo `.upgrade()` do Dexie (lê tudo → migra → regrava). Uma implementação, dois usos.
 - Fixture dourada por versão em `src/project/__fixtures__/export-v<n>.json`; teste garante migração até a atual.
-- O dump do banco (`readRaw`) usa o `schemaVersion` **gravado no projeto**, não a constante, para que a migração também rode na carga. As tabelas de cada versão anterior ficam congeladas em `project/migrations.ts` (`STORES_V1`), e `db.version(n).upgrade()` aplica `migrateRows` às linhas — a mesma função da importação. Etapa 2: v1 → v2 adiciona `analysis: null` às partes e os parâmetros padrão de Partes Interessadas. Etapa 3: v2 → v3 (sem tabelas novas; `STORES_V2` congelado) adiciona `reassess: null` aos riscos, `fatStatus/satStatus = 'Não Aplicável'` e datas `null` aos entregáveis físicos e `latePenalty` desativada ao perfil de Governança. Cada `db.version(n).upgrade()` chama `migrateRows(tabela, linhas, n−1, n)`.
+- O dump do banco (`readRaw`) usa o `schemaVersion` **gravado no projeto**, não a constante, para que a migração também rode na carga. As tabelas de cada versão anterior ficam congeladas em `project/migrations.ts` (`STORES_V1`), e `db.version(n).upgrade()` aplica `migrateRows` às linhas — a mesma função da importação. Etapa 2: v1 → v2 adiciona `analysis: null` às partes e os parâmetros padrão de Partes Interessadas. Etapa 3: v2 → v3 (sem tabelas novas; `STORES_V2` congelado) adiciona `reassess: null` aos riscos, `fatStatus/satStatus = 'Não Aplicável'` e datas `null` aos entregáveis físicos e `latePenalty` desativada ao perfil de Governança. v3 → v4: as solicitações de mudança saem do Escopo para a Governança — `TABLE_RENAMES[3]` renomeia `scope_changeRequests` → `governance_changeRequests` na importação, e o Dexie v4 copia as linhas e apaga a tabela antiga (`STORES_V3` congelado). Cada `db.version(n).upgrade()` chama `migrateRows(tabela, linhas, n−1, n)`.
 
 ## 7. Export / Import JSON
 
@@ -400,7 +400,7 @@ Sem `MemoryRepository`: o mesmo adaptador Dexie roda sobre `fake-indexeddb` nos 
 | 006 | Sem Zustand, RHF, date-fns, decimal.js, MemoryRepository | arquiteto | uma fonte da verdade (Dexie); menos dependências |
 | 007 | Módulos não se importam; `analytics` é o único ponto de cruzamento | arquiteto (ECC) + SP | lint garante; domínio usa tipos estruturais |
 | 008 | CPM Término→Início sem lag, dias corridos, término inclusivo, a partir dos pacotes da EAP | SP | simples e verificável à mão; extensível |
-| 009 | Mudanças em Escopo; rebaseline só por mudança `Aprovada` | usuário | `applyChangeToBaseline` em `commands/baseline.ts` |
+| 009 | Mudanças em Governança (antes em Escopo); rebaseline só por mudança `Aprovada` | usuário | `applyChangeToBaseline` em `commands/baseline.ts` |
 | 010 | Contratação = entidade própria em Finanças, fornecedor obrigatório por ID (organização Fornecedor/Prestador), sem vínculo com linha de orçamento | usuário + arquiteto | sem dupla contagem; painel de fornecedor projetado em Stakeholders |
 | 011 | Cadastro de pessoas/organizações sempre disponível | SP | vínculos de responsável/fornecedor não dependem do módulo ligado |
 | 012 | Importação com vínculo órfão é recusada | SP | nenhum dado perdido em silêncio |

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { domainCard, importReferenceProject, situationDot } from './support';
 
 const fixture = (name: string) => fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
 
@@ -155,11 +156,14 @@ test('Critérios 5 e 6: atraso crítico gera alerta; LB só muda por mudança ap
   await save(page);
 
   await go(page, '/projeto/geral');
-  await expect(page.getByLabel('RAG Cronograma')).toContainText('RAG Vermelho');
+  await expect(situationDot(domainCard(page, 'Cronograma'), 'Vermelho')).toBeVisible();
   await expect(page.getByText('Marco M-001 previsto 7 dias após a linha de base — considerar solicitação de mudança')).toBeVisible();
   await expect(page.getByText('Linha de base v1')).toBeVisible();
 
   await page.getByRole('button', { name: 'Abrir solicitação de mudança' }).click();
+  // Mudanças moram na Governança (não mais no Escopo).
+  await expect(page).toHaveURL(/#\/projeto\/governance\/mudancas\?nova=1$/);
+  await expect(page.getByRole('navigation', { name: 'Domínios' }).getByRole('link', { name: 'Governança' })).toHaveAttribute('aria-current', 'page');
   const form = page.getByRole('dialog');
   await form.getByLabel('Título').fill('Replanejar pacote A');
   await save(page);
@@ -170,6 +174,11 @@ test('Critérios 5 e 6: atraso crítico gera alerta; LB só muda por mudança ap
   await decision.getByRole('button', { name: 'Confirmar decisão' }).click();
   await page.getByRole('button', { name: 'Aplicar à linha de base' }).click();
   await expect(page.getByRole('cell', { name: 'Implementada', exact: true })).toBeVisible();
+  const sections = page.getByRole('navigation', { name: 'Seções' });
+  await expect(sections.getByRole('link', { name: 'Mudanças' })).toHaveAttribute('aria-current', 'page');
+  await go(page, '/projeto/scope/eap');
+  await expect(sections.getByRole('link', { name: 'EAP' })).toBeVisible();
+  await expect(sections.getByRole('link', { name: 'Mudanças' })).toHaveCount(0);
 
   await go(page, '/projeto/geral');
   await expect(page.getByText('Linha de base v2')).toBeVisible();
@@ -220,10 +229,12 @@ test('dados persistem ao recarregar', async ({ page }) => {
   expect(await dbNames(page)).toContain('pmb');
 });
 
-test('projeto de demonstração preenche painel, EAP, Gantt e Curva S', async ({ page }) => {
+test('tela inicial sem projeto demo; projeto importado preenche painel, EAP, Gantt e Curva S', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Carregar projeto de demonstração' }).click();
-  await expect(page.getByText('Painel executivo')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Criar projeto' })).toBeVisible();
+  await expect(page.getByText(/demonstração|projeto demo/i)).toHaveCount(0);
+  await importReferenceProject(page);
+  await expect(page.getByRole('toolbar', { name: 'Ações do projeto' }).getByText(/demo/i)).toHaveCount(0);
   await expect(page.getByText('Demonstração — Automação da Linha de Envase 3')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Abrir solicitação de mudança' }).first()).toBeVisible();
   await go(page, '/projeto/scope/eap');

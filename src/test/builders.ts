@@ -5,7 +5,8 @@ import type { BudgetLine, Procurement } from '@/modules/finances';
 import type { Risk } from '@/modules/risks';
 import type { Allocation, Resource } from '@/modules/resources';
 import type { ImplementedModuleId } from '@/project/registry';
-import type { ChangeRequest, Deliverable, Requirement, WbsNode } from '@/modules/scope';
+import type { ChangeRequest } from '@/modules/governance';
+import type { Deliverable, Requirement, WbsNode } from '@/modules/scope';
 import type { Milestone } from '@/modules/schedule';
 import type { GovernanceProfile, Lesson, Meeting, Norm } from '@/modules/governance';
 import type { Baseline } from '@/project/baseline';
@@ -66,7 +67,7 @@ export class SnapshotBuilder {
     return this;
   }
   withChangeRequest(...cs: ChangeRequest[]) {
-    this.s.scope = { ...this.s.scope, changeRequests: { ...this.s.scope.changeRequests, ...byId(cs) } };
+    this.s.governance = { ...this.s.governance, changeRequests: { ...this.s.governance.changeRequests, ...byId(cs) } };
     return this;
   }
   withMilestone(...ms: Milestone[]) {

@@ -3,7 +3,6 @@ import { aDocument, aPackage, aPhysical, aRequirement } from '@/test/factories';
 import { requirementSituation, scopeRag } from './requirements';
 import { findCycle } from './cycles';
 import { deliverableProgress } from './deliverables';
-import { allowedCrTransitions } from './change-requests';
 
 describe('requirementSituation', () => {
   it('ordem de derivação', () => {
@@ -73,16 +72,5 @@ describe('deliverableProgress', () => {
     expect(p['Documentação de engenharia']).toEqual({ done: 1, total: 1, percent: 100 });
     expect(p['Entregável físico / serviço']).toEqual({ done: 0, total: 1, percent: 0 });
     expect(p['Documentação de gerenciamento de projeto']).toEqual({ done: 0, total: 0, percent: null });
-  });
-});
-
-describe('allowedCrTransitions', () => {
-  it('máquina de estados', () => {
-    expect(allowedCrTransitions('Solicitada')).toEqual(['Em análise', 'Cancelada']);
-    expect(allowedCrTransitions('Em análise')).toEqual(['Aprovada', 'Rejeitada', 'Cancelada']);
-    expect(allowedCrTransitions('Aprovada')).toEqual(['Implementada', 'Cancelada']);
-    expect(allowedCrTransitions('Implementada')).toEqual([]);
-    expect(allowedCrTransitions('Rejeitada')).toEqual([]);
-    expect(allowedCrTransitions('Cancelada')).toEqual([]);
   });
 });

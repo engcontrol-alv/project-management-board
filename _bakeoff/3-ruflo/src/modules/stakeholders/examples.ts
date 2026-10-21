@@ -43,7 +43,7 @@ export const communicationExamples: Example<Communication>[] = [
   },
   {
     title: 'Diligenciamento de fornecedor crítico',
-    explanation: 'Fornecedores em "Gerenciar de perto" precisam de um plano de comunicação, senão o RAG fica amarelo.',
+    explanation: 'Fornecedores em "Gerenciar de perto" precisam de um plano de comunicação, senão o domínio fica em alerta no painel.',
     values: { information: 'Reunião de diligenciamento da fabricação dos painéis', channel: 'Reunião', frequency: 'Quinzenal' },
   },
 ];

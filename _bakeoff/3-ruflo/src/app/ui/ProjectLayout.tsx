@@ -14,7 +14,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { formatDateBR } from '@/shared/lib/dates';
-import { RagBadge, StatusBadge } from '@/shared/ui/Badge';
+import { RagDot, StatusBadge } from '@/shared/ui/Badge';
 import { computeDashboard } from '@/analytics/dashboard';
 import { isReadOnly } from '@/modules/governance';
 import { reopenProject, setStatusDate } from '@/commands/project';
@@ -120,10 +120,10 @@ export function ProjectLayout() {
             <strong title={s.project.info.name}>{s.project.info.name}</strong>
           </div>
           <div className="tb-cell tb-cell-status">
-            <span className="tb-caption">Status · RAG</span>
+            <span className="tb-caption">Status</span>
             <span className="tb-cell-row">
               <StatusBadge status={s.governance.profile.charter.status} />
-              <RagBadge rag={dash.overall} />
+              <RagDot rag={dash.overall} />
             </span>
           </div>
           <label className="tb-cell status-date">

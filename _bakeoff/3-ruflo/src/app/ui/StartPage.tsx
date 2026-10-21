@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { FolderOpen, Plus, Sparkles } from 'lucide-react';
+import { FolderOpen, Plus } from 'lucide-react';
 import type { IsoDate } from '@/shared/lib/dates';
 import { issuesToMessages, ptErrorMap } from '@/shared/lib/zod';
 import { ErrorList } from '@/shared/ui/Dialog';
@@ -16,13 +16,10 @@ export function StartPage({
   today,
   onCreate,
   onImport,
-  onLoadDemo,
 }: {
   today: IsoDate;
   onCreate: (info: ProjectInfo) => Promise<void>;
   onImport: (s: ProjectSnapshot) => Promise<void>;
-  /** Carrega o projeto fictício de demonstração (só por ação explícita). */
-  onLoadDemo?: () => Promise<void>;
 }) {
   const [info, setInfo] = useState<ProjectInfo>({ name: '', code: '', startDate: today });
   const [errors, setErrors] = useState<string[]>([]);
@@ -52,7 +49,7 @@ export function StartPage({
         </div>
         <h1>Governança, escopo e cronograma de um projeto, em um só painel.</h1>
         <p className="muted">
-          Organizado nos domínios do PMBOK, com caminho crítico, linha de base e RAG calculados. Nenhum dado é
+          Organizado nos domínios do PMBOK, com caminho crítico, linha de base e situação de cada domínio calculados. Nenhum dado é
           gravado até você criar ou importar um projeto, e tudo fica apenas neste navegador.
         </p>
       </header>
@@ -93,16 +90,6 @@ export function StartPage({
           />
         </div>
       </div>
-      {onLoadDemo && (
-        <div className="demo">
-          <button className="btn btn-ghost" onClick={() => void onLoadDemo()}>
-            <Sparkles size={14} aria-hidden="true" /> Carregar projeto de demonstração
-          </button>
-          <p className="muted small" style={{ margin: '4px 0 0' }}>
-            Projeto fictício de engenharia, em andamento, para explorar painel, EAP, Gantt e Curva S.
-          </p>
-        </div>
-      )}
     </div>
   );
 }

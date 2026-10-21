@@ -30,11 +30,11 @@ const decision = { approverId: 'p1' as never, decisionDate: '2026-01-10' };
 describe('upsertEntity / removeEntity', () => {
   it('códigos sequenciais nunca reutilizados', () => {
     let s = aSnapshot().build();
-    for (const id of ['a', 'b', 'c']) s = apply(s, upsertEntity('scope', 'changeRequests', newCr(id)));
-    expect(Object.values(s.scope.changeRequests).map((c) => c.code).sort()).toEqual(['MUD-001', 'MUD-002', 'MUD-003']);
-    s = apply(s, removeEntity('scope', 'changeRequests', 'c'));
-    s = apply(s, upsertEntity('scope', 'changeRequests', newCr('d')));
-    expect(s.scope.changeRequests['d' as never]?.code).toBe('MUD-004');
+    for (const id of ['a', 'b', 'c']) s = apply(s, upsertEntity('governance', 'changeRequests', newCr(id)));
+    expect(Object.values(s.governance.changeRequests).map((c) => c.code).sort()).toEqual(['MUD-001', 'MUD-002', 'MUD-003']);
+    s = apply(s, removeEntity('governance', 'changeRequests', 'c'));
+    s = apply(s, upsertEntity('governance', 'changeRequests', newCr('d')));
+    expect(s.governance.changeRequests['d' as never]?.code).toBe('MUD-004');
     expect(s.project.counters.MUD).toBe(4);
   });
 
@@ -86,8 +86,8 @@ describe('transições de mudança', () => {
     const analysis = apply(base(), transitionChangeRequest(id, 'Em análise'));
     expect(run(analysis, transitionChangeRequest(id, 'Aprovada')).ok).toBe(false);
     const approved = apply(analysis, transitionChangeRequest(id, 'Aprovada', decision));
-    expect(approved.scope.changeRequests[id]?.status).toBe('Aprovada');
-    expect(apply(approved, transitionChangeRequest(id, 'Implementada')).scope.changeRequests[id]?.status).toBe('Implementada');
+    expect(approved.governance.changeRequests[id]?.status).toBe('Aprovada');
+    expect(apply(approved, transitionChangeRequest(id, 'Implementada')).governance.changeRequests[id]?.status).toBe('Implementada');
     const withLb = apply(approved, defineInitialBaseline());
     expect(errors(withLb, transitionChangeRequest(id, 'Implementada'))).toEqual(['Use "Aplicar à linha de base".']);
   });
@@ -104,14 +104,14 @@ describe('linha de base', () => {
   it('v1 só uma vez; v2 só por mudança aprovada', () => {
     const v1 = apply(s0(), defineInitialBaseline());
     expect(errors(v1, defineInitialBaseline())).toEqual(['Linha de base já definida']);
-    const solicited = { ...v1, scope: { ...v1.scope, changeRequests: { cr2: aChangeRequest({ id: 'cr2' as never }) } } };
+    const solicited = { ...v1, governance: { ...v1.governance, changeRequests: { cr2: aChangeRequest({ id: 'cr2' as never }) } } };
     expect(run(solicited, applyChangeToBaseline('cr2' as never)).ok).toBe(false);
 
     const v2 = apply(v1, applyChangeToBaseline('cr1' as never));
     expect(v2.baselines).toHaveLength(2);
     expect(v2.baselines[1]?.version).toBe(2);
     expect(v2.baselines[1]?.changeRequestId).toBe('cr1');
-    expect(v2.scope.changeRequests['cr1' as never]?.status).toBe('Implementada');
+    expect(v2.governance.changeRequests['cr1' as never]?.status).toBe('Implementada');
     expect(v2.baselines[0]).toEqual(v1.baselines[0]);
   });
 

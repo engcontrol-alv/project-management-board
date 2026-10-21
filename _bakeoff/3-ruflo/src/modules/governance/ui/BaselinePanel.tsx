@@ -16,7 +16,7 @@ export function BaselinePanel() {
   const baselines = [...snapshot.baselines].sort((a, b) => b.version - a.version);
   const current = baselines[0];
   const crCode = (id: string | null) =>
-    id ? (snapshot.scope.changeRequests[id as keyof typeof snapshot.scope.changeRequests]?.code ?? 'mudança') : 'inicial';
+    id ? (snapshot.governance.changeRequests[id as keyof typeof snapshot.governance.changeRequests]?.code ?? 'mudança') : 'inicial';
   const shown = baselines.find((b) => b.version === viewing);
 
   return (

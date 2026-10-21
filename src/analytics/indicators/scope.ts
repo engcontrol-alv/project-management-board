@@ -1,5 +1,6 @@
 import type { ModuleIndicators } from '@/core/indicators';
-import { isPendingCr, scopeRag } from '@/modules/scope';
+import { isPendingCr } from '@/modules/governance';
+import { scopeRag } from '@/modules/scope';
 import type { AnalysisContext } from '../alerts/types';
 
 export function scopeIndicators({ snapshot }: AnalysisContext): ModuleIndicators {
@@ -26,7 +27,7 @@ export function scopeIndicators({ snapshot }: AnalysisContext): ModuleIndicators
       {
         id: 'scope.pendingChanges',
         label: 'Mudanças pendentes',
-        value: Object.values(snapshot.scope.changeRequests).filter((c) => isPendingCr(c.status)).length,
+        value: Object.values(snapshot.governance.changeRequests).filter((c) => isPendingCr(c.status)).length,
         format: 'count',
       },
     ],

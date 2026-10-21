@@ -1,4 +1,5 @@
 import type { Example } from '@/registers/types';
+import type { ChangeRequest } from './model/change-request';
 import type { Lesson, Meeting, Norm } from './model/records';
 
 /** Exemplos fictícios — nunca persistidos. */
@@ -40,6 +41,24 @@ export const lessonExamples: Example<Lesson>[] = [
       context: 'Ajustes de layout pedidos durante o TAF atrasaram a expedição.',
       recommendation: 'Incluir revisão de layout com o cliente ao fim da engenharia.',
       date: null,
+    },
+  },
+];
+
+export const changeRequestExamples: Example<ChangeRequest>[] = [
+  {
+    title: 'Mudança de prazo e custo',
+    explanation:
+      'Registre o impacto em dias (negativo = antecipação) e em custo (negativo = economia). Só uma mudança aprovada pode revisar a linha de base.',
+    values: {
+      title: 'Inclusão de um segundo painel',
+      description: 'Cliente solicitou um painel adicional para a ampliação.',
+      justification: 'Ampliação da planta prevista para o próximo ano.',
+      categories: ['Escopo', 'Cronograma', 'Custo'],
+      scopeImpact: 'Novo pacote de montagem e novo diagrama unifilar.',
+      scheduleImpactDays: 20,
+      costImpactCents: 15000000,
+      impactLevel: 'Alto',
     },
   },
 ];

@@ -2,8 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { aChangeRequest, aMeeting } from '@/test/factories';
 import { emptyProfile, profileSchema, type GovernanceProfile } from './model/profile';
 import { meetingSchema } from './model/records';
+import { changeRequestSchema } from './model/change-request';
+import { allowedCrTransitions } from './domain/change-requests';
 import { governanceRag, isReadOnly, staleChangeRequests } from './domain/governance';
 import { latePenalty } from './domain/penalty';
+
+const ok = (schema: { safeParse(v: unknown): { success: boolean } }, v: unknown) =>
+  schema.safeParse(v).success;
 
 function closed(o: Partial<GovernanceProfile['closure']>): GovernanceProfile {
   const p = emptyProfile('proj');
@@ -99,5 +104,32 @@ describe('cláusula de multa por atraso (D7)', () => {
     expect(r.capCents).toBe(15_000_000);
     expect(r.totalCents).toBe(15_000_000);
     expect(r.capped).toBe(true);
+  });
+});
+
+describe('Mudança', () => {
+  it('impactos negativos são aceitos; custo em centavos inteiros', () => {
+    expect(
+      ok(changeRequestSchema, aChangeRequest({ scheduleImpactDays: -5, costImpactCents: -100000 })),
+    ).toBe(true);
+    expect(ok(changeRequestSchema, aChangeRequest({ costImpactCents: 10.5 }))).toBe(false);
+  });
+  it('Aprovada e Rejeitada exigem aprovador e data da decisão', () => {
+    const decided = { approverId: 'p1' as never, decisionDate: '2026-01-10' };
+    expect(ok(changeRequestSchema, aChangeRequest({ status: 'Aprovada', approverId: 'p1' as never }))).toBe(false);
+    expect(ok(changeRequestSchema, aChangeRequest({ status: 'Aprovada', decisionDate: '2026-01-10' }))).toBe(false);
+    expect(ok(changeRequestSchema, aChangeRequest({ status: 'Rejeitada', approverId: 'p1' as never }))).toBe(false);
+    expect(ok(changeRequestSchema, aChangeRequest({ status: 'Aprovada', ...decided }))).toBe(true);
+  });
+});
+
+describe('allowedCrTransitions', () => {
+  it('máquina de estados', () => {
+    expect(allowedCrTransitions('Solicitada')).toEqual(['Em análise', 'Cancelada']);
+    expect(allowedCrTransitions('Em análise')).toEqual(['Aprovada', 'Rejeitada', 'Cancelada']);
+    expect(allowedCrTransitions('Aprovada')).toEqual(['Implementada', 'Cancelada']);
+    expect(allowedCrTransitions('Implementada')).toEqual([]);
+    expect(allowedCrTransitions('Rejeitada')).toEqual([]);
+    expect(allowedCrTransitions('Cancelada')).toEqual([]);
   });
 });

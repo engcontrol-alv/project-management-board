@@ -101,7 +101,11 @@ describe('downloadText', () => {
     const create = vi.fn(() => 'blob:x');
     const revoke = vi.fn();
     Object.assign(URL, { createObjectURL: create, revokeObjectURL: revoke });
+    // jsdom não navega: o clique no link de download só é registrado.
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     downloadText('a.json', '{}');
+    expect(click).toHaveBeenCalledOnce();
+    click.mockRestore();
     expect(create).toHaveBeenCalledOnce();
     expect(revoke).not.toHaveBeenCalled();
     vi.advanceTimersByTime(30_000);

@@ -77,6 +77,14 @@ describe('Novo Projeto (cabeçalho)', () => {
     expect(window.location.hash).toBe('#/');
   });
 
+  it('abre fora do cabeçalho: portal no body, sobre a janela inteira', async () => {
+    const { dialog } = await openProject();
+    expect(dialog.closest('header')).toBeNull();
+    const backdrop = dialog.parentElement!;
+    expect(backdrop).toHaveClass('dialog-backdrop');
+    expect(backdrop.parentElement).toBe(document.body);
+  });
+
   it('cancelar mantém o projeto aberto', async () => {
     const { repo, dialog } = await openProject();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
@@ -117,15 +125,13 @@ describe('StartPage', () => {
     await waitFor(() => expect(repo.replaceAll).toHaveBeenCalledWith(s));
   });
 
-  it('projeto de demonstração só é gravado por ação explícita', async () => {
+  it('tela inicial só cria ou importa: sem projeto de demonstração', async () => {
     const repo = fakeRepo();
     render(<App repository={repo} clock={testClock} />);
     await screen.findByRole('button', { name: /Criar projeto/ });
+    expect(screen.getByLabelText(/Importar projeto/)).toBeInTheDocument();
+    expect(screen.queryByText(/demonstração|demo/i)).toBeNull();
     expect(repo.replaceAll).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole('button', { name: /Carregar projeto de demonstração/ }));
-    await waitFor(() => expect(repo.replaceAll).toHaveBeenCalledOnce());
-    const [s] = vi.mocked(repo.replaceAll).mock.calls[0]!;
-    expect(s.project.info.name).toMatch(/^Demonstração/);
   });
 
   it('importar arquivo inválido mostra a mensagem e não grava', async () => {

@@ -3,18 +3,11 @@ export type RagValue = 'verde' | 'amarelo' | 'vermelho' | 'n/a';
 
 export type Tone = 'red' | 'amber' | 'gold' | 'green' | 'blue' | 'gray';
 
-export function ragTone(r: RagValue): Tone {
-  if (r === 'verde') return 'green';
-  if (r === 'amarelo') return 'gold';
-  if (r === 'vermelho') return 'red';
-  return 'gray';
-}
-
 export const RAG_LABEL: Record<RagValue, string> = {
   verde: 'Verde',
   amarelo: 'Amarelo',
   vermelho: 'Vermelho',
-  'n/a': 'n/a',
+  'n/a': 'Sem dados',
 };
 
 /** Tons dos selos de status usados nos cadastros. */

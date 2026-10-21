@@ -10,7 +10,7 @@ import { buildDemoSnapshot } from './demo-project';
 const TODAY = '2026-10-18';
 const ctx = aContext({ today: TODAY, now: `${TODAY}T12:00:00.000Z` });
 
-describe('projeto de demonstração', () => {
+describe('projeto de referência dos testes', () => {
   it('é válido (schemas e integridade) e sobrevive ao round-trip', () => {
     const s = buildDemoSnapshot(ctx);
     const r = parseImportText(JSON.stringify(toExport(s, ctx.now)));
@@ -98,7 +98,7 @@ describe('projeto de demonstração', () => {
 
   it('a mudança aprovada pode ser aplicada à linha de base', () => {
     const s = buildDemoSnapshot(ctx);
-    const approved = Object.values(s.scope.changeRequests).find((c) => c.status === 'Aprovada')!;
+    const approved = Object.values(s.governance.changeRequests).find((c) => c.status === 'Aprovada')!;
     const r = runCommand(s, applyChangeToBaseline(approved.id), ctx);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.value.snapshot.baselines).toHaveLength(2);

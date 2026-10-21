@@ -1,5 +1,6 @@
 /**
- * Projeto de demonstração — carregado só por ação explícita na tela inicial.
+ * Projeto de referência para testes (unitários e E2E): o app não tem mais "Projeto demo" —
+ * só projetos criados pelo usuário ou importados via JSON; os E2E importam este como arquivo.
  * Todos os nomes são fictícios. As datas são relativas a `today`, para que o cronograma,
  * a Curva S e os alertas apareçam "em andamento" em qualquer dia.
  */
@@ -21,8 +22,8 @@ import type {
   WorkPackageId,
 } from '@/core/ids';
 import { addDays, type IsoDate } from '@/shared/lib/dates';
-import type { Lesson, Meeting, Norm } from '@/modules/governance';
-import type { ChangeRequest, Deliverable, Requirement, WbsNode } from '@/modules/scope';
+import type { ChangeRequest, Lesson, Meeting, Norm } from '@/modules/governance';
+import type { Deliverable, Requirement, WbsNode } from '@/modules/scope';
 import type { Milestone, ScheduleSettings } from '@/modules/schedule';
 import type { Communication, Organization, Person, StakeholderAnalysis } from '@/modules/stakeholders';
 import type { BudgetLine, Procurement } from '@/modules/finances';
@@ -475,10 +476,11 @@ export function buildDemoSnapshot(ctx: CommandContext): ProjectSnapshot {
     finances: { budgetLines: byId(budgetLines), procurements: byId(procurements) },
     risks: { risks: byId(risks) },
     resources: { resources: byId(resources), allocations: byId(allocations) },
-    scope: { requirements: byId(requirements), wbs: byId(nodes), deliverables: byId(deliverables), changeRequests: byId(changeRequests) },
+    scope: { requirements: byId(requirements), wbs: byId(nodes), deliverables: byId(deliverables) },
     schedule: { milestones: byId(milestones) },
     governance: {
       ...base.governance,
+      changeRequests: byId(changeRequests),
       profile: {
         ...base.governance.profile,
         charter: {

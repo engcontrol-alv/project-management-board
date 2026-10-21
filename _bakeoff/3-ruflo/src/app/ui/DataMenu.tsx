@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Download, FilePlus2, Sparkles, Trash2, Upload } from 'lucide-react';
-import { newId } from '@/shared/lib/ids';
+import { Download, FilePlus2, Trash2, Upload } from 'lucide-react';
 import { Badge } from '@/shared/ui/Badge';
 import { Card } from '@/shared/ui/Card';
 import { downloadText } from '@/shared/lib/download';
@@ -11,14 +10,12 @@ import { useRepositoryContext, useSnapshot } from '@/platform/react/hooks';
 import {
   exportFileName,
   parseImportFile,
-  summarize,
   toExport,
   withChecksum,
   type ImportSummary,
   type Integrity,
 } from '@/project/serialization';
 import type { ProjectSnapshot } from '@/project/snapshot';
-import { buildDemoSnapshot } from '../demo/demo-project';
 import { useAppActions } from '../shell';
 
 const INTEGRITY_BADGE: Record<Integrity, { text: string; tone: 'green' | 'gray' | 'gold' }> = {
@@ -49,13 +46,7 @@ export function DataMenu() {
     else setImportError(r.error.message);
   };
 
-  // Substituir pelo projeto de demonstração passa pela mesma prévia e confirmação da importação.
-  const previewDemo = () => {
-    const demo = buildDemoSnapshot({ now: clock.now(), today: clock.today(), newId });
-    setPreview({ snapshot: demo, summary: summarize(demo) });
-  };
-
-  // Sair do projeto atual (ex.: o demo) e voltar à tela inicial — confirmação simples, sem digitar palavra.
+  // Sair do projeto atual e voltar à tela inicial — confirmação simples, sem digitar palavra.
   const startNew = () => {
     setConfirmNew(false);
     window.location.hash = '#/';
@@ -72,9 +63,6 @@ export function DataMenu() {
       </label>
       <button className="btn btn-sm btn-ghost" title="Exportar" onClick={() => void exportNow()} disabled={!snapshot}>
         <Download size={14} aria-hidden="true" /> Exportar
-      </button>
-      <button className="btn btn-sm btn-ghost" title="Projeto demo" onClick={previewDemo}>
-        <Sparkles size={14} aria-hidden="true" /> Projeto demo
       </button>
       <input
         id="data-import"

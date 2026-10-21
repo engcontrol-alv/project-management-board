@@ -6,7 +6,6 @@ import type { ProjectRepository } from '@/platform/persistence/repository';
 import { RepositoryProvider, type Clock } from '@/platform/react/hooks';
 import type { ProjectInfo } from '@/project/project';
 import type { ProjectSnapshot } from '@/project/snapshot';
-import { buildDemoSnapshot } from './demo/demo-project';
 import { buildRoutes } from './routes';
 import { AppActionsContext, type AppActions } from './shell';
 import { RecoveryPage } from './ui/RecoveryPage';
@@ -76,13 +75,12 @@ export function App({ repository, clock }: { repository: ProjectRepository; cloc
           actions.replaceProject(newProjectSnapshot(info, { now: clock.now(), today: clock.today(), newId }))
         }
         onImport={actions.replaceProject}
-        onLoadDemo={() => actions.replaceProject(buildDemoSnapshot({ now: clock.now(), today: clock.today(), newId }))}
       />
     );
   return (
     <AppActionsContext.Provider value={actions}>
       <RepositoryProvider repository={repository} clock={clock}>
-        <HashRouter>
+        <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AppRoutes />
         </HashRouter>
       </RepositoryProvider>

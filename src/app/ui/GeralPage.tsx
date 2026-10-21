@@ -3,9 +3,8 @@ import { AlertOctagon, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { formatDateBR } from '@/shared/lib/dates';
 import { formatPercent, formatRatio } from '@/shared/lib/format';
 import { formatMoneyBR } from '@/shared/lib/money';
-import { Badge, RagBadge } from '@/shared/ui/Badge';
+import { Badge, RagDot } from '@/shared/ui/Badge';
 import { KpiTile } from '@/shared/ui/KpiTile';
-import { ragTone } from '@/shared/ui/tones';
 import { computeDashboard } from '@/analytics/dashboard';
 import { currentBaseline } from '@/analytics/derive';
 import { BaselinePanel } from '@/modules/governance/ui/BaselinePanel';
@@ -104,13 +103,13 @@ export function GeralPage() {
           <div className="eyebrow">Geral · situação do projeto</div>
           <div className="row" style={{ alignItems: 'center', marginTop: 4 }}>
             <h1 style={{ margin: 0 }}>Painel executivo</h1>
-            <RagBadge rag={dash.overall} />
+            <RagDot rag={dash.overall} />
           </div>
           <p className="muted" style={{ margin: '6px 0 0' }}>
             {worst.length > 0
               ? worst.map((m) => `${m.label}: ${m.reason}`).join(' · ')
               : dash.overall === 'n/a'
-                ? 'Sem dados suficientes para o RAG geral.'
+                ? 'Sem dados suficientes para a situação geral.'
                 : 'Todos os domínios ativos dentro dos limites.'}
           </p>
           <div className="hero-meta">
@@ -135,13 +134,10 @@ export function GeralPage() {
       <ul className="rag-grid" aria-label="Semáforo dos domínios">
         {dash.perModule.map((m) => (
           <li key={m.id}>
-            <Link to={sectionPath(m.id)} className="health health-link" aria-label={`RAG ${m.label}`}>
-              <span className="status-dot" aria-hidden="true" style={{ background: `var(--${ragTone(m.rag)})` }} />
+            <Link to={sectionPath(m.id)} className="health health-link">
+              <RagDot rag={m.rag} reason={m.reason} />
               <div style={{ minWidth: 0 }}>
-                <div className="row" style={{ gap: 8 }}>
-                  <strong>{m.label}</strong>
-                  <RagBadge rag={m.rag} reason={m.reason} />
-                </div>
+                <strong>{m.label}</strong>
                 <div className="muted small" style={{ marginTop: 3 }}>
                   {m.reason}
                 </div>

@@ -1,6 +1,6 @@
 import type { ChangeRequestId } from '@/core/ids';
 import { err, ok } from '@/core/result';
-import type { ChangeRequest } from '@/modules/scope';
+import type { ChangeRequest } from '@/modules/governance';
 import { snapshotBaseline } from '@/analytics/baseline-snapshot';
 import { deriveProject, effectiveStatusDate } from '@/analytics/derive';
 import { guard } from './guard';
@@ -22,7 +22,7 @@ export const defineInitialBaseline = (): Command =>
 /** LB v(n+1) a partir de uma mudança `Aprovada`, que vira `Implementada` — na mesma transação. */
 export const applyChangeToBaseline = (crId: ChangeRequestId): Command =>
   guard((s, ctx) => {
-    const cr = s.scope.changeRequests[crId];
+    const cr = s.governance.changeRequests[crId];
     if (!cr) return err(['Mudança não encontrada.']);
     if (cr.status !== 'Aprovada')
       return err(['Somente mudanças aprovadas podem ser aplicadas à linha de base.']);
@@ -32,7 +32,7 @@ export const applyChangeToBaseline = (crId: ChangeRequestId): Command =>
     const implemented: ChangeRequest = { ...cr, status: 'Implementada' };
     return ok({
       appendBaseline: snapshotBaseline(s, derived, { id: ctx.newId(), now: ctx.now, changeRequestId: crId }),
-      puts: [{ table: 'scope_changeRequests', value: implemented }],
+      puts: [{ table: 'governance_changeRequests', value: implemented }],
       deletes: [],
     });
   });

@@ -15,11 +15,11 @@ export const RECORD_SECTIONS: Record<string, string> = {
   'scope.requirements': '/projeto/scope/requisitos',
   'scope.wbs': '/projeto/scope/eap',
   'scope.deliverables': '/projeto/scope/entregaveis',
-  'scope.changeRequests': '/projeto/scope/mudancas',
   'schedule.milestones': '/projeto/schedule/marcos',
   'governance.norms': '/projeto/governance/normas',
   'governance.meetings': '/projeto/governance/reunioes',
   'governance.lessons': '/projeto/governance/licoes',
+  'governance.changeRequests': '/projeto/governance/mudancas',
   'stakeholders.parties': '/projeto/pessoas', // redireciona ao cadastro do módulo quando ligado
   'stakeholders.communications': '/projeto/stakeholders/comunicacao',
   'finances.budgetLines': '/projeto/finances/orcamento',
@@ -29,4 +29,4 @@ export const RECORD_SECTIONS: Record<string, string> = {
   'resources.allocations': '/projeto/resources/alocacoes',
 };
 
-export const NEW_CHANGE_REQUEST_PATH = '/projeto/scope/mudancas?nova=1';
+export const NEW_CHANGE_REQUEST_PATH = '/projeto/governance/mudancas?nova=1';

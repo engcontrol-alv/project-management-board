@@ -3,7 +3,6 @@ import type { CollectionDef, ModuleManifest, RefDef } from '@/core/module-contra
 import { requirementSchema, type Requirement } from './model/requirement';
 import { wbsNodeSchema, type WbsNode } from './model/wbs';
 import { deliverableSchema, type Deliverable } from './model/deliverable';
-import { changeRequestSchema, type ChangeRequest } from './model/change-request';
 
 const person = (field: string, label: string): RefDef => ({
   field,
@@ -93,36 +92,6 @@ const deliverables: CollectionDef<Deliverable> = {
   describe: (d) => `${d.code} ${d.name}`.trim(),
 };
 
-const changeRequests: CollectionDef<ChangeRequest> = {
-  module: 'scope',
-  name: 'changeRequests',
-  table: 'scope_changeRequests',
-  label: 'Solicitações de mudança',
-  cardinality: 'many',
-  schema: changeRequestSchema,
-  codePrefix: 'MUD',
-  refs: [
-    person('requesterId', 'solicitante'),
-    person('approverId', 'aprovador'),
-    person('implementerId', 'responsável pela implementação'),
-    {
-      field: 'affectedWorkPackageIds',
-      label: 'pacotes afetados',
-      target: { module: 'scope', collection: 'wbs' },
-      many: true,
-      required: false,
-    },
-    {
-      field: 'affectedDeliverableIds',
-      label: 'entregáveis afetados',
-      target: { module: 'scope', collection: 'deliverables' },
-      many: true,
-      required: false,
-    },
-  ],
-  describe: (c) => `${c.code} ${c.title}`.trim(),
-};
-
 const kindOf = (t: unknown) =>
   t && typeof t === 'object' && 'kind' in t ? (t as { kind: unknown }).kind : undefined;
 
@@ -135,7 +104,7 @@ export const scopeManifest: ModuleManifest<typeof settingsSchema> = {
   requires: [],
   settingsSchema,
   defaultSettings: {},
-  collections: [requirements, wbs, deliverables, changeRequests],
+  collections: [requirements, wbs, deliverables],
   constraints: {
     isGroup: (t) => (kindOf(t) === 'Agrupador' ? null : 'deve ser um agrupador'),
     isWorkPackage: (t) =>

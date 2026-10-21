@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { CollectionDef, ModuleManifest, RefDef } from '@/core/module-contract';
+import { changeRequestSchema, type ChangeRequest } from './model/change-request';
 import { profileSchema, type GovernanceProfile } from './model/profile';
 import {
   lessonSchema,
@@ -70,6 +71,37 @@ const lessons: CollectionDef<Lesson> = {
   describe: (l) => `${l.code} ${l.title}`.trim(),
 };
 
+/** Controle integrado de mudanças (Etapa 4: saiu do Escopo). Os vínculos com EAP e entregáveis são dados (RefDef). */
+const changeRequests: CollectionDef<ChangeRequest> = {
+  module: 'governance',
+  name: 'changeRequests',
+  table: 'governance_changeRequests',
+  label: 'Solicitações de mudança',
+  cardinality: 'many',
+  schema: changeRequestSchema,
+  codePrefix: 'MUD',
+  refs: [
+    party('requesterId', 'solicitante', 'isPerson'),
+    party('approverId', 'aprovador', 'isPerson'),
+    party('implementerId', 'responsável pela implementação', 'isPerson'),
+    {
+      field: 'affectedWorkPackageIds',
+      label: 'pacotes afetados',
+      target: { module: 'scope', collection: 'wbs' },
+      many: true,
+      required: false,
+    },
+    {
+      field: 'affectedDeliverableIds',
+      label: 'entregáveis afetados',
+      target: { module: 'scope', collection: 'deliverables' },
+      many: true,
+      required: false,
+    },
+  ],
+  describe: (c) => `${c.code} ${c.title}`.trim(),
+};
+
 export const governanceSettingsSchema = z.object({
   staleChangeDays: z.number().int().min(1),
 });
@@ -82,6 +114,6 @@ export const governanceManifest: ModuleManifest<typeof governanceSettingsSchema>
   requires: [],
   settingsSchema: governanceSettingsSchema,
   defaultSettings: { staleChangeDays: 15 },
-  collections: [profile, norms, meetings, lessons],
+  collections: [profile, norms, meetings, lessons, changeRequests],
   constraints: {},
 };

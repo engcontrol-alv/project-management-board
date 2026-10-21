@@ -100,11 +100,17 @@ describe('ProjectLayout — navegação horizontal', () => {
   it('cabeçalho com projeto, status e ações globais', async () => {
     await renderAt('/projeto/geral');
     const toolbar = await screen.findByRole('toolbar', { name: 'Ações do projeto' });
-    for (const name of [/Importar/, /Exportar/, /Projeto demo/, /Imprimir A4/, /Configurações/]) expect(within(toolbar).getByText(name)).toBeInTheDocument();
+    for (const name of [/Importar/, /Exportar/, /Imprimir A4/, /Configurações/]) expect(within(toolbar).getByText(name)).toBeInTheDocument();
+    expect(within(toolbar).queryByText(/demo/i)).toBeNull();
     expect(screen.getByText('PT-01')).toBeInTheDocument();
     expect(screen.getByText('Em iniciação')).toBeInTheDocument();
-    expect(screen.getByText(/^RAG /)).toHaveClass('tb-badge');
-    for (const caption of ['Código', 'Projeto', 'Status · RAG']) expect(screen.getByText(caption)).toHaveClass('tb-caption');
+    // Situação geral só pela bolinha colorida; o nome da cor fica no aria-label/title, nunca na tela.
+    const dot = screen.getByRole('img', { name: /^Situação: / });
+    expect(dot).toHaveClass('rag-dot');
+    expect(dot).toHaveAttribute('title');
+    expect(dot).toBeEmptyDOMElement();
+    expect(document.body.textContent).not.toMatch(/RAG|Verde|Amarelo|Vermelho/);
+    for (const caption of ['Código', 'Projeto', 'Status']) expect(screen.getByText(caption)).toHaveClass('tb-caption');
     expect(screen.getByLabelText('Data de status')).toBeInTheDocument();
     const notice = screen.getByText('Seus dados ficam apenas neste navegador. Exporte regularmente.');
     expect(notice.closest('nav')).toBeNull();
