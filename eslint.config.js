@@ -35,7 +35,7 @@ const sameModule = ['module-logic', { moduleName: '${from.moduleName}' }];
 const PURE_LAYERS = ['src/core/**', 'src/modules/*/model/**', 'src/modules/*/domain/**', 'src/modules/*/manifest.ts', 'src/modules/*/index.ts', 'src/project/**', 'src/analytics/**', 'src/commands/**'];
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', '.claude', 'playwright-report', 'test-results', '*.js', '!eslint.config.js'] },
+  { ignores: ['dist', 'node_modules', '.claude', '_bakeoff', 'playwright-report', 'test-results', '*.js', '!eslint.config.js'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

@@ -4,7 +4,7 @@ import type { AnalysisContext } from '../alerts/types';
 
 export function financesIndicators({ derived, config }: AnalysisContext): ModuleIndicators {
   const f = derived.finances;
-  if (!f) return { rag: 'n/a', ragReason: 'Custos & Finanças desligado', kpis: [], alerts: [] };
+  if (!f) return { rag: 'n/a', ragReason: 'Finanças desligado', kpis: [], alerts: [] };
   const { evm, summary } = f;
   const kpis: ModuleIndicators['kpis'] = [
     { id: 'finances.spi', label: 'SPI', value: evm.spi, format: 'ratio' },

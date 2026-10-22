@@ -8,6 +8,7 @@ export * from './domain/money-summary';
 export * from './domain/cashflow';
 export * from './domain/contingency';
 export * from './domain/evm';
+export * from './domain/evm-labels';
 export * from './domain/rag';
 export { CURRENCIES, financesManifest, financesSettingsSchema, type FinancesSettings } from './manifest';
 

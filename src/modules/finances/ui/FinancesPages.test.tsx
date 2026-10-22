@@ -104,26 +104,82 @@ describe('CashflowPage', () => {
     expect(within(table).getByText('02/2026')).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Itens sem data' })).toHaveTextContent('ORC-002');
     expect(screen.getByText('Risco de deslocamento')).toBeInTheDocument();
-    // O gráfico é lazy: esperar o carregamento dentro do act.
-    await waitFor(() => expect(screen.queryByText('Carregando gráfico…')).not.toBeInTheDocument());
-  });
+    // O gráfico é lazy: esperar o carregamento dentro do act. Com cache frio (logo após `npm ci`),
+    // a primeira transformação do chunk do Recharts pode passar dos 4 s padrão.
+    await waitFor(() => expect(screen.queryByText('Carregando gráfico…')).not.toBeInTheDocument(), {
+      timeout: 20_000,
+    });
+  }, 30_000);
 });
 
-describe('EvmPage', () => {
-  it('sem LB pede a linha de base; com LB mostra os 11 indicadores', async () => {
-    const s = aSnapshot()
+describe('EvmPage — modo essencial × avançado', () => {
+  const evmProject = () =>
+    aSnapshot()
       .withPackage(aPackage({ id: 'A', code: '1', duration: 10, actualStart: PROJECT_START, percentComplete: 40 }))
       .withBudgetLine(aBudgetLine({ workPackageId: 'A' as never, actualCents: 50_000, status: 'Em andamento' }), aBudgetLine({ id: 'u' as never, code: 'ORC-002' }))
       .withStatusDate('2026-01-09')
       .build();
-    const { unmount } = await renderWithProject(<EvmPage />, { snapshot: s });
-    expect(await screen.findByText('Defina a linha de base para calcular PV e SPI.')).toBeInTheDocument();
-    unmount();
-    await renderWithProject(<EvmPage />, { snapshot: withLb(s) });
-    for (const k of ['BAC', 'PV', 'EV', 'AC', 'SPI', 'CPI', 'CV', 'SV', 'EAC', 'ETC', 'VAC'])
-      expect(await screen.findByText(k, { selector: '.kpi-label' })).toBeInTheDocument();
+  const labels = () => screen.getAllByText(/./, { selector: '.kpi-label' }).map((e) => e.textContent);
+  const toggle = () => screen.getByRole('button', { name: 'Ver projeções avançadas (EAC, Variâncias)' });
+
+  it('essencial por padrão: 6 indicadores em português, com sigla e legenda de origem', async () => {
+    await renderWithProject(<EvmPage />, { snapshot: withLb(evmProject()) });
+    await screen.findByText('Orçamento Total (BAC)', { selector: '.kpi-label' });
+    expect(labels()).toEqual([
+      'Orçamento Total (BAC)',
+      'Previsto até a Data (PV)',
+      'Trabalho Entregue (EV)',
+      'Custo Realizado (AC)',
+      'Eficiência de Custo (CPI)',
+      'Ritmo do Prazo (SPI)',
+    ]);
+    for (const hint of [
+      'Soma do orçamento planejado em Finanças',
+      'Quanto deveria estar pronto hoje pela Linha de Base',
+      'Orçamento × % de avanço físico dos pacotes na EAP (Escopo)',
+      'Total já gasto/realizado nos itens de Finanças',
+      'Trabalho Entregue ÷ Custo Realizado (meta ≥ 1,00)',
+      'Trabalho Entregue ÷ Previsto até a Data (meta ≥ 1,00)',
+    ])
+      expect(screen.getByText(hint, { selector: '.kpi-hint' })).toBeInTheDocument();
     expect(screen.getAllByText('0,80', { selector: '.kpi-value' })).toHaveLength(2);
+    expect(toggle()).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.queryByText('Estimativa no Término (EAC)')).toBeNull();
+    expect(screen.queryByRole('note', { name: 'O que falta preencher' })).toBeNull();
     expect(screen.getByText(/% do custo orçado não vinculado a pacotes/)).toHaveTextContent('50,0%');
+  });
+
+  it('"Ver projeções avançadas" revela EAC, ETC, VAC, CV e SV com legendas; clicar de novo esconde', async () => {
+    await renderWithProject(<EvmPage />, { snapshot: withLb(evmProject()) });
+    await userEvent.click(await screen.findByRole('button', { name: 'Ver projeções avançadas (EAC, Variâncias)' }));
+    expect(toggle()).toHaveAttribute('aria-pressed', 'true');
+    const advanced = screen.getByRole('region', { name: 'Projeções avançadas' });
+    expect(within(advanced).getAllByText(/./, { selector: '.kpi-label' }).map((e) => e.textContent)).toEqual([
+      'Estimativa no Término (EAC)',
+      'Estimativa para Terminar (ETC)',
+      'Variação no Término (VAC)',
+      'Variação de Custo (CV)',
+      'Variação de Prazo (SV)',
+    ]);
+    expect(within(advanced).getAllByText(/./, { selector: '.kpi-hint' })).toHaveLength(5);
+    await userEvent.click(toggle());
+    expect(screen.queryByRole('region', { name: 'Projeções avançadas' })).toBeNull();
+  });
+
+  it('dica do que falta preencher: sem LB, sem orçamento, sem custo realizado', async () => {
+    const note = async () => screen.findByRole('note', { name: 'O que falta preencher' });
+    const { unmount } = await renderWithProject(<EvmPage />, { snapshot: evmProject() });
+    expect(await note()).toHaveTextContent('Defina a Linha de Base');
+    unmount();
+    const empty = await renderWithProject(<EvmPage />, { snapshot: aSnapshot().build() });
+    expect(await note()).toHaveTextContent('Cadastre linhas de orçamento');
+    empty.unmount();
+    const noActual = withLb(
+      aSnapshot().withPackage(aPackage({ id: 'A', duration: 10 })).withBudgetLine(aBudgetLine({ workPackageId: 'A' as never })).build(),
+    );
+    await renderWithProject(<EvmPage />, { snapshot: noActual });
+    expect(await note()).toHaveTextContent('Lance o custo realizado');
+    expect(await note()).not.toHaveTextContent('Linha de Base');
   });
 });
 

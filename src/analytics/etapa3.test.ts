@@ -89,7 +89,7 @@ describe('provisão de multa por atraso (D6, D7)', () => {
     expect(penalty(s)!.items.map((i) => [i.code, i.delayDays, i.penaltyCents])).toEqual([['M-001', 2, 300_000]]);
   });
 
-  it('base "Valor do marco" = receitas vinculadas; com Custos & Finanças desligado = n/a', () => {
+  it('base "Valor do marco" = receitas vinculadas; com Finanças desligado = n/a', () => {
     const b = aSnapshot()
       .withProfile(clause({ base: 'Valor do marco', ratePct: 1, capPct: null, contractValueCents: null }))
       .withMilestone(aMilestone({ manualDate: '2026-01-05' }))
@@ -100,7 +100,7 @@ describe('provisão de multa por atraso (D6, D7)', () => {
     expect(penalty(b.build())!.items[0]).toMatchObject({ baseCents: 10_000_000, penaltyCents: 400_000 });
     const off = penalty(b.withModule('finances', { enabled: false }).build())!;
     expect(off.totalCents).toBeNull();
-    expect(off.reason).toBe('Custos & Finanças desligado: sem o valor do marco');
+    expect(off.reason).toBe('Finanças desligado: sem o valor do marco');
   });
 
   it('cláusula desativada ou Cronograma desligado = sem provisão', () => {

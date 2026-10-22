@@ -17,7 +17,7 @@ export const REPORT_SECTIONS: ReportSectionDef[] = [
   { id: 'governance', title: 'Governança', label: 'Governança — identidade do contrato, fases, cláusula de multa e mudanças', modules: [] },
   { id: 'scope', title: 'Escopo', label: 'Escopo — pacotes de trabalho e entregáveis com TAF/FAT e TAC/SAT', modules: ['scope'] },
   { id: 'schedule', title: 'Cronograma', label: 'Cronograma — marcos contratuais e caminho crítico', modules: ['schedule'] },
-  { id: 'finances', title: 'Custos & Finanças', label: 'Custos & Finanças — EVM, provisão de multa, orçado × comprometido × realizado e Curva S', modules: ['finances'] },
+  { id: 'finances', title: 'Finanças', label: 'Finanças — EVM, provisão de multa, orçado × comprometido × realizado e Curva S', modules: ['finances'] },
   { id: 'risks', title: 'Riscos', label: 'Riscos — matriz e riscos abertos Alto/Crítico', modules: ['risks'] },
   {
     id: 'resources_stakeholders',

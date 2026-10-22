@@ -24,7 +24,7 @@ export function BaselinePanel() {
       <ErrorList errors={errors} />
       {!current ? (
         <>
-          <p className="muted">Sem linha de base: SPI físico, Curva S e desvios ficam "n/a".</p>
+          <p className="muted">Sem linha de base, SPI físico, Curva S e desvios ainda não são calculados.</p>
           <button
             className="btn btn-primary"
             disabled={isReadOnly(snapshot.governance.profile)}

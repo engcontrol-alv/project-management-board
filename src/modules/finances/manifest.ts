@@ -75,7 +75,7 @@ export type FinancesSettings = z.infer<typeof financesSettingsSchema>;
 
 export const financesManifest: ModuleManifest<typeof financesSettingsSchema> = {
   id: 'finances',
-  label: 'Custos & Finanças',
+  label: 'Finanças',
   mandatory: false,
   requires: [],
   settingsSchema: financesSettingsSchema,

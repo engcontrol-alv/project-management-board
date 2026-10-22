@@ -69,7 +69,7 @@ export function derivePenalty(
     })
     .sort((x, y) => x.m.code.localeCompare(y.m.code));
 
-  const reason = byMilestone && !a.finances ? 'Custos & Finanças desligado: sem o valor do marco' : null;
+  const reason = byMilestone && !a.finances ? 'Finanças desligado: sem o valor do marco' : null;
   const result = latePenalty(
     clause,
     late.map((l) => ({ id: l.m.id, delayDays: l.delayDays, baseCents: l.baseCents ?? 0 })),

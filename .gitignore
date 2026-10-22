@@ -2,3 +2,12 @@ node_modules/
 dist/
 test-results/
 playwright-report/
+
+# Interno (só local)
+_bakeoff/
+CLAUDE.md
+.claude/
+.agents/
+.claude-flow/
+script.txt
+skills-lock.json

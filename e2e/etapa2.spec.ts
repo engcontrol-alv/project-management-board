@@ -139,17 +139,18 @@ test('Critério 7: desligar Finanças oculta o módulo e o CPI; religar preserva
   await expect(page.getByRole('cell', { name: 'ORC-001', exact: true })).toBeVisible();
 
   await go(page, '/projeto/configuracao');
-  await page.getByLabel(/^Custos & Finanças/).click();
-  await expect(page.getByLabel(/^Custos & Finanças/)).not.toBeChecked();
-  await expect(page.getByRole('navigation', { name: 'Domínios' }).getByRole('link', { name: 'Custos & Finanças' })).toHaveCount(0);
+  await page.getByLabel(/^Finanças/).click();
+  await expect(page.getByLabel(/^Finanças/)).not.toBeChecked();
+  await expect(page.getByRole('navigation', { name: 'Domínios' }).getByRole('link', { name: 'Finanças' })).toHaveCount(0);
   await go(page, '/projeto/geral');
-  // Critério 7: o CPI fica "n/a" no painel Geral com o módulo desligado.
-  const evm = page.getByRole('region', { name: 'Valor agregado e prazo' });
-  await expect(evm.locator('.kpi').filter({ has: page.locator('.kpi-label', { hasText: /^CPI$/ }) })).toContainText('n/a');
+  // Critério 7: com o módulo desligado o CPI é "n/a", e a aba Geral omite o indicador (sem "n/a" na tela).
+  await expect(page.getByRole('heading', { name: 'Painel executivo' })).toBeVisible();
+  await expect(page.locator('.kpi-label', { hasText: /CPI/ })).toHaveCount(0);
+  await expect(page.locator('main')).not.toContainText('n/a');
 
   await go(page, '/projeto/configuracao');
-  await page.getByLabel(/^Custos & Finanças/).click();
-  await expect(page.getByLabel(/^Custos & Finanças/)).toBeChecked();
+  await page.getByLabel(/^Finanças/).click();
+  await expect(page.getByLabel(/^Finanças/)).toBeChecked();
   await go(page, '/projeto/finances/orcamento');
   await expect(page.getByRole('cell', { name: 'ORC-001', exact: true })).toBeVisible();
 });
@@ -199,7 +200,7 @@ test('Recursos: duas alocações de 60% na mesma semana = 120% e situação amar
 test('Projeto importado: 7 domínios cruzados no painel, Curva S monetária, matriz e histograma', async ({ page }) => {
   await importReferenceProject(page);
   const bar = page.getByRole('navigation', { name: 'Domínios' });
-  const domains = ['Governança', 'Escopo', 'Cronograma', 'Recursos', 'Custos & Finanças', 'Riscos', 'Partes Interessadas'];
+  const domains = ['Governança', 'Escopo', 'Cronograma', 'Recursos', 'Finanças', 'Riscos', 'Partes Interessadas'];
   await expect(bar.getByRole('link')).toHaveText(['Geral', ...domains]);
   await expect(bar.getByRole('link', { name: 'Geral' })).toHaveAttribute('aria-current', 'page');
   await expect(bar.getByRole('separator')).toBeVisible();
@@ -209,8 +210,11 @@ test('Projeto importado: 7 domínios cruzados no painel, Curva S monetária, mat
     await expect(situationDot(domainCard(page, m), 'Sem dados')).toHaveCount(0);
   }
   await expect(page.locator('body')).not.toContainText(/RAG|Verde|Amarelo|Vermelho/);
-  await expect(page.getByText('CPI', { exact: true })).toBeVisible();
-  await expect(page.getByText('EAC', { exact: true })).toBeVisible();
+  // Modo essencial por padrão; o toggle revela as projeções (EAC, variâncias).
+  await expect(page.getByText('Eficiência de Custo (CPI)', { exact: true })).toBeVisible();
+  await expect(page.getByText('Estimativa no Término (EAC)', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Ver projeções avançadas (EAC, Variâncias)' }).click();
+  await expect(page.getByText('Estimativa no Término (EAC)', { exact: true })).toBeVisible();
   await expect(page.getByText('Entrega de CTR-001 ameaça o marco M-004')).toBeVisible();
   // Clicar no card do semáforo leva ao domínio.
   await domainCard(page, 'Riscos').click();

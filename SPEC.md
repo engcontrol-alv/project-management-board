@@ -63,7 +63,7 @@ A V1 conecta os módulos **por ID**, calcula cronograma, avanço físico e valor
 | **Solicitação de mudança (MUD)** | Registro em **Governança** (seção Mudanças) com impacto em escopo, prazo e custo; única forma de criar LB v2+. |
 | **Exemplo** | Registro ilustrativo exibido na UI; nunca salvo, contado ou exportado. |
 | **Data de status** | Data de corte dos cálculos. Padrão: hoje; editável no projeto. |
-| **n/a** | Indicador sem base de cálculo (divisão por zero, módulo desligado, sem LB). Nunca `NaN`/`Infinity`. |
+| **n/a** | Indicador sem base de cálculo (divisão por zero, módulo desligado, sem LB). Nunca `NaN`/`Infinity`. Na aba **Geral** e no resumo do Relatório Executivo A4, indicadores n/a e campos vazios são **omitidos** (nem rótulo nem caixa vazia). |
 
 ## 5. Dados, privacidade e exemplos
 
@@ -443,7 +443,7 @@ Herdada do protótipo: fundo `#f5f7fa`, azul petróleo `#3f6d8f`, IBM Plex Mono 
 4. Para redes de pacotes conhecidas, datas, folgas e caminho crítico batem com o cálculo manual (casos de teste no repositório).
 5. Atrasar um pacote crítico deixa o marco dependente `Atrasado`, o RAG de Cronograma vermelho e a Governança com alerta — sem alterar dados de Finanças.
 6. A LB não muda ao editar pacotes; muda apenas por "Aplicar à linha de base" numa mudança `Aprovada`, gerando nova versão; a anterior continua consultável.
-7. Desligar Finanças oculta o módulo, CPI vira "n/a", e religar mostra os dados intactos.
+7. Desligar Finanças oculta o módulo, CPI vira "n/a" (omitido na aba Geral), e religar mostra os dados intactos.
 8. Contratação sem fornecedor (ou com pessoa como fornecedor) não salva; o fornecedor mostra orçado/comprometido/realizado na sua ficha em Partes Interessadas.
 9. O relatório imprime só os módulos selecionados.
 10. "Apagar dados locais" deixa o IndexedDB vazio.

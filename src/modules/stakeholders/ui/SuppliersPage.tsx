@@ -26,7 +26,7 @@ export function SuppliersPage() {
         <h1 style={{ flex: 1 }}>Fornecedores</h1>
       </div>
       {!config.enabled.finances && (
-        <p className="notice">Custos & Finanças desligado — ligue o módulo em Configurações para ver contratações e totais.</p>
+        <p className="notice">Finanças desligado — ligue o módulo em Configurações para ver contratações e totais.</p>
       )}
       {suppliers.length === 0 && (
         <div className="card tb-card empty-state">Nenhuma organização com papel Fornecedor ou Prestador de serviço.</div>

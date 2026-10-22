@@ -52,3 +52,25 @@ Caminhos e comandos relativos à raiz do app (`_bakeoff/3-ruflo`).
 ### Task 6 — E2E + bateria
 - [x] E2E: importar o projeto de referência → abrir outra aba → "Imprimir A4" → preset → desmarcar uma seção → notas → "Gerar e Imprimir A4" → `window.print` chamado; mídia `print` mostra só o relatório com o carimbo; PDF A4 gerado.
 - [x] `npm test`, `npm run lint`, `npm run build`, `npm run e2e` — 0 erros, 0 avisos.
+
+---
+
+## Revisão — alinhamento com Finanças, Modo Essencial e campos nulos
+
+O compositor, o container de impressão e o CSS A4 já existiam (Tasks 1–6). Esta revisão alinha o relatório às regras que vieram depois:
+
+| # | Ponto | Decisão adotada |
+|---|---|---|
+| R9 | Indicadores de Finanças no relatório | Substitui R8 em `finances`: os 6 do **Modo Essencial** (`EVM_ESSENTIAL`: Orçamento Total (BAC) … Ritmo do Prazo (SPI)) com a legenda de origem, mais a provisão de multa. As projeções (EAC, ETC, VAC, CV, SV) ficam fora da folha, como na tela padrão |
+| R10 | Campos nulos | Mesma regra da aba Geral: o carimbo omite Cliente, Gerente e Linha de base vazios; a identidade do contrato omite parte, objetivo e modalidade vazios; KPI sem valor e multa sem cláusula não aparecem. Nada de "—", "n/a" ou "não definido" |
+| R11 | Nome do módulo | `Finanças` (antes "Custos & Finanças") no compositor e no título da seção |
+
+### Task 7 — Finanças no Modo Essencial
+- [x] Teste: rótulos em português na ordem do Modo Essencial, com legenda; sem siglas cruas.
+- [x] Implementar com `EVM_ESSENTIAL` (`src/modules/finances/domain/evm-labels.ts`).
+
+### Task 8 — Omissão de campos nulos no carimbo e nas seções
+- [x] Teste unitário: projeto vazio, relatório completo → carimbo só com Código, Projeto, datas e situação; identidade sem campos vazios; Finanças sem "n/a".
+- [x] E2E: projeto novo, preset Diretoria → `window.print` uma vez; carimbo sem Cliente/Gerente; sem "n/a"/"não definido"; sem bloco de observações quando a nota está vazia.
+- [x] CSS do carimbo: bordas corretas com qualquer número de células (seletor de última linha).
+- [x] `npm test`, `npm run lint`, `npm run build`, `npm run e2e` — 0 erros.

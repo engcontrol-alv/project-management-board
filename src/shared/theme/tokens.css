@@ -517,6 +517,10 @@ h3 {
   gap: 16px;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
 }
+/* Bloco único (o vizinho foi omitido por falta de dados) ocupa a linha inteira. */
+.split > :only-child {
+  grid-column: 1 / -1;
+}
 @media (max-width: 1100px) {
   .split {
     grid-template-columns: minmax(0, 1fr);
@@ -987,6 +991,9 @@ fieldset {
 .hero-meta {
   display: flex;
   flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin-bottom: 0;
   gap: 4px 18px;
   margin-top: 10px;
   font-size: 12.5px;
@@ -1404,6 +1411,56 @@ fieldset {
   color: var(--navy);
 }
 
+/* Geral: Guia de Preenchimento do Projeto (nunca impresso) */
+.fill-guide-toggle {
+  margin: -4px 0 12px;
+}
+.fill-guide-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.fill-guide-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.fill-guide-steps li:last-child {
+  border-bottom: none;
+}
+.fill-guide-mark {
+  flex: none;
+  width: 18px;
+  margin-top: 2px;
+  text-align: center;
+  color: var(--ink-faint);
+}
+.fill-guide-body {
+  flex: 1;
+  min-width: 0;
+}
+.fill-guide-steps li.done .fill-guide-body strong {
+  color: var(--ink-soft);
+}
+.fill-guide-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+@media (max-width: 640px) {
+  .fill-guide-steps li {
+    flex-wrap: wrap;
+  }
+  .fill-guide-links {
+    width: 100%;
+    justify-content: flex-start;
+    padding-left: 30px;
+  }
+}
+
 /* Geral: semáforo clicável, KPIs de valor agregado e miniatura da Curva S */
 .rag-grid {
   list-style: none;
@@ -1427,8 +1484,13 @@ fieldset {
   /* 4 × 2: valores monetários completos, sem reticências. */
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
+/* Sub-aba Valor agregado: 6 essenciais em 3 × 2. */
+.evm-grid.cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 @media (max-width: 900px) {
-  .evm-grid {
+  .evm-grid,
+  .evm-grid.cols-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -1698,8 +1760,13 @@ h2 {
 .stamp-cell:nth-child(4n) {
   border-right: none;
 }
-.stamp-cell:nth-last-child(-n + 4) {
+/* Última linha (com 4 colunas), qualquer que seja o número de campos preenchidos. */
+.stamp-cell:nth-child(4n + 1):nth-last-child(-n + 4),
+.stamp-cell:nth-child(4n + 1):nth-last-child(-n + 4) ~ .stamp-cell {
   border-bottom: none;
+}
+.stamp-cell:last-child {
+  border-right: none;
 }
 .stamp-value {
   font-weight: 600;
@@ -1816,6 +1883,13 @@ h2 {
   }
   .stamp-cell:nth-child(2n) {
     border-right: none;
+  }
+  .stamp-cell {
+    border-bottom: 1px solid var(--ink);
+  }
+  .stamp-cell:nth-child(2n + 1):nth-last-child(-n + 2),
+  .stamp-cell:nth-child(2n + 1):nth-last-child(-n + 2) ~ .stamp-cell {
+    border-bottom: none;
   }
   .executive-print-report {
     padding: 16px;
