@@ -5,6 +5,7 @@ import type { AnalysisContext } from '@/analytics/alerts/types';
 import { computeDashboard } from '@/analytics/dashboard';
 import { currentBaseline } from '@/analytics/derive';
 import { formatDateBR, type IsoDate } from '@/shared/lib/dates';
+import { hasValue } from '@/shared/lib/format';
 import { RagDot } from '@/shared/ui/Badge';
 import { REPORT_SECTIONS, type ReportRequest } from './report-config';
 import { SECTION_BODY } from './report-sections';
@@ -36,22 +37,32 @@ export function PrintableReport({
   const { snapshot, derived } = analysis;
   const { charter } = snapshot.governance.profile;
   const name = (id: string | null) =>
-    (id && snapshot.stakeholders.parties[id as keyof typeof snapshot.stakeholders.parties]?.name) || '—';
+    id
+      ? snapshot.stakeholders.parties[id as keyof typeof snapshot.stakeholders.parties]?.name
+      : null;
   const baseline = currentBaseline(snapshot);
-  const stamp: [string, ReactNode][] = [
-    ['Código', <span className="tb-mono">{snapshot.project.info.code}</span>],
-    ['Projeto', snapshot.project.info.name],
-    ['Cliente', name(charter.clientId)],
-    ['Gerente', name(charter.managerId)],
-    ['Data de status', <span className="tb-mono">{formatDateBR(derived.statusDate)}</span>],
-    ['Data de emissão', <span className="tb-mono">{formatDateBR(issuedOn)}</span>],
-    ['Linha de base', <span className="tb-mono">{baseline ? `v${baseline.version}` : 'não definida'}</span>],
-    ['Situação geral', <RagDot rag={dash.overall} />],
-  ];
+  // Carimbo: metadado vazio não ocupa célula (mesma regra de campos nulos da aba Geral).
+  const mono = (v: string | null) => (v === null ? null : <span className="tb-mono">{v}</span>);
+  const stamp = (
+    [
+      ['Código', mono(snapshot.project.info.code)],
+      ['Projeto', snapshot.project.info.name],
+      ['Cliente', name(charter.clientId)],
+      ['Gerente', name(charter.managerId)],
+      ['Data de status', mono(formatDateBR(derived.statusDate))],
+      ['Data de emissão', mono(formatDateBR(issuedOn))],
+      ['Linha de base', mono(baseline ? `v${baseline.version}` : null)],
+      ['Situação geral', <RagDot rag={dash.overall} />],
+    ] as [string, ReactNode][]
+  ).filter(([, v]) => hasValue(v));
 
   return createPortal(
     <div className="report-preview">
-      <div className="report-toolbar no-print" role="toolbar" aria-label="Pré-visualização do relatório">
+      <div
+        className="report-toolbar no-print"
+        role="toolbar"
+        aria-label="Pré-visualização do relatório"
+      >
         <span className="small muted">Pré-visualização · A4 retrato</span>
         <button className="btn btn-sm btn-primary" onClick={() => window.print()}>
           <Printer size={14} aria-hidden="true" /> Imprimir

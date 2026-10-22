@@ -12,7 +12,8 @@ import {
   type ReportSectionId,
 } from './report-config';
 
-const sameSet = (a: Set<string>, b: Set<string>) => a.size === b.size && [...a].every((x) => b.has(x));
+const sameSet = (a: Set<string>, b: Set<string>) =>
+  a.size === b.size && [...a].every((x) => b.has(x));
 
 /** Compositor do Relatório Executivo A4: presets, seções e notas da emissão. */
 export function ReportComposer({
@@ -27,7 +28,9 @@ export function ReportComposer({
   onGenerate: (request: ReportRequest, print: boolean) => void;
 }) {
   const available = availableSections(enabled);
-  const [selected, setSelected] = useState<Set<ReportSectionId>>(() => presetSelection('board', enabled));
+  const [selected, setSelected] = useState<Set<ReportSectionId>>(() =>
+    presetSelection('board', enabled),
+  );
   const [notes, setNotes] = useState('');
   // Um módulo desligado depois da última abertura nunca fica marcado.
   const effective = new Set([...selected].filter((id) => available.has(id)));
@@ -38,7 +41,8 @@ export function ReportComposer({
     else next.delete(id);
     setSelected(next);
   };
-  const generate = (print: boolean) => onGenerate({ sections: effective, notes: notes.trim() }, print);
+  const generate = (print: boolean) =>
+    onGenerate({ sections: effective, notes: notes.trim() }, print);
   const empty = effective.size === 0;
 
   return (
@@ -63,7 +67,12 @@ export function ReportComposer({
       <div className="report-composer">
         <div className="segmented" role="group" aria-label="Perfis rápidos">
           {PRESETS.map((p) => (
-            <button key={p.id} type="button" aria-pressed={sameSet(effective, presetSelection(p.id, enabled))} onClick={() => setSelected(presetSelection(p.id, enabled))}>
+            <button
+              key={p.id}
+              type="button"
+              aria-pressed={sameSet(effective, presetSelection(p.id, enabled))}
+              onClick={() => setSelected(presetSelection(p.id, enabled))}
+            >
               {p.label}
             </button>
           ))}
@@ -74,7 +83,12 @@ export function ReportComposer({
             const on = available.has(s.id);
             return (
               <label key={s.id} className={on ? undefined : 'muted'}>
-                <input type="checkbox" checked={effective.has(s.id)} disabled={!on} onChange={(e) => toggle(s.id, e.target.checked)} />
+                <input
+                  type="checkbox"
+                  checked={effective.has(s.id)}
+                  disabled={!on}
+                  onChange={(e) => toggle(s.id, e.target.checked)}
+                />
                 <span>
                   {s.label}
                   {!on && <em className="small"> (módulo desligado)</em>}
@@ -85,7 +99,13 @@ export function ReportComposer({
         </fieldset>
         <div className="field">
           <label htmlFor="report-notes">Observações executivas / notas da emissão</label>
-          <textarea id="report-notes" rows={3} maxLength={NOTES_MAX} value={notes} onChange={(e) => setNotes(e.target.value)} />
+          <textarea
+            id="report-notes"
+            rows={3}
+            maxLength={NOTES_MAX}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
           <span className="hint">
             Opcional; sai no topo do relatório. {notes.length}/{NOTES_MAX}
           </span>

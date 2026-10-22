@@ -55,7 +55,7 @@ describe('ConfigPage — etapa 2', () => {
   it('desligar Finanças não desliga outros módulos e preserva os dados', async () => {
     const s = aSnapshot().withBudgetLine(aBudgetLine()).build();
     const { load } = await renderWithProject(withActions(<ConfigPage />), { snapshot: s });
-    await userEvent.click(await screen.findByLabelText(/^Custos & Finanças/));
+    await userEvent.click(await screen.findByLabelText(/^Finanças/));
     await waitFor(async () => expect(resolveConfig((await load()).project.config).enabled.finances).toBe(false));
     const cfg = resolveConfig((await load()).project.config);
     expect(Object.entries(cfg.enabled).filter(([, on]) => !on).map(([k]) => k)).toEqual(['finances']);
@@ -67,7 +67,7 @@ describe('ConfigPage — etapa 2', () => {
     const cpi = await screen.findByLabelText('CPI verde a partir de');
     await userEvent.clear(cpi);
     await userEvent.type(cpi, '0,9');
-    await userEvent.click(screen.getByRole('button', { name: 'Salvar parâmetros de Custos & Finanças' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar parâmetros de Finanças' }));
     await waitFor(async () => expect(resolveConfig((await load()).project.config).settings.finances.cpiGreenMin).toBe(0.9));
 
     const red = screen.getByLabelText('Sobrealocação vermelha acima de (%)');

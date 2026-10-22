@@ -14,6 +14,14 @@ function usable(n: number | null | undefined): n is number {
   return typeof n === 'number' && Number.isFinite(n);
 }
 
+/** Valor exibível: nem nulo/indefinido, nem texto vazio, nem "n/a", nem número não finito. */
+export function hasValue(v: unknown): boolean {
+  if (v === null || v === undefined) return false;
+  if (typeof v === 'number') return Number.isFinite(v);
+  if (typeof v === 'string') return v.trim() !== '' && v.trim() !== 'n/a';
+  return true;
+}
+
 export function formatRatio(n: number | null | undefined): string {
   return usable(n) ? ratioFmt.format(n) : 'n/a';
 }

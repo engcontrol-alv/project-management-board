@@ -83,6 +83,8 @@ test('Critério 1: navegador limpo mostra criar/importar e não cria banco', asy
 });
 
 test('Critério 2 e 10: exportar, apagar e reimportar produz dados idênticos', async ({ page }) => {
+  // Cadastra, exporta, apaga e reimporta: leva ~20 s com a suíte em paralelo; 30 s padrão fica justo.
+  test.setTimeout(60_000);
   await createProject(page);
   await addPerson(page, 'Ana Teste');
   await addPackage(page, 'Pacote A', 5);

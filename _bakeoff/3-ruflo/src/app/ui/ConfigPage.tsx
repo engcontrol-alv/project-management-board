@@ -188,7 +188,7 @@ function FinancesSettingsForm({ initial, onSave }: { initial: FinancesSettings; 
   const [green, setGreen] = useState(String(initial.cpiGreenMin).replace('.', ','));
   const [yellow, setYellow] = useState(String(initial.cpiYellowMin).replace('.', ','));
   return (
-    <Card title="Parâmetros — Custos & Finanças">
+    <Card title="Parâmetros — Finanças">
       <div className="form-grid">
         <Field id="cfg-base" label="Moeda base" hint="Todos os totais são convertidos para ela.">
           <select id="cfg-base" value={base} onChange={(e) => setBase(e.target.value)}>
@@ -222,7 +222,7 @@ function FinancesSettingsForm({ initial, onSave }: { initial: FinancesSettings; 
         className="btn"
         onClick={() => onSave({ baseCurrency: base, currencies: accepted, cpiGreenMin: num(green), cpiYellowMin: num(yellow) })}
       >
-        Salvar parâmetros de Custos & Finanças
+        Salvar parâmetros de Finanças
       </button>
     </Card>
   );

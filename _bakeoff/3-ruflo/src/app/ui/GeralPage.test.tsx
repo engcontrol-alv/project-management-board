@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { aBudgetLine, aMilestone, aNorm, aPackage, aProcurement, aRisk, aSupplier } from '@/test/factories';
+import { aBudgetLine, aMilestone, aNorm, anOrganization, aPackage, aPerson, aProcurement, aRisk, aSupplier } from '@/test/factories';
 import { aSnapshot, PROJECT_START } from '@/test/builders';
 import { renderWithProject } from '@/test/render';
 import { snapshotBaseline } from '@/analytics/baseline-snapshot';
@@ -96,7 +96,7 @@ describe('GeralPage — centro de comando', () => {
       'Escopo',
       'Cronograma',
       'Recursos',
-      'Custos & Finanças',
+      'Finanças',
       'Riscos',
       'Partes Interessadas',
     ]);
@@ -108,15 +108,33 @@ describe('GeralPage — centro de comando', () => {
   it('KPIs de valor agregado e prazo', async () => {
     await renderWithProject(withRoutes(<GeralPage />), { snapshot: project() });
     const evm = await screen.findByRole('region', { name: 'Valor agregado e prazo' });
-    const labels = within(evm).getAllByText(/./, { selector: '.kpi-label' }).map((e) => e.textContent);
-    expect(labels).toEqual(['BAC', 'PV', 'EV', 'AC', 'CPI', 'SPI', 'EAC', 'Avanço físico']);
+    const labels = () => within(evm).getAllByText(/./, { selector: '.kpi-label' }).map((e) => e.textContent);
+    expect(labels()).toEqual([
+      'Orçamento Total (BAC)',
+      'Previsto até a Data (PV)',
+      'Trabalho Entregue (EV)',
+      'Custo Realizado (AC)',
+      'Eficiência de Custo (CPI)',
+      'Ritmo do Prazo (SPI)',
+      'Avanço físico',
+    ]);
     expect(within(evm).getAllByText('0,80', { selector: '.kpi-value' })).toHaveLength(2);
+    // Projeções avançadas: desligadas por padrão; o toggle revela só as que têm valor.
+    const toggle = within(evm).getByRole('button', { name: 'Ver projeções avançadas (EAC, Variâncias)' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(within(evm).queryByText('Estimativa no Término (EAC)')).toBeNull();
+    await userEvent.click(toggle);
+    expect(labels()).toEqual(expect.arrayContaining(['Estimativa no Término (EAC)', 'Variação de Custo (CV)', 'Variação de Prazo (SV)']));
+    expect(within(evm).getByText('Trabalho Entregue − Custo Realizado; negativo = acima do custo', { selector: '.kpi-hint' })).toBeInTheDocument();
   });
 
-  it('sem LB: SPI n/a', async () => {
+  it('sem LB: SPI fica fora do DOM (sem "n/a"); o avanço físico continua', async () => {
     await renderWithProject(withRoutes(<GeralPage />), { snapshot: aSnapshot().withPackage(aPackage({ id: 'A' })).build() });
     const evm = await screen.findByRole('region', { name: 'Valor agregado e prazo' });
-    expect(within(evm).getByText('SPI', { selector: '.kpi-label' }).parentElement).toHaveTextContent('n/a');
+    expect(within(evm).queryByText('Ritmo do Prazo (SPI)', { selector: '.kpi-label' })).toBeNull();
+    expect(within(evm).queryByRole('button', { name: /projeções avançadas/ })).toBeNull();
+    expect(within(evm).getByText('Avanço físico', { selector: '.kpi-label' })).toBeInTheDocument();
+    expect(within(evm).queryByText(/n\/a/)).toBeNull();
   });
 
   it('orçado × comprometido × realizado com miniatura e atalho da Curva S', async () => {
@@ -175,9 +193,93 @@ describe('Geral — multa contratual por atraso', () => {
     expect(card).toHaveTextContent('M-002 · 4 dia(s)');
   });
 
-  it('sem cláusula configurada', async () => {
+  it('sem cláusula configurada: o bloco não é renderizado', async () => {
     await renderWithProject(withRoutes(<GeralPage />));
-    const card = await screen.findByRole('region', { name: 'Multa contratual por atraso' });
-    expect(card).toHaveTextContent('Cláusula de multa não configurada');
+    expect(await screen.findByRole('heading', { name: 'Painel executivo' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Multa contratual por atraso' })).toBeNull();
+    expect(screen.queryByText('Cláusula de multa não configurada.')).toBeNull();
+  });
+});
+
+describe('Geral — campos nulos ficam fora do DOM', () => {
+  /** Valores em branco que nunca devem aparecer na tela. */
+  const PLACEHOLDERS = [/^n\/a$/, /^—$/, /não definid[ao]/, /não configurad[ao]/, /Nenhum alerta/, /Nenhuma norma/];
+
+  it('a) projeto sem dados: sem KPIs, metadados, blocos ou títulos vazios', async () => {
+    await renderWithProject(withRoutes(<GeralPage />), { snapshot: aSnapshot().build() });
+    expect(await screen.findByRole('heading', { name: 'Painel executivo' })).toBeInTheDocument();
+    for (const p of PLACEHOLDERS) expect(screen.queryByText(p)).toBeNull();
+    expect(document.body.textContent).not.toMatch(/n\/a/);
+    for (const region of ['Valor agregado e prazo', 'Multa contratual por atraso', 'Orçado × comprometido × realizado', 'Curva S', 'Riscos por faixa', 'Definições do projeto'])
+      expect(screen.queryByRole('region', { name: region })).toBeNull();
+    expect(screen.queryByRole('region', { name: /^Alertas/ })).toBeNull();
+    const meta = screen.getByRole('list', { name: 'Dados do projeto' });
+    for (const label of ['Fase', 'LB', 'Término previsto', 'Cliente', 'Patrocinador', 'Gerente', 'Valor do contrato', 'Aprovação'])
+      expect(within(meta).queryByText(label)).toBeNull();
+    // A data de status sempre existe (manual ou hoje).
+    expect(within(meta).getByText('Status')).toBeInTheDocument();
+  });
+
+  it('a) Finanças desligado: nenhum KPI monetário nem quadro financeiro, sem "n/a"', async () => {
+    const off = withLb(aSnapshot().withModule('finances', { enabled: false }).withPackage(aPackage({ id: 'A', duration: 5 })).build());
+    await renderWithProject(withRoutes(<GeralPage />), { snapshot: off });
+    const evm = await screen.findByRole('region', { name: 'Valor agregado e prazo' });
+    const labels = within(evm).getAllByText(/./, { selector: '.kpi-label' }).map((e) => e.textContent);
+    expect(labels).toEqual(['Ritmo do Prazo (SPI)', 'Avanço físico']);
+    expect(evm.textContent).not.toMatch(/n\/a|desligado/);
+    expect(screen.queryByRole('region', { name: 'Orçado × comprometido × realizado' })).toBeNull();
+    // A Curva S física continua (há LB), em bloco próprio.
+    expect(screen.getByRole('region', { name: 'Curva S' })).toBeInTheDocument();
+  });
+
+  it('b) domínios preenchidos: indicadores, metadados e blocos aparecem', async () => {
+    const client = anOrganization({ id: 'cli' as never, code: 'PI-020', name: 'Cliente Exemplo S.A.' });
+    const manager = aPerson({ id: 'gp' as never, code: 'PI-021', name: 'Gerente Exemplo' });
+    const sponsor = aPerson({ id: 'sp' as never, code: 'PI-022', name: 'Patrocinador Exemplo' });
+    const base = project();
+    const s: ProjectSnapshot = {
+      ...base,
+      stakeholders: { ...base.stakeholders, parties: { ...base.stakeholders.parties, cli: client, gp: manager, sp: sponsor } as never },
+      governance: {
+        ...base.governance,
+        norms: { n1: aNorm({ id: 'n1' as never }) } as never,
+        profile: {
+          ...base.governance.profile,
+          charter: { ...base.governance.profile.charter, clientId: client.id, managerId: manager.id, sponsorId: sponsor.id, currentPhase: 'Engenharia', approvalDate: '2026-01-02' },
+          documentTemplate: { template: 'Interno', notes: '' },
+          latePenalty: { ...base.governance.profile.latePenalty, enabled: true, ratePct: 0.1, period: 'Diário', base: 'Valor do contrato', contractValueCents: 150_000_000, capPct: 10 },
+        },
+      },
+    };
+    await renderWithProject(withRoutes(<GeralPage />), { snapshot: s });
+    const evm = await screen.findByRole('region', { name: 'Valor agregado e prazo' });
+    expect(within(evm).getAllByText(/./, { selector: '.kpi-label' }).map((e) => e.textContent)).toEqual([
+      'Orçamento Total (BAC)',
+      'Previsto até a Data (PV)',
+      'Trabalho Entregue (EV)',
+      'Custo Realizado (AC)',
+      'Eficiência de Custo (CPI)',
+      'Ritmo do Prazo (SPI)',
+      'Avanço físico',
+    ]);
+    const meta = screen.getByRole('list', { name: 'Dados do projeto' });
+    for (const [label, value] of [
+      ['Cliente', 'Cliente Exemplo S.A.'],
+      ['Gerente', 'Gerente Exemplo'],
+      ['Patrocinador', 'Patrocinador Exemplo'],
+      ['Valor do contrato', 'R$ 1.500.000,00'],
+      ['Fase', 'Engenharia'],
+      ['Aprovação', '02/01/2026'],
+      ['LB', 'v1'],
+    ] as const)
+      expect(within(meta).getByText(label).closest('li')).toHaveTextContent(value);
+    expect(within(meta).getByText('Término previsto')).toBeInTheDocument();
+    for (const region of ['Multa contratual por atraso', 'Orçado × comprometido × realizado', 'Riscos por faixa', 'Definições do projeto'])
+      expect(screen.getByRole('region', { name: region })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /^Alertas/ })).toBeInTheDocument();
+    const defs = screen.getByRole('region', { name: 'Definições do projeto' });
+    expect(defs).toHaveTextContent('Interno');
+    expect(defs).not.toHaveTextContent(/não definid/);
+    expect(document.body.textContent).not.toMatch(/n\/a/);
   });
 });

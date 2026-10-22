@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { downloadText } from './download';
 import { addDays, diffDays, formatDateBR, isIsoDate, maxDate, monthKey, startOfWeek } from './dates';
 import { formatMoneyBR, parseMoneyBR, roundHalfEven, toBaseCents } from './money';
-import { formatIndicator, formatPercent, formatRatio } from './format';
+import { formatIndicator, formatPercent, formatRatio, hasValue } from './format';
 import { formatCode, nextWbsCode } from './codes';
 import { findCycleInGraph, topologicalOrder } from './graph';
 
@@ -111,5 +111,12 @@ describe('downloadText', () => {
     vi.advanceTimersByTime(30_000);
     expect(revoke).toHaveBeenCalledWith('blob:x');
     vi.useRealTimers();
+  });
+});
+
+describe('hasValue', () => {
+  it('nulo, indefinido, vazio, "n/a" e número não finito não são exibíveis; zero é', () => {
+    for (const v of [null, undefined, '', '   ', 'n/a', NaN, Infinity]) expect(hasValue(v)).toBe(false);
+    for (const v of [0, 12.5, 'Engenharia', 'R$ 0,00']) expect(hasValue(v)).toBe(true);
   });
 });

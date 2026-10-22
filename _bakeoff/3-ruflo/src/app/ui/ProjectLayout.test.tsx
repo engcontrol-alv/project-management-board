@@ -35,7 +35,7 @@ describe('ProjectLayout — navegação horizontal', () => {
       'Escopo',
       'Cronograma',
       'Recursos',
-      'Custos & Finanças',
+      'Finanças',
       'Riscos',
       'Partes Interessadas',
     ]);

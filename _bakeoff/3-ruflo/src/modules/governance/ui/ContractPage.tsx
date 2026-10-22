@@ -27,7 +27,7 @@ const penaltyFields: FieldDef[] = [
     type: 'select',
     options: PENALTY_BASES,
     visible: on,
-    hint: 'Valor do marco = receitas de Custos & Finanças vinculadas ao marco.',
+    hint: 'Valor do marco = receitas de Finanças vinculadas ao marco.',
   },
   { key: 'latePenalty.contractValueCents', label: 'Valor do contrato', type: 'money', visible: on, hint: 'Na moeda base do projeto.' },
   {
@@ -62,7 +62,7 @@ function ContractForm() {
       <Card title="Multa contratual por atraso">
         <p className="muted small">
           Vale para os marcos do tipo <strong>Contratual</strong>. O prazo é a data do marco na linha de base vigente (sem
-          linha de base, a data manual). A provisão aparece em Custos &amp; Finanças e na aba Geral.
+          linha de base, a data manual). A provisão aparece em Finanças e na aba Geral.
         </p>
         <RecordForm fields={penaltyFields} value={value} onChange={setValue} errors={errors} disabled={readOnly} />
       </Card>

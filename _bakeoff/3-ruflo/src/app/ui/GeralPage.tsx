@@ -1,19 +1,33 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AlertOctagon, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { AlertOctagon, AlertTriangle } from 'lucide-react';
 import { formatDateBR } from '@/shared/lib/dates';
-import { formatPercent, formatRatio } from '@/shared/lib/format';
+import { formatPercent, formatRatio, hasValue } from '@/shared/lib/format';
 import { formatMoneyBR } from '@/shared/lib/money';
 import { Badge, RagDot } from '@/shared/ui/Badge';
 import { KpiTile } from '@/shared/ui/KpiTile';
 import { computeDashboard } from '@/analytics/dashboard';
 import { currentBaseline } from '@/analytics/derive';
+import {
+  EVM_ADVANCED,
+  EVM_ADVANCED_TOGGLE,
+  EVM_ESSENTIAL,
+  type EvmIndicatorDef,
+} from '@/modules/finances';
 import { BaselinePanel } from '@/modules/governance/ui/BaselinePanel';
 import { useAnalysis } from '@/platform/react/hooks';
 import { NEW_CHANGE_REQUEST_PATH, RECORD_SECTIONS } from '@/registers/module-view';
 import { VIEWS } from '../registry';
+import { FillGuide } from './FillGuide';
 
 const BAND_ORDER = ['Crítico', 'Alto', 'Moderado', 'Baixo', 'Não avaliado'] as const;
-const BAND_TONE: Record<string, string> = { Crítico: 'red', Alto: 'amber', Moderado: 'blue', Baixo: 'green', 'Não avaliado': 'gray' };
+const BAND_TONE: Record<string, string> = {
+  Crítico: 'red',
+  Alto: 'amber',
+  Moderado: 'blue',
+  Baixo: 'green',
+  'Não avaliado': 'gray',
+};
 
 const clampPct = (n: number | null) => Math.max(0, Math.min(100, n ?? 0));
 
@@ -28,7 +42,14 @@ function Sparkline({ series, max }: { series: Series[]; max: number }) {
   const x = (i: number) => (n <= 1 ? 0 : (i / (n - 1)) * w);
   const y = (v: number) => h - (max > 0 ? (v / max) * h : 0);
   return (
-    <svg width="100%" viewBox={`0 0 ${w} ${h + 2}`} preserveAspectRatio="none" role="img" aria-label="Miniatura da Curva S" className="sparkline">
+    <svg
+      width="100%"
+      viewBox={`0 0 ${w} ${h + 2}`}
+      preserveAspectRatio="none"
+      role="img"
+      aria-label="Miniatura da Curva S"
+      className="sparkline"
+    >
       <line x1={0} x2={w} y1={h} y2={h} stroke="var(--paper-line)" />
       {series.map((s, k) => {
         const points = s.values
@@ -36,7 +57,15 @@ function Sparkline({ series, max }: { series: Series[]; max: number }) {
           .filter((p): p is string => p !== null)
           .join(' ');
         return (
-          <polyline key={k} points={points} fill="none" stroke={s.color} strokeWidth={1.8} strokeDasharray={s.dashed ? '4 3' : undefined} vectorEffect="non-scaling-stroke" />
+          <polyline
+            key={k}
+            points={points}
+            fill="none"
+            stroke={s.color}
+            strokeWidth={1.8}
+            strokeDasharray={s.dashed ? '4 3' : undefined}
+            vectorEffect="non-scaling-stroke"
+          />
         );
       })}
     </svg>
@@ -47,6 +76,7 @@ function Sparkline({ series, max }: { series: Series[]; max: number }) {
 export function GeralPage() {
   const analysis = useAnalysis();
   const navigate = useNavigate();
+  const [advanced, setAdvanced] = useState(false);
   if (!analysis) return null;
   const dash = computeDashboard(analysis);
   const { snapshot, derived, config } = analysis;
@@ -56,23 +86,69 @@ export function GeralPage() {
   const currency = config.settings.finances.baseCurrency;
   const fin = derived.finances;
   const penalty = derived.penalty;
-  const worst = dash.perModule.filter((m) => m.rag === dash.overall && m.rag !== 'verde' && m.rag !== 'n/a');
-  const money = (v: number | null | undefined) => (v === null || v === undefined ? 'n/a' : formatMoneyBR(Math.round(v), currency));
-  const sectionPath = (id: keyof typeof VIEWS) => `/projeto/${id}/${VIEWS[id].sections[0]?.path ?? ''}`;
+  const worst = dash.perModule.filter(
+    (m) => m.rag === dash.overall && m.rag !== 'verde' && m.rag !== 'n/a',
+  );
+  const money = (v: number) => formatMoneyBR(Math.round(v), currency);
+  const sectionPath = (id: keyof typeof VIEWS) =>
+    `/projeto/${id}/${VIEWS[id].sections[0]?.path ?? ''}`;
+  const partyName = (id: string | null) =>
+    id
+      ? snapshot.stakeholders.parties[id as keyof typeof snapshot.stakeholders.parties]?.name
+      : null;
+  const { charter } = profile;
 
-  // Sem Finanças, o SPI exibido é o físico (Cronograma).
-  const spi = fin ? fin.evm.spi : derived.progress.spi;
-  const evmTiles: [string, string, string][] = [
-    ['BAC', money(fin?.evm.bac), 'Orçamento no término'],
-    ['PV', money(fin?.evm.pv), 'Planejado na data de status'],
-    ['EV', money(fin?.evm.ev), 'Valor agregado'],
-    ['AC', money(fin?.evm.ac), 'Custo real'],
-    ['CPI', formatRatio(fin?.evm.cpi), 'EV ÷ AC'],
-    ['SPI', formatRatio(spi), fin ? 'EV ÷ PV' : 'físico (Custos & Finanças desligado)'],
-    ['EAC', money(fin?.evm.eac), 'BAC ÷ CPI'],
-  ];
+  // Campos nulos (sem dado no domínio) ficam fora do DOM: nada de "n/a", "—" ou rótulo vazio.
+  const meta = (
+    [
+      ['Fase', charter.currentPhase, false],
+      ['Status', formatDateBR(derived.statusDate), true],
+      ['LB', baseline ? `v${baseline.version}` : null, true],
+      [
+        'Término previsto',
+        derived.schedule.ok && derived.schedule.projectFinish
+          ? formatDateBR(derived.schedule.projectFinish)
+          : null,
+        true,
+      ],
+      ['Cliente', partyName(charter.clientId), false],
+      ['Gerente', partyName(charter.managerId), false],
+      ['Patrocinador', partyName(charter.sponsorId), false],
+      [
+        'Valor do contrato',
+        profile.latePenalty.contractValueCents === null
+          ? null
+          : money(profile.latePenalty.contractValueCents),
+        true,
+      ],
+      ['Aprovação', charter.approvalDate ? formatDateBR(charter.approvalDate) : null, true],
+    ] as [string, string | null | undefined, boolean][]
+  ).filter(([, v]) => hasValue(v));
 
-  const total = fin?.summary.total;
+  // Valores monetários só com itens de custo/receita lançados; sem Finanças, o SPI é o físico (Cronograma).
+  const costs = fin && fin.items.length > 0 ? fin : null;
+  const physicalSpi = (d: EvmIndicatorDef) => d.key === 'spi' && !fin;
+  const tiles = (defs: EvmIndicatorDef[]) =>
+    defs.flatMap((d) => {
+      const v = physicalSpi(d) ? derived.progress.spi : costs?.evm[d.key];
+      if (typeof v !== 'number' || !hasValue(v)) return [];
+      const hint = physicalSpi(d)
+        ? 'Avanço físico real ÷ planejado pela Linha de Base (meta ≥ 1,00)'
+        : d.hint;
+      return [
+        <KpiTile
+          key={d.key}
+          label={d.label}
+          value={d.format === 'ratio' ? formatRatio(v) : money(v)}
+          hint={hint}
+        />,
+      ];
+    });
+  const evmTiles = tiles(EVM_ESSENTIAL);
+  const advancedTiles = tiles(EVM_ADVANCED);
+  const physical = hasValue(derived.progress.actual);
+
+  const total = costs?.summary.total;
   const trioMax = total ? Math.max(total.budgeted, total.committed, total.actual, 1) : 1;
   const curve = fin && fin.moneySCurve.length > 0 ? fin.moneySCurve : null;
   const sparkline = curve ? (
@@ -88,13 +164,28 @@ export function GeralPage() {
     <Sparkline
       max={100}
       series={[
-        { values: derived.sCurve.map((p) => p.planned), color: 'var(--chart-planned)', dashed: true },
+        {
+          values: derived.sCurve.map((p) => p.planned),
+          color: 'var(--chart-planned)',
+          dashed: true,
+        },
         { values: derived.sCurve.map((p) => p.actual), color: 'var(--navy)' },
       ]}
     />
-  ) : (
-    <p className="muted small">Defina a linha de base para ver a Curva S.</p>
+  ) : null;
+  const curveLink = (
+    <Link to="/projeto/schedule/curva-s" className="small">
+      Abrir Curva S
+    </Link>
   );
+
+  const hasRisks = !!derived.risks && Object.keys(snapshot.risks.risks).length > 0;
+  const normList = Object.values(norms);
+  const definitions =
+    normList.length > 0 ||
+    hasValue(profile.documentTemplate.template) ||
+    hasValue(policy.model) ||
+    hasValue(policy.billing);
 
   return (
     <div>
@@ -112,23 +203,18 @@ export function GeralPage() {
                 ? 'Sem dados suficientes para a situação geral.'
                 : 'Todos os domínios ativos dentro dos limites.'}
           </p>
-          <div className="hero-meta">
-            <span>
-              Fase <strong>{profile.charter.currentPhase || '—'}</strong>
-            </span>
-            <span>
-              Status <strong className="tb-mono">{formatDateBR(derived.statusDate)}</strong>
-            </span>
-            <span>
-              LB <strong className="tb-mono">{baseline ? `v${baseline.version}` : 'não definida'}</strong>
-            </span>
-            <span>
-              Término previsto{' '}
-              <strong className="tb-mono">{formatDateBR(derived.schedule.ok ? derived.schedule.projectFinish : null)}</strong>
-            </span>
-          </div>
+          <ul className="hero-meta" aria-label="Dados do projeto">
+            {meta.map(([label, value, mono]) => (
+              <li key={label}>
+                <span>{label}</span>{' '}
+                <strong className={mono ? 'tb-mono' : undefined}>{value}</strong>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
+
+      <FillGuide snapshot={snapshot} enabled={config.enabled} />
 
       {/* a) Semáforo dos 7 domínios: cada card leva ao domínio. */}
       <ul className="rag-grid" aria-label="Semáforo dos domínios">
@@ -147,214 +233,289 @@ export function GeralPage() {
         ))}
       </ul>
 
-      {/* b) Valor agregado e prazo. */}
-      <section className="card tb-card" aria-label="Valor agregado e prazo">
-        <div className="card-head">
-          <h2>Valor agregado e prazo</h2>
-          {!fin && <span className="muted small">Custos & Finanças desligado — valores monetários n/a.</span>}
-        </div>
-        <div className="grid evm-grid">
-          {evmTiles.map(([label, value, hint]) => (
-            <KpiTile key={label} label={label} value={value} hint={hint} />
-          ))}
-          <KpiTile label="Avanço físico" value={formatPercent(derived.progress.actual)} hint={`planejado (LB) ${formatPercent(derived.progress.planned)}`}>
-            <div className="meter" style={{ marginTop: 6 }} aria-hidden="true">
-              <span className="planned" style={{ width: `${clampPct(derived.progress.planned)}%` }} />
-              <span className="actual" style={{ width: `${clampPct(derived.progress.actual)}%` }} />
+      {/* b) Valor agregado e prazo: só os indicadores com valor calculado. */}
+      {(evmTiles.length > 0 || physical) && (
+        <section className="card tb-card" aria-label="Valor agregado e prazo">
+          <div className="card-head">
+            <h2>Valor agregado e prazo</h2>
+            {advancedTiles.length > 0 && (
+              <button
+                type="button"
+                className="btn btn-sm btn-ghost"
+                aria-pressed={advanced}
+                onClick={() => setAdvanced(!advanced)}
+              >
+                {EVM_ADVANCED_TOGGLE}
+              </button>
+            )}
+          </div>
+          <div className="grid evm-grid">
+            {evmTiles}
+            {physical && (
+              <KpiTile
+                label="Avanço físico"
+                value={formatPercent(derived.progress.actual)}
+                hint={
+                  hasValue(derived.progress.planned)
+                    ? `planejado (LB) ${formatPercent(derived.progress.planned)}`
+                    : undefined
+                }
+              >
+                <div className="meter" style={{ marginTop: 6 }} aria-hidden="true">
+                  <span
+                    className="planned"
+                    style={{ width: `${clampPct(derived.progress.planned)}%` }}
+                  />
+                  <span
+                    className="actual"
+                    style={{ width: `${clampPct(derived.progress.actual)}%` }}
+                  />
+                </div>
+              </KpiTile>
+            )}
+          </div>
+          {advanced && advancedTiles.length > 0 && (
+            <div aria-label="Projeções avançadas" role="region" style={{ marginTop: 12 }}>
+              <div className="eyebrow" style={{ marginBottom: 6 }}>
+                Projeções avançadas
+              </div>
+              <div className="grid evm-grid">{advancedTiles}</div>
             </div>
-          </KpiTile>
-        </div>
-      </section>
+          )}
+        </section>
+      )}
 
-      {/* Provisão de multa contratual por atraso (Governança × Cronograma × LB). */}
-      <section className="card tb-card" aria-label="Multa contratual por atraso">
-        <div className="card-head">
-          <h2>Multa contratual por atraso</h2>
-          <Link to="/projeto/governance/contrato" className="small">
-            {penalty ? 'Ver cláusula' : 'Configurar cláusula'}
-          </Link>
-        </div>
-        {penalty ? (
+      {/* Provisão de multa contratual por atraso (Governança × Cronograma × LB); só com cláusula e valor calculado. */}
+      {penalty && penalty.totalCents !== null && (
+        <section className="card tb-card" aria-label="Multa contratual por atraso">
+          <div className="card-head">
+            <h2>Multa contratual por atraso</h2>
+            <Link to="/projeto/governance/contrato" className="small">
+              Ver cláusula
+            </Link>
+          </div>
           <div className="penalty-row">
             <div>
               <div className="eyebrow">Provisão (atraso real ou previsto)</div>
-              <div className="tb-mono penalty-value">{penalty.totalCents === null ? 'n/a' : formatMoneyBR(penalty.totalCents, currency)}</div>
+              <div className="tb-mono penalty-value">
+                {formatMoneyBR(penalty.totalCents, currency)}
+              </div>
               {penalty.capped && <Badge text="Teto atingido" tone="red" />}
             </div>
             <div className="small" style={{ flex: 1, minWidth: 0 }}>
-              {penalty.reason ??
-                (penalty.items.length === 0 ? (
-                  <span className="muted">Nenhum marco contratual atrasado.</span>
-                ) : (
-                  <ul className="plain-list">
-                    {penalty.items.map((i) => (
-                      <li key={i.milestoneId}>
-                        <span className="tb-mono">
-                          {i.code} · {i.delayDays} dia(s)
-                        </span>{' '}
-                        <span className="muted">{i.name}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ))}
-              <div className="muted" style={{ marginTop: 4 }}>
-                {penalty.clauseText}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <p className="muted small" style={{ margin: 0 }}>
-            {profile.latePenalty.enabled ? 'Cronograma desligado.' : 'Cláusula de multa não configurada.'}
-          </p>
-        )}
-      </section>
-
-      <div className="split" style={{ marginBottom: 16 }}>
-        {/* c) Quadro financeiro + miniatura da Curva S. */}
-        <section className="card tb-card" aria-label="Orçado × comprometido × realizado" style={{ marginBottom: 0 }}>
-          <div className="card-head">
-            <h2>Orçado × comprometido × realizado</h2>
-          </div>
-          {total ? (
-            (
-              [
-                ['Orçado', total.budgeted, 'var(--chart-baseline)'],
-                ['Comprometido', total.committed, 'var(--amber)'],
-                ['Realizado', total.actual, 'var(--navy)'],
-              ] as const
-            ).map(([label, value, color]) => (
-              <div key={label} className="money-bar">
-                <span className="small">{label}</span>
-                <span className="meter" aria-hidden="true">
-                  <span style={{ width: `${(value / trioMax) * 100}%`, background: color }} />
-                </span>
-                <span className="tb-mono small">{formatMoneyBR(value, currency)}</span>
-              </div>
-            ))
-          ) : (
-            <p className="muted small">Custos & Finanças desligado.</p>
-          )}
-          <div className="sparkline-box">
-            <div className="row" style={{ justifyContent: 'space-between' }}>
-              <span className="eyebrow">Curva S</span>
-              <Link to="/projeto/schedule/curva-s" className="small">
-                Abrir Curva S
-              </Link>
-            </div>
-            {sparkline}
-          </div>
-        </section>
-
-        {/* d) Riscos por faixa e exposição financeira × contingência. */}
-        {derived.risks && (
-          <section className="card tb-card" aria-label="Riscos por faixa" style={{ marginBottom: 0 }}>
-            <div className="card-head">
-              <h2>Riscos por faixa</h2>
-              <Link to="/projeto/risks/matriz" className="small">
-                Abrir matriz de riscos
-              </Link>
-            </div>
-            <ul className="band-list">
-              {BAND_ORDER.map((b) => (
-                <li key={b}>
-                  <span className="tb-badge" style={{ color: `var(--${BAND_TONE[b]})`, background: `var(--${BAND_TONE[b]}-soft)` }}>
-                    {b}
-                  </span>
-                  <span className="tb-mono">{derived.risks!.byBand[b]}</span>
-                </li>
-              ))}
-            </ul>
-            {fin && (
-              <>
-                <dl className="def-list" style={{ marginTop: 14 }}>
-                  <dt>Valor esperado dos riscos abertos</dt>
-                  <dd className="tb-mono">{formatMoneyBR(fin.contingency.openRiskEmv, currency)}</dd>
-                  <dt>Saldo de contingência</dt>
-                  <dd className="tb-mono">{formatMoneyBR(fin.contingency.balance, currency)}</dd>
-                </dl>
-                <div style={{ marginTop: 8 }}>
-                  <Badge
-                    text={fin.contingency.coversRisks ? 'Cobre os riscos abertos' : 'Não cobre os riscos abertos'}
-                    tone={fin.contingency.coversRisks ? 'green' : 'red'}
-                  />
-                </div>
-              </>
-            )}
-          </section>
-        )}
-      </div>
-
-      <div className="split">
-        {/* e) Alertas cruzados com atalhos. */}
-        <section className="card tb-card" aria-label={`Alertas (${dash.alerts.length})`}>
-          <div className="card-head">
-            <h2>{`Alertas (${dash.alerts.length})`}</h2>
-          </div>
-          {dash.alerts.length === 0 ? (
-            <div className="empty-state">
-              <CheckCircle2 size={20} color="var(--green)" aria-hidden="true" />
-              <p style={{ margin: '6px 0 0' }}>Nenhum alerta. Os desvios aparecem aqui assim que forem detectados.</p>
-            </div>
-          ) : (
-            dash.alerts.map((a) => (
-              <div className="alert-item" key={a.id}>
-                {a.severity === 'vermelho' ? (
-                  <AlertOctagon size={16} color="var(--red)" aria-label="Crítico" />
-                ) : (
-                  <AlertTriangle size={16} color="var(--gold)" aria-label="Atenção" />
-                )}
-                <span style={{ flex: 1 }}>{a.message}</span>
-                {a.action?.kind === 'openChangeRequest' && (
-                  <button className="btn btn-sm" onClick={() => navigate(NEW_CHANGE_REQUEST_PATH)}>
-                    Abrir solicitação de mudança
-                  </button>
-                )}
-                {a.action?.kind === 'openRecord' && (
-                  <button
-                    className="btn btn-sm"
-                    onClick={() =>
-                      a.action?.kind === 'openRecord' &&
-                      navigate(RECORD_SECTIONS[`${a.action.module}.${a.action.collection}`] ?? '/projeto')
-                    }
-                  >
-                    Abrir registro
-                  </button>
-                )}
-              </div>
-            ))
-          )}
-        </section>
-
-        <section className="card tb-card" aria-label="Definições do projeto">
-          <div className="card-head">
-            <h2>Definições do projeto</h2>
-          </div>
-          <dl className="def-list">
-            <dt>Normas aplicáveis</dt>
-            <dd>
-              {Object.values(norms).length === 0 ? (
-                <span className="muted">Nenhuma norma cadastrada.</span>
+              {penalty.items.length === 0 ? (
+                <span className="muted">Nenhum marco contratual atrasado.</span>
               ) : (
-                <div className="row" style={{ gap: 6 }}>
-                  {Object.values(norms).map((n) => (
-                    <span key={n.id} className="code-chip" title={n.title}>
-                      {n.standard}
-                    </span>
+                <ul className="plain-list">
+                  {penalty.items.map((i) => (
+                    <li key={i.milestoneId}>
+                      <span className="tb-mono">
+                        {i.code} · {i.delayDays} dia(s)
+                      </span>{' '}
+                      <span className="muted">{i.name}</span>
+                    </li>
                   ))}
+                </ul>
+              )}
+              {hasValue(penalty.clauseText) && (
+                <div className="muted" style={{ marginTop: 4 }}>
+                  {penalty.clauseText}
                 </div>
               )}
-            </dd>
-            <dt>Template de documentação</dt>
-            <dd>{profile.documentTemplate.template ?? 'não definido'}</dd>
-            <dt>Estratégia de aquisições</dt>
-            <dd>
-              Modalidade: {policy.model ?? 'não definida'}
-              <br />
-              Faturamento: {policy.billing ?? 'não definido'}
-            </dd>
-          </dl>
+            </div>
+          </div>
         </section>
-      </div>
+      )}
+
+      {(total || sparkline || hasRisks) && (
+        <div className="split" style={{ marginBottom: 16 }}>
+          {/* c) Quadro financeiro + miniatura da Curva S (só com custos lançados). */}
+          {total ? (
+            <section
+              className="card tb-card"
+              aria-label="Orçado × comprometido × realizado"
+              style={{ marginBottom: 0 }}
+            >
+              <div className="card-head">
+                <h2>Orçado × comprometido × realizado</h2>
+              </div>
+              {(
+                [
+                  ['Orçado', total.budgeted, 'var(--chart-baseline)'],
+                  ['Comprometido', total.committed, 'var(--amber)'],
+                  ['Realizado', total.actual, 'var(--navy)'],
+                ] as const
+              ).map(([label, value, color]) => (
+                <div key={label} className="money-bar">
+                  <span className="small">{label}</span>
+                  <span className="meter" aria-hidden="true">
+                    <span style={{ width: `${(value / trioMax) * 100}%`, background: color }} />
+                  </span>
+                  <span className="tb-mono small">{formatMoneyBR(value, currency)}</span>
+                </div>
+              ))}
+              {sparkline && (
+                <div className="sparkline-box">
+                  <div className="row" style={{ justifyContent: 'space-between' }}>
+                    <span className="eyebrow">Curva S</span>
+                    {curveLink}
+                  </div>
+                  {sparkline}
+                </div>
+              )}
+            </section>
+          ) : (
+            sparkline && (
+              <section className="card tb-card" aria-label="Curva S" style={{ marginBottom: 0 }}>
+                <div className="card-head">
+                  <h2>Curva S</h2>
+                  {curveLink}
+                </div>
+                {sparkline}
+              </section>
+            )
+          )}
+
+          {/* d) Riscos por faixa e exposição financeira × contingência (só com riscos registrados). */}
+          {hasRisks && derived.risks && (
+            <section
+              className="card tb-card"
+              aria-label="Riscos por faixa"
+              style={{ marginBottom: 0 }}
+            >
+              <div className="card-head">
+                <h2>Riscos por faixa</h2>
+                <Link to="/projeto/risks/matriz" className="small">
+                  Abrir matriz de riscos
+                </Link>
+              </div>
+              <ul className="band-list">
+                {BAND_ORDER.map((b) => (
+                  <li key={b}>
+                    <span
+                      className="tb-badge"
+                      style={{
+                        color: `var(--${BAND_TONE[b]})`,
+                        background: `var(--${BAND_TONE[b]}-soft)`,
+                      }}
+                    >
+                      {b}
+                    </span>
+                    <span className="tb-mono">{derived.risks!.byBand[b]}</span>
+                  </li>
+                ))}
+              </ul>
+              {fin && (
+                <>
+                  <dl className="def-list" style={{ marginTop: 14 }}>
+                    <dt>Valor esperado dos riscos abertos</dt>
+                    <dd className="tb-mono">
+                      {formatMoneyBR(fin.contingency.openRiskEmv, currency)}
+                    </dd>
+                    <dt>Saldo de contingência</dt>
+                    <dd className="tb-mono">{formatMoneyBR(fin.contingency.balance, currency)}</dd>
+                  </dl>
+                  <div style={{ marginTop: 8 }}>
+                    <Badge
+                      text={
+                        fin.contingency.coversRisks
+                          ? 'Cobre os riscos abertos'
+                          : 'Não cobre os riscos abertos'
+                      }
+                      tone={fin.contingency.coversRisks ? 'green' : 'red'}
+                    />
+                  </div>
+                </>
+              )}
+            </section>
+          )}
+        </div>
+      )}
+
+      {(dash.alerts.length > 0 || definitions) && (
+        <div className="split">
+          {/* e) Alertas cruzados com atalhos (só quando há alertas). */}
+          {dash.alerts.length > 0 && (
+            <section className="card tb-card" aria-label={`Alertas (${dash.alerts.length})`}>
+              <div className="card-head">
+                <h2>{`Alertas (${dash.alerts.length})`}</h2>
+              </div>
+              {dash.alerts.map((a) => (
+                <div className="alert-item" key={a.id}>
+                  {a.severity === 'vermelho' ? (
+                    <AlertOctagon size={16} color="var(--red)" aria-label="Crítico" />
+                  ) : (
+                    <AlertTriangle size={16} color="var(--gold)" aria-label="Atenção" />
+                  )}
+                  <span style={{ flex: 1 }}>{a.message}</span>
+                  {a.action?.kind === 'openChangeRequest' && (
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => navigate(NEW_CHANGE_REQUEST_PATH)}
+                    >
+                      Abrir solicitação de mudança
+                    </button>
+                  )}
+                  {a.action?.kind === 'openRecord' && (
+                    <button
+                      className="btn btn-sm"
+                      onClick={() =>
+                        a.action?.kind === 'openRecord' &&
+                        navigate(
+                          RECORD_SECTIONS[`${a.action.module}.${a.action.collection}`] ??
+                            '/projeto',
+                        )
+                      }
+                    >
+                      Abrir registro
+                    </button>
+                  )}
+                </div>
+              ))}
+            </section>
+          )}
+
+          {/* f) Definições: só os campos preenchidos na Governança. */}
+          {definitions && (
+            <section className="card tb-card" aria-label="Definições do projeto">
+              <div className="card-head">
+                <h2>Definições do projeto</h2>
+              </div>
+              <dl className="def-list">
+                {normList.length > 0 && (
+                  <>
+                    <dt>Normas aplicáveis</dt>
+                    <dd>
+                      <div className="row" style={{ gap: 6 }}>
+                        {normList.map((n) => (
+                          <span key={n.id} className="code-chip" title={n.title}>
+                            {n.standard}
+                          </span>
+                        ))}
+                      </div>
+                    </dd>
+                  </>
+                )}
+                {hasValue(profile.documentTemplate.template) && (
+                  <>
+                    <dt>Template de documentação</dt>
+                    <dd>{profile.documentTemplate.template}</dd>
+                  </>
+                )}
+                {(hasValue(policy.model) || hasValue(policy.billing)) && (
+                  <>
+                    <dt>Estratégia de aquisições</dt>
+                    <dd>
+                      {hasValue(policy.model) && <div>Modalidade: {policy.model}</div>}
+                      {hasValue(policy.billing) && <div>Faturamento: {policy.billing}</div>}
+                    </dd>
+                  </>
+                )}
+              </dl>
+            </section>
+          )}
+        </div>
+      )}
 
       <BaselinePanel />
     </div>
